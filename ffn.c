@@ -7,16 +7,26 @@
 
 #define SEQ_LEN 10
 #define EMB_DIM 32
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+
+
+Tensor *relu(Tensor *x) {
+	int size = x->shape[0] * x->shape[1];
+	for (int i = 0; i < size; i++) {
+		float val = MAX(0, x->data[i]);
+		x->data[i] = val;
+	}
+	return x;
+}
 
 Tensor *forward(Tensor *x) {
 	int shape1[2] = {32, 128};
-	Tensor *w1 = tensor_create_weights(2, shape1);
-
-	Tensor *h1 = tensor_matmul(x, w1);
-	
 	int shape2[2] = {128, 32};
+	Tensor *w1 = tensor_create_weights(2, shape1);
 	Tensor *w2 = tensor_create_weights(2, shape2);
-	Tensor *out = tensor_matmul(h1, w2);
+	Tensor *h1 = tensor_matmul(x, w1);
+	Tensor *a1 = relu(h1);
+	Tensor *out = tensor_matmul(a1, w2);
 
 	return out;
 }	
@@ -50,23 +60,7 @@ int main() {
 
 	Tensor *res = forward(tokens);
 	tensor_get(res);
-	
-	//int *shape_weights = malloc(ndim * sizeof(int));
-	//if (!shape_weights) {
-	//	fprintf(stderr, "Something wrong with memory allocation\n");
-	//	return 0;
-	//}
-
-	//shape_weights[0] = EMB_DIM;
-	//shape_weights[1] = EMB_DIM;
-
-	//int num_heads = 8;
-
-	//printf("\n");
-	//Tensor *mha = multihead_attention(tokens, shape_weights, num_heads);
-	//Tensor *t = layer_norm(mha);
-	////Tensor *f = forward(t);
-	//tensor_get(t);
+	tensor_shape(res);
 	return 0;
 }
 

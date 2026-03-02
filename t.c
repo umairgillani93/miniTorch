@@ -79,10 +79,12 @@ int main() {
 	int size = tensor_size(t);
 	int rows= t->shape[0];
 	int cols = t->shape[1];
-	
-	for (int r = 0; r < rows; r++) {
-		float *s = t->data + r * t->shape[1];
-		printf("src: %p\n", (void*)s);
+
+
+	for (int i = 0; i < size; i++) {
+		printf("%f ", t->data[i]);
 	}
+
+	
 	return 0;
 }
