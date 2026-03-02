@@ -9,6 +9,25 @@
 #define EMB_DIM 32
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
+FFN *ffn_create(int input_dim, int hidden_dim) {
+	int ndim = 2;
+	int shape1[2] = {input_dim, hidden_dim};
+	int shape2[2] = {hidden_dim, input_dim};
+
+	FFN *f = malloc(sizeof(FFN));
+	f->w1 = tensor_create_weights(ndim, shape1);
+	f->w2 = tensor_create_weights(ndim, shape2);
+
+	return f;
+}
+
+Tensor *ffn_forward(Tensor *x, FFN *f) {
+	Tensor *h1 = tensor_matmul(x, f->w1);
+	Tensor *a1 = relu(h1);
+	Tensor *out = tensor_matmul(a1, f->w2);
+	return out;
+}	
+
 
 Tensor *relu(Tensor *x) {
 	int size = x->shape[0] * x->shape[1];
@@ -43,24 +62,15 @@ int main() {
 
 	Tensor *tokens = tensor_create(ndim, shape_tokens);
 
-	/* 
-	 * we have some tensor of shape (SEQ_LEN, EMB_DIM)
-	 * we want to perform some FFNN overit
-	 * and what FFN does is it takes the values of tensor "FLATTEN"
-	 * and assign some "WEIGHTS" to the flatten tensor
-	 * and does 'Y = WX + B' for each "PERCEPTRON"
-	 *
-	 */
-
-
 	if (!tokens) {
 		fprintf(stderr, "Something wrong with memory allocation\n");
 		return 0;
 	}
 
-	Tensor *res = forward(tokens);
+	FFN *f = ffn_create(32, EMB_DIM);
+	Tensor *res = ffn_forward(ffn, tokens);
 	tensor_get(res);
-	tensor_shape(res);
+
 	return 0;
 }
 
