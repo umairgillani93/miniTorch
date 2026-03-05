@@ -87,10 +87,13 @@ This repository is intended for:
 
 ## References
 
-- Vaswani et al. — *Attention Is All You Need*
-- nanoGPT
-- tinygrad
-- llama.cpp
+### Research Paper
+- Vaswani et al., 2017 — [Attention Is All You Need](https://arxiv.org/abs/1706.03762)
+
+### Inspirational Implementations
+- [nanoGPT](https://github.com/karpathy/nanoGPT)
+- [tinygrad](https://github.com/geohot/tinygrad)
+- [llama.cpp](https://github.com/ggerganov/llama.cpp) llama.cpp
 
 ---
 
