@@ -24,7 +24,7 @@ Tensor *multihead_attention(Tensor *tokens, int heads, int seq_len, int emb_dim,
 	mha->dk = emb_dim / mha->num_heads;
 
 	for (int i = 0; i < heads; i++) {
-		Tensor *score = scaled_dot_product_attention(mha->Q, mha->K, mha->V, mha->num_heads);
+		Tensor *score = scaled_dot_product_attention(mha->Q, mha->K, mha->V, mha->dk);
 		arr[i] = score;
 	}
 
@@ -35,14 +35,15 @@ Tensor *multihead_attention(Tensor *tokens, int heads, int seq_len, int emb_dim,
 
 	int offset = 0;
 	for (int k = 0; k < heads; k++) {
-		Tensor *h = res[k];
+		Tensor *h = arr[k];
 		int rows = h->shape[0];
 		int cols = h->shape[1];
 
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < cols; j++) {
-				int src_idx = h->data[i * cols + j];
-				int dest_idx = res->data[i * res->shape[1] + (offset + j)];
+				int src_idx = i * cols + j;
+				res->data[i * res->shape[1] + (offset + j)] = 
+					h->data[i * cols + j];
 			}
 		}	
 		offset += cols;
@@ -106,6 +107,7 @@ int main() {
 	Tensor *tokens = tensor_create(ndim, shape_tokens);
 	int heads = 8;
 	Tensor *multi_head = multihead_attention(tokens, heads, SEQ_LEN, EMB_DIM, ndim); 
+	tensor_get(multi_head);
 
 	return 0;
 }
