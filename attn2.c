@@ -21,7 +21,19 @@ Tensor *multihead_attention(Tensor *tokens, int heads, int seq_len, int emb_dim,
 	mha->K = tensor_matmul(tokens, mha->wk);
 	mha->V = tensor_matmul(tokens, mha->wv);
 	mha->num_heads = heads;
-	mha->dk = emb_dim / mha->num_heads;
+	mha->dk = emb_dim / heads;
+
+	// head slicing
+	
+	int col_offset = 0;
+	for (int i = 0; i < seq_len, i++) {
+		for (int j = 0; j < emb_dim; j++) {
+			int src_idx = i * emb_dim + j;
+			int dest_idx i * emb_dim + (offset + j);
+			Tensor *
+		}	
+	}
+
 
 	for (int i = 0; i < heads; i++) {
 		Tensor *score = scaled_dot_product_attention(mha->Q, mha->K, mha->V, mha->dk);
@@ -32,10 +44,14 @@ Tensor *multihead_attention(Tensor *tokens, int heads, int seq_len, int emb_dim,
 	int res_rows = res_shape[0];
 	int res_cols = res_shape[1];
 	Tensor *res = tensor_create(ndim, res_shape);
+	printf("res shape: \n");
+	tensor_shape(res);
 
 	int offset = 0;
 	for (int k = 0; k < heads; k++) {
 		Tensor *h = arr[k];
+		printf("head shape: \n");
+		tensor_shape(h);
 		int rows = h->shape[0];
 		int cols = h->shape[1];
 
@@ -92,21 +108,15 @@ int main() {
 	//srand(seed);
 	int ndim = 2;
 
-	int *shape_tokens = malloc(ndim * sizeof(int));
-	int *shape_weights = malloc(ndim * sizeof(int));
-
-	// define shape_tokens
-	shape_tokens[0] = SEQ_LEN;
-	shape_tokens[1] = EMB_DIM; // this is for token embeddings
-	
-	// weights shape
-	//shape_weights[0] = EMB_DIM;
-	//shape_weights[1] = EMB_DIM;
-	
+	int shape_tokens[2] = {SEQ_LEN, EMB_DIM};
+	int shape_weights[2] = {EMB_DIM, EMB_DIM};
 
 	Tensor *tokens = tensor_create(ndim, shape_tokens);
+	
 	int heads = 8;
-	Tensor *multi_head = multihead_attention(tokens, heads, SEQ_LEN, EMB_DIM, ndim); 
+	int HEAD_DIM = EMB_DIM / heads;
+	Tensor *multi_head = multihead_attention(tokens, heads, SEQ_LEN, EMB_DIM, ndim);
+	tensor_shape(multi_head);
 	tensor_get(multi_head);
 
 	return 0;

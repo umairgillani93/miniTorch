@@ -193,7 +193,7 @@ int tensor_size(Tensor *t) {
 		size *= t->shape[i];
 	}
 	printf("Tensor size: %d\n", size);
-	// return size;
+	return size;
 }	
 
 void tensor_shape(Tensor *t) {
