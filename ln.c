@@ -70,9 +70,11 @@ Tensor *layer_norm(Tensor *t) {
 //
 //	int num_heads = 8;
 //
-//	Tensor *mha = multihead_attention(tokens, shape_weights, num_heads);
-//	//Tensor *t = layer_norm(tokens);
-//	tensor_shape(mha);
+//	Tensor *mha = multihead_attention(tokens, num_heads, SEQ_LEN, EMB_DIM, ndim);
+//	Tensor *t = layer_norm(tokens);
+//	printf("Success!\n");
+//	tensor_shape(t);
+//	tensor_get(t);
 //	return 0;
 //}
 

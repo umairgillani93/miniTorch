@@ -31,8 +31,6 @@ FFN *ffn_create(int input_dim, int hidden_dim) {
 Tensor *ffn_forward(Tensor *x, FFN *f) {
 	assert(x->shape[1] == f->w1->shape[0]);
 	Tensor *h1 = tensor_matmul(x, f->w1);
-	printf("h1 shape: \n");
-	tensor_shape(h1);
 	Tensor *a1 = relu(h1);
 	assert(a1->shape[1] == f->w2->shape[0]);
 	Tensor *out = tensor_matmul(a1, f->w2);
@@ -82,14 +80,11 @@ int main() {
 	FFN *f = ffn_create(32, 128);
 	//tensor_shape(f->w1);
 
-	Tensor *mha = multihead_attention(tokens, shape_weights, num_heads);
+	Tensor *mha = multihead_attention(tokens, num_heads, SEQ_LEN, EMB_DIM, ndim);
 	Tensor *ln = layer_norm(tokens);
-	printf("shape layer norm: \n");
-	tensor_shape(ln);
-	//Tensor *res = ffn_forward(ln, f);
-	//tensor_get(res);
-
-
+	Tensor *res = ffn_forward(ln, f);
+	tensor_get(res);
+	tensor_shape(res);
 
 	return 0;
 }
