@@ -103,22 +103,22 @@ MHA *mha_create(int num_heads, int seq_len, int emb_dim) {
 
 	
 
-int main() {
-	//int seed = 32;
-	//srand(seed);
-	int ndim = 2;
-
-	int shape_tokens[2] = {SEQ_LEN, EMB_DIM};
-	int shape_weights[2] = {EMB_DIM, EMB_DIM};
-
-	Tensor *tokens = tensor_create(ndim, shape_tokens);
-	
-	int heads = 8;
-	int HEAD_DIM = EMB_DIM / heads;
-	MHA *mha = mha_create(heads, SEQ_LEN, EMB_DIM);
-	Tensor *multi_head = mha_forward(tokens, mha);
-	tensor_shape(multi_head);
-	tensor_get(multi_head);
-
-	return 0;
-}
+//int main() {
+//	//int seed = 32;
+//	//srand(seed);
+//	int ndim = 2;
+//
+//	int shape_tokens[2] = {SEQ_LEN, EMB_DIM};
+//	int shape_weights[2] = {EMB_DIM, EMB_DIM};
+//
+//	Tensor *tokens = tensor_create(ndim, shape_tokens);
+//	
+//	int heads = 8;
+//	int HEAD_DIM = EMB_DIM / heads;
+//	MHA *mha = mha_create(heads, SEQ_LEN, EMB_DIM);
+//	Tensor *multi_head = mha_forward(tokens, mha);
+//	tensor_shape(multi_head);
+//	tensor_get(multi_head);
+//
+//	return 0;
+//}

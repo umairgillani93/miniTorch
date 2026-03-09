@@ -21,20 +21,21 @@ FFN *ffn_create(int input_dim, int hidden_dim) {
 	}
 	f->w1 = tensor_create_weights(ndim, shape1);
 	f->w2 = tensor_create_weights(ndim, shape2);
-	//printf("w1 shape: \n");
-	//tensor_get(f->w1);
-	//tensor_get(f->w2);
 
 	return f;
 }
 
 Tensor *ffn_forward(Tensor *x, FFN *f) {
 	assert(x->shape[1] == f->w1->shape[0]);
+	if (f->save_inputs == true) {
+		f->inputs = x;
+	}
 	Tensor *h1 = tensor_matmul(x, f->w1);
-	Tensor *a1 = relu(h1);
-	assert(a1->shape[1] == f->w2->shape[0]);
-	Tensor *out = tensor_matmul(a1, f->w2);
-	return out;
+	f->h1 = h1;
+	f->a1 = relu(f->h1);
+	assert(f->a1->shape[1] == f->w2->shape[0]);
+	f->out = tensor_matmul(f->a1, f->w2);
+	return f->out;
 }	
 
 
@@ -80,8 +81,10 @@ int main() {
 	FFN *f = ffn_create(32, 128);
 	//tensor_shape(f->w1);
 
-	Tensor *mha = mha_forward(tokens, num_heads, SEQ_LEN, EMB_DIM, ndim);
-	Tensor *ln = layer_norm(tokens);
+	int heads = 8;
+	MHA *mha = mha_create(heads, SEQ_LEN, EMB_DIM);
+	Tensor *score = mha_forward(tokens, mha);
+	Tensor *ln = layer_norm(score);
 	Tensor *res = ffn_forward(ln, f);
 	tensor_get(res);
 	tensor_shape(res);

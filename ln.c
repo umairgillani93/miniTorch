@@ -68,10 +68,11 @@ Tensor *layer_norm(Tensor *t) {
 //	shape_weights[0] = EMB_DIM;
 //	shape_weights[1] = EMB_DIM;
 //
-//	int num_heads = 8;
+//	int heads = 8;
 //
-//	Tensor *mha = mha_forward(tokens, num_heads, SEQ_LEN, EMB_DIM, ndim);
-//	Tensor *t = layer_norm(tokens);
+//	MHA *mha = mha_create(heads, SEQ_LEN, EMB_DIM);
+//	Tensor *score = mha_forward(tokens, mha);
+//	Tensor *t = layer_norm(score);
 //	printf("Success!\n");
 //	tensor_shape(t);
 //	tensor_get(t);
