@@ -11,64 +11,62 @@
 #define BATCH_SIZE 2
 #define EPS 1e-5
 
-Tensor *multihead_attention(Tensor *t, int heads, int seq_len, int emb_dim, int ndim) {
-	
-	// final pointer array storing Tensor pointers corresponding to each "head" tensor
-	Tensor **arr= malloc(heads * sizeof(Tensor *));
-	
-	MHA *mha = mha_create(heads, seq_len, emb_dim);
+
+Tensor *mha_forward(Tensor *t, MHA *mha) {
+	// free the existing Q, K and V to replace with tensor_matmul operations
+	tensor_free(mha->Q);
+	tensor_free(mha->K);
+	tensor_free(mha->V);
+
 	mha->Q = tensor_matmul(t, mha->wq);
 	mha->K = tensor_matmul(t, mha->wk);
 	mha->V = tensor_matmul(t, mha->wv);
-	mha->num_heads = heads;
-	mha->dk = emb_dim / heads;
 
-
+	// extract the required parameters
 	int rows = t->shape[0];
 	int cols = t->shape[1];
+	int heads = mha->num_heads;
+	int dk = mha->dk;
 
-	int common_shape[2] = {seq_len, mha->dk};
-	Tensor *out = tensor_create(ndim, t->shape);
+
+	tensor_free(mha->out);
+	mha->out = tensor_create(2, t->shape);
+	int common_shape[2] = {rows, dk};
 
 	for (int k = 0; k < heads; k++) {
-		Tensor *Q_k = tensor_create(ndim, common_shape);
-		Tensor *K_k = tensor_create(ndim, common_shape);
-		Tensor *V_k = tensor_create(ndim, common_shape);
-
-		float *base_Q = mha->Q->data + (k * mha->dk);
-		float *base_K = mha->K->data + (k * mha->dk);
-		float *base_V = mha->V->data + (k * mha->dk);
+		// first of all I need scaled_dot_product_scores
+		// for which I need slicing Q, K and V
+		// slicing logic first
+		Tensor *Q_h = tensor_create(2, common_shape);
+		Tensor *K_h = tensor_create(2, common_shape);
+		Tensor *V_h = tensor_create(2, common_shape);
 
 		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < mha->dk; j++) {
-				int src = i * cols + j;
-				int dest = (i * mha->dk) + j;
-				Q_k->data[dest] = *(base_Q + src);
-				K_k->data[dest] = *(base_K + src);
-				V_k->data[dest] = *(base_V + src);
+			for (int j = 0; j < dk; j++) {
+				int src = i * cols + j + k * dk;
+				int dest = i * dk + j;
+
+				Q_h->data[dest] = mha->Q->data[src];
+				K_h->data[dest] = mha->K->data[src];
+				V_h->data[dest] = mha->V->data[src];
+
 			}
 		}
 
-		arr[k] = scaled_dot_product_attention(Q_k, K_k, V_k, mha->dk);
-	}
-
-	for (int k = 0; k < heads; k++) {
-		Tensor *head = arr[k];
-
-		float *base = out->data + (k * mha->dk);
-
-		int h_rows = head->shape[0];
-		int h_cols = head->shape[1];
-
-		for (int i = 0; i < out->shape[0]; i++) {
-			for (int j = 0; j < mha->dk; j++) {
-				int src_idx = (i * mha->dk) + j;
-				*(base + i * cols +j) = head->data[src_idx];
+		Tensor *head_out = scaled_dot_product_attention(Q_h, K_h, V_h, dk);
+		// Write this back to the output
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < dk; j++) {
+				int head_idx = i * dk + j;
+				int out_idx = i * cols + j + k * dk;
+				mha->out->data[out_idx] = head_out->data[head_idx];
 			}
 		}
+		tensor_free(Q_h);
+		tensor_free(K_h);
+		tensor_free(V_h);
 	}
-
-	return out;
+	return mha->out;
 }	
 
 Tensor *scaled_dot_product_attention(Tensor *Q, Tensor *K, Tensor *V, int dk) {
@@ -105,21 +103,22 @@ MHA *mha_create(int num_heads, int seq_len, int emb_dim) {
 
 	
 
-//int main() {
-//	//int seed = 32;
-//	//srand(seed);
-//	int ndim = 2;
-//
-//	int shape_tokens[2] = {SEQ_LEN, EMB_DIM};
-//	int shape_weights[2] = {EMB_DIM, EMB_DIM};
-//
-//	Tensor *tokens = tensor_create(ndim, shape_tokens);
-//	
-//	int heads = 8;
-//	int HEAD_DIM = EMB_DIM / heads;
-//	Tensor *multi_head = multihead_attention(tokens, heads, SEQ_LEN, EMB_DIM, ndim);
-//	tensor_shape(multi_head);
-//	tensor_get(multi_head);
-//
-//	return 0;
-//}
+int main() {
+	//int seed = 32;
+	//srand(seed);
+	int ndim = 2;
+
+	int shape_tokens[2] = {SEQ_LEN, EMB_DIM};
+	int shape_weights[2] = {EMB_DIM, EMB_DIM};
+
+	Tensor *tokens = tensor_create(ndim, shape_tokens);
+	
+	int heads = 8;
+	int HEAD_DIM = EMB_DIM / heads;
+	MHA *mha = mha_create(heads, SEQ_LEN, EMB_DIM);
+	Tensor *multi_head = mha_forward(tokens, mha);
+	tensor_shape(multi_head);
+	tensor_get(multi_head);
+
+	return 0;
+}

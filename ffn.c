@@ -80,7 +80,7 @@ int main() {
 	FFN *f = ffn_create(32, 128);
 	//tensor_shape(f->w1);
 
-	Tensor *mha = multihead_attention(tokens, num_heads, SEQ_LEN, EMB_DIM, ndim);
+	Tensor *mha = mha_forward(tokens, num_heads, SEQ_LEN, EMB_DIM, ndim);
 	Tensor *ln = layer_norm(tokens);
 	Tensor *res = ffn_forward(ln, f);
 	tensor_get(res);

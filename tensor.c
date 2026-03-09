@@ -154,7 +154,7 @@ void tensor_free(Tensor *t) {
 	free(t->stride);
 	free(t->shape);
 	free(t);
-	printf("Freed successfully!\n");
+	//printf("Freed successfully!\n");
 }
 
 void tensor_get(Tensor *t) {

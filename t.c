@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include "tensor.h"
 #include <stdlib.h>
+#include "tensor.h"
+#include "attention2.h"
 
 Tensor **tensor_slice_cols(Tensor *t, int dk)  {
 	int heads = 8;
@@ -23,12 +24,31 @@ Tensor **tensor_slice_cols(Tensor *t, int dk)  {
 	return mha;
 }
 
+//Tensor *mha_backward(Tensor *mha) {
+//	Tensor *wq = mha->wq;
+//	Tensor *wk = mha->wk;
+//	Tensor *wv = mha->wv;
+//	Tensor *wo = mha->wo;
+//
+//	tensor_shape(wq);
+//	tensor_shape(wk);
+//	tensor_shape(wv);
+//
+//	return NULL;
+//}
+
 int main() {
 
-	int shape[2] = {10, 32};
+	int seq_len = 10;
+	int emb_dim = 32;
+	int shape[2] = {seq_len, emb_dim};
+	int heads = 8;
 	int ndim = 2;
+
 	Tensor *t = tensor_create(2, shape);
-	Tensor **s = tensor_slice_cols(t, 4);
+	Tensor *mha = mha_forward(t, heads, seq_len, emb_dim, ndim);
+	tensor_shape(mha->Q);
+	//Tensor *mha_b = mha_backward(mha);
 
 	return 0;
 }
