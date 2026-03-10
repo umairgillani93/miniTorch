@@ -10,6 +10,21 @@
 #define BATCH_SIZE 2
 #define EPS 1e-5
 
+Tensor *relu_backward(Tensor *da1, Tensor *h1) {
+	Tensor *dh1 = tensor_create_weights(h1->ndim, h1->shape);
+	int size = tensor_size(h1);
+
+	for (int i = 0; i < size; i++) {
+		if (h1->data[i] > 0) {
+			dh1->data[i] = da1->data[i];
+		}
+		else {
+			dh1->data[i] = 0.0f;
+		}
+	}
+	return dh1;
+}
+
 
 Tensor *tensor_mse_loss(Tensor *pred, Tensor *target) {
 	Tensor *grad = tensor_create_weights(pred->ndim, pred->shape);	

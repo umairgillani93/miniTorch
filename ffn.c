@@ -9,20 +9,17 @@
 #define SEQ_LEN 10
 #define EMB_DIM 32
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
-
-
-Tensor *ffn_backward(FFN *f, Tensor *x, Tensor *loss) {
-	 backward work
-	f->dw2 = tensor_matmul(tensor_transpose(f->out), f->a1);
-	f->da1 = tensor_matmul(f->w2, tensor_transpose(f->out));
-	f->dh1 = tensor_matmul(tensor_transpose(f->da1), relu(f->h1));
-	f->dw1 = tensor_matmul(f->dh1, tensor_transpose(x));
-	tensor_shape(f->dw2);
-	tensor_shape(f->da1);
-	tensor_shape(f->dh1);
-	tensor_shape(f->dw1);
-}
 	
+Tensor *ffn_backward(FFN *f, Tensor *x, Tensor *dout) {
+
+	f->dw2 = tensor_matmul(tensor_transpose(f->a1), dout);
+	f->da1 = tensor_matmul(dout, tensor_transpose(f->w2));
+	f->dh1 = relu_backward(f->da1, f->h1); 
+	f->dw1 = tensor_matmul(tensor_transpose(x), f->dh1);
+	Tensor *dx = tensor_matmul(f->dh1, tensor_transpose(f->w1));
+
+	return dx;
+}
 
 FFN *ffn_create(int input_dim, int hidden_dim) {
 	int ndim = 2;
@@ -106,9 +103,13 @@ int main() {
 	Tensor *ln1 = layer_norm(score);
 	Tensor *res = ffn_forward(ln1, f);
 	Tensor *pred = layer_norm(res);
+	
+	// Backward pass functions start here
 	Tensor *target = tensor_create(ndim, shape_tokens);
 	Tensor *loss = tensor_mse_loss(pred, target);
-	tensor_shape(loss);
+	Tensor *final = ffn_backward(f, tokens, loss);
+	tensor_get(final);
+	tensor_shape(final);
 
 	return 0;
 }
