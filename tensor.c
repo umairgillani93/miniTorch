@@ -10,6 +10,17 @@
 #define BATCH_SIZE 2
 #define EPS 1e-5
 
+
+Tensor *tensor_mse_loss(Tensor *pred, Tensor *target) {
+	Tensor *grad = tensor_create_weights(pred->ndim, pred->shape);	
+	int size = tensor_size(pred);
+	
+	for (int i = 0; i < size; i++) {
+		grad->data[i] = 2.0f * (pred->data[i] - target->data[i]) / size;
+	}
+	return grad;
+}
+
 Tensor *tensor_create(int ndim, int *shape) {
 	Tensor *t = malloc(sizeof(Tensor));
 	if (!t) {

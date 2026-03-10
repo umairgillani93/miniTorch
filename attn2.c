@@ -12,6 +12,15 @@
 #define EPS 1e-5
 
 
+//Tensor *mha_backward(MHA *m, Tensor *t) {
+//	mha->dwq = tensor_create(m->ndim, t->shape[1]);
+//	mha->dwk = tensor_create(m->ndim, t->shape[1]);
+//	mha->dwv = tensor_create(m->ndim, t->shape[1]);
+//
+//	// How can I take their gradients now??
+//}
+
+
 Tensor *mha_forward(Tensor *t, MHA *mha) {
 	// free the existing Q, K and V to replace with tensor_matmul operations
 	tensor_free(mha->Q);

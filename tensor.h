@@ -15,6 +15,7 @@ Tensor *tensor_create_weights(int ndim, int *shape);
 Tensor *tensor_matmul(Tensor *a, Tensor *b);
 Tensor *tensor_softmax(Tensor *a);
 Tensor *tensor_transpose(Tensor *t);
+Tensor *tensor_mse_loss(Tensor *pred, Tensor *target);
 void tensor_free(Tensor *t);
 void tensor_get(Tensor *t);
 int tensor_size(Tensor *t);

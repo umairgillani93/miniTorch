@@ -10,6 +10,20 @@
 #define EMB_DIM 32
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
+
+Tensor *ffn_backward(FFN *f, Tensor *x, Tensor *loss) {
+	 backward work
+	f->dw2 = tensor_matmul(tensor_transpose(f->out), f->a1);
+	f->da1 = tensor_matmul(f->w2, tensor_transpose(f->out));
+	f->dh1 = tensor_matmul(tensor_transpose(f->da1), relu(f->h1));
+	f->dw1 = tensor_matmul(f->dh1, tensor_transpose(x));
+	tensor_shape(f->dw2);
+	tensor_shape(f->da1);
+	tensor_shape(f->dh1);
+	tensor_shape(f->dw1);
+}
+	
+
 FFN *ffn_create(int input_dim, int hidden_dim) {
 	int ndim = 2;
 	int shape1[2] = {input_dim, hidden_dim};
@@ -21,9 +35,12 @@ FFN *ffn_create(int input_dim, int hidden_dim) {
 	}
 	f->w1 = tensor_create_weights(ndim, shape1);
 	f->w2 = tensor_create_weights(ndim, shape2);
+	//f->inputs = tensor_create(ndim, shape1);
 
 	return f;
 }
+
+
 
 Tensor *ffn_forward(Tensor *x, FFN *f) {
 	assert(x->shape[1] == f->w1->shape[0]);
@@ -35,6 +52,8 @@ Tensor *ffn_forward(Tensor *x, FFN *f) {
 	f->a1 = relu(f->h1);
 	assert(f->a1->shape[1] == f->w2->shape[0]);
 	f->out = tensor_matmul(f->a1, f->w2);
+	
+
 	return f->out;
 }	
 
@@ -79,16 +98,17 @@ int main() {
 
 	// define FFN weights
 	FFN *f = ffn_create(32, 128);
-	//tensor_shape(f->w1);
+	//ffn_backward(f);
 
 	int heads = 8;
 	MHA *mha = mha_create(heads, SEQ_LEN, EMB_DIM);
 	Tensor *score = mha_forward(tokens, mha);
-	Tensor *ln = layer_norm(score);
-	Tensor *res = ffn_forward(ln, f);
-	tensor_get(res);
-	tensor_shape(res);
+	Tensor *ln1 = layer_norm(score);
+	Tensor *res = ffn_forward(ln1, f);
+	Tensor *pred = layer_norm(res);
+	Tensor *target = tensor_create(ndim, shape_tokens);
+	Tensor *loss = tensor_mse_loss(pred, target);
+	tensor_shape(loss);
 
 	return 0;
 }
-
