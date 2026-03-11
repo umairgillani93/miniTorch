@@ -108,8 +108,8 @@ int main() {
 	Tensor *target = tensor_create(ndim, shape_tokens);
 	Tensor *loss = tensor_mse_loss(pred, target);
 	Tensor *final = ffn_backward(f, tokens, loss);
-	tensor_get(final);
-	tensor_shape(final);
+
+	Tensor *mha_back = mha_backward(mha, final);
 
 	return 0;
 }

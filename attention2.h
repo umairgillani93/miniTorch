@@ -28,6 +28,7 @@ typedef struct {
 MHA *mha_create(int heads, int seq_len, int emb_dim);
 Tensor *scaled_dot_product_attention(Tensor *Q, Tensor *K, Tensor *V, int heads);
 Tensor *mha_forward(Tensor *t, MHA *m);
+Tensor *mha_backward(MHA *m, Tensor *t);
 
 #endif
 

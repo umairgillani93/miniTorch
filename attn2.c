@@ -11,14 +11,80 @@
 #define BATCH_SIZE 2
 #define EPS 1e-5
 
-
-//Tensor *mha_backward(MHA *m, Tensor *t) {
-//	mha->dwq = tensor_create(m->ndim, t->shape[1]);
-//	mha->dwk = tensor_create(m->ndim, t->shape[1]);
-//	mha->dwv = tensor_create(m->ndim, t->shape[1]);
+// Since we already slice the heads from our LOSS matrix
+// now we have dO_i.... dO..heads-1 for i = 0 ... num_heads
+// Now let's use the chain rule identity
+// we know that Y = A @ B the chain rule becomes 
+// dA = dY @ B_transpose
+// dB = A_transpose @ dY
 //
-//	// How can I take their gradients now??
-//}
+// for our sliced heads from h0...h(num_heads)
+// we have dO_i = heads defined above
+// so we can do something like below
+// output = attention_score @ V
+// d_attention_score = output @ V_transpose
+// d_V = attention_score_transpose @ output
+
+// Do calculations for Attention_score
+// TODO: Need to fix the architecture issue for thie Recalculation!
+
+void mha_backward_temp_weights(Tensor *dO, Tensor *A, Tensor *B, Tensor **dA, Tensor **dV) {
+	*dA = tensor_matmul(dO, tensor_transpose(B));
+	*dV = tensor_matmul(tensor_transpose(A), dO);
+	tensor_shape(*(dA));
+	tensor_shape(*(dV));
+}
+
+Tensor *mha_backward(MHA *m, Tensor *dx) {
+	int ndim = 2;
+	int heads = m->num_heads;
+	int dk = m->dk;
+	int shape[2] = {dx->shape[0], dk};
+	int rows = dx->shape[0];
+	int cols = dx->shape[1];
+
+	for (int k = 0; k < heads; k++) {
+		Tensor *head = tensor_create_weights(2, shape);
+
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < dk; j++) {
+				int src = i * cols + j + k * dk;
+				int dest = i * dk + j;
+				head->data[dest] = dx->data[src];
+			}
+		}
+
+		Tensor *Qk = tensor_create_weights(ndim, shape);
+		Tensor *Kk = tensor_create_weights(ndim, shape);
+		Tensor *Vk = tensor_create_weights(ndim, shape);
+
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < dk; j++) {
+				int src = i * cols + j + k * dk;
+				int dest = i * dk + j;
+				Qk->data[dest] = m->Q->data[src];
+				Kk->data[dest] = m->K->data[src];
+				Vk->data[dest] = m->V->data[src];
+			}
+		}
+
+		Tensor *Kt = tensor_transpose(Kk);
+		Tensor *QKt = tensor_matmul(Qk, Kt);
+		for (int i = 0; i < QKt->shape[0]; i++) {
+			for (int j = 0; j < QKt->shape[1]; j++) {
+				QKt->data[i] = QKt->data[i] / sqrtf(dk);
+			}
+		}
+		Tensor *Ak = tensor_softmax(QKt);
+
+		
+		Tensor *dA = tensor_create_weights(ndim, shape);
+		Tensor *dV = tensor_create_weights(ndim, shape);
+
+		mha_backward_temp_weights(head, Ak, Vk, &dA, &dV);
+		
+} return NULL;
+}
 
 
 Tensor *mha_forward(Tensor *t, MHA *mha) {
@@ -78,6 +144,7 @@ Tensor *mha_forward(Tensor *t, MHA *mha) {
 	return mha->out;
 }	
 
+
 Tensor *scaled_dot_product_attention(Tensor *Q, Tensor *K, Tensor *V, int dk) {
 	Tensor *kt = tensor_transpose(K);
 	Tensor *qkt = tensor_matmul(Q, kt);
@@ -107,6 +174,7 @@ MHA *mha_create(int num_heads, int seq_len, int emb_dim) {
 	mha->V = tensor_create(ndim, shape_tokens);
 	mha->out = tensor_create(ndim, shape_tokens);
 	mha->num_heads= num_heads;
+	mha->dk = emb_dim / mha->num_heads;
 	return mha;
 }
 
