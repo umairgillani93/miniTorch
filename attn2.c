@@ -31,11 +31,11 @@
 void mha_backward_temp_weights(Tensor *dO, Tensor *A, Tensor *B, Tensor **dA, Tensor **dV) {
 	*dA = tensor_matmul(dO, tensor_transpose(B));
 	*dV = tensor_matmul(tensor_transpose(A), dO);
-	tensor_shape(*(dA));
-	tensor_shape(*(dV));
+	//tensor_shape(*(dA));
+	//tensor_shape(*(dV));
 }
 
-Tensor *mha_backward(MHA *m, Tensor *dx) {
+Tensor *mha_backward(MHA *m, Tensor *dx, Tensor *tokens) {
 	int ndim = 2;
 	int heads = m->num_heads;
 	int dk = m->dk;
@@ -78,12 +78,21 @@ Tensor *mha_backward(MHA *m, Tensor *dx) {
 		Tensor *Ak = tensor_softmax(QKt);
 
 		
-		Tensor *dA = tensor_create_weights(ndim, shape);
-		Tensor *dV = tensor_create_weights(ndim, shape);
+		Tensor *dAk = tensor_create_weights(ndim, shape);
+		Tensor *dVk = tensor_create_weights(ndim, shape);
 
-		mha_backward_temp_weights(head, Ak, Vk, &dA, &dV);
-		
-} return NULL;
+
+
+		mha_backward_temp_weights(head, Ak, Vk, &dAk, &dVk);
+
+		// so we got the derivatives of Value matrix and Attetion score matrix
+		// Now we need to produce grandients of weight matrices that produced 'V' i.e wv
+		// Since V = X @ wv => dwv = X^T @ dV
+		m->dwv = tensor_matmul(tensor_transpose(tokens), dVk);
+		tensor_shape(m->dwv);
+
+	} 
+return NULL;
 }
 
 

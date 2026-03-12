@@ -109,7 +109,7 @@ int main() {
 	Tensor *loss = tensor_mse_loss(pred, target);
 	Tensor *final = ffn_backward(f, tokens, loss);
 
-	Tensor *mha_back = mha_backward(mha, final);
+	Tensor *mha_back = mha_backward(mha, final, tokens);
 
 	return 0;
 }
