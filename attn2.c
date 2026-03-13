@@ -28,6 +28,27 @@
 // Do calculations for Attention_score
 // TODO: Need to fix the architecture issue for thie Recalculation!
 
+Tensor *softmax_gradient(Tensor *A, Tensor *dA) {
+
+	int rows = A->shape[0];
+	int cols = A->shape[1];
+	int dS_shape[2] = {rows, cols};
+	Tensor *dS = tensor_create(2, dS_shape);
+
+	for (int i = 0; i < rows; i++) {
+		float sum = 0.0f;
+		for (int j = 0; j < cols; j++) {
+			sum += dA->data[i * cols +j] * A->data[i * cols + j];
+		}
+
+		for (int j = 0; j < cols; j++) {
+			dA->data[i * cols +j] = dA->data[i * cols + j] - sum;
+		}
+	}
+	return dS;
+}
+
+
 void mha_backward_temp_weights(Tensor *dO, Tensor *A, Tensor *B, Tensor **dA, Tensor **dV) {
 	*dA = tensor_matmul(dO, tensor_transpose(B));
 	*dV = tensor_matmul(tensor_transpose(A), dO);
@@ -89,7 +110,8 @@ Tensor *mha_backward(MHA *m, Tensor *dx, Tensor *tokens) {
 		// Now we need to produce grandients of weight matrices that produced 'V' i.e wv
 		// Since V = X @ wv => dwv = X^T @ dV
 		m->dwv = tensor_matmul(tensor_transpose(tokens), dVk);
-		tensor_shape(m->dwv);
+		Tensor *dS = softmax_gradient(dAk, Ak);
+		tensor_shape(dS);
 
 	} 
 return NULL;
