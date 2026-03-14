@@ -110,7 +110,8 @@ Tensor *mha_backward(MHA *m, Tensor *dx, Tensor *tokens) {
 		// Now we need to produce grandients of weight matrices that produced 'V' i.e wv
 		// Since V = X @ wv => dwv = X^T @ dV
 		m->dwv = tensor_matmul(tensor_transpose(tokens), dVk);
-		Tensor *dS = softmax_gradient(dAk, Ak);
+		Tensor *dSk = softmax_gradient(dAk, Ak);
+		//Tensor *dQk = dSk / sqrt(
 		tensor_shape(dS);
 
 	} 
