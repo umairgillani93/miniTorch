@@ -77,6 +77,13 @@ Tensor *forward(Tensor *x) {
 }	
 
 int main() {
+	int BACH_SIZE = 10;
+	int EPOCHS = 2;
+	for (int i = 0; i < EPOCHS; i++) {
+		for (int j = 0; j < BACH_SIZE; j++) {
+			// .. Rest of logic comes here
+		}
+	}
 	int ndim = 2;
 	int *shape_tokens = malloc(ndim * sizeof(int));
 	int *shape_weights= malloc(ndim * sizeof(int));

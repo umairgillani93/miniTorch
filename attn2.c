@@ -149,9 +149,7 @@ Tensor *mha_backward(MHA *m, Tensor *dx, Tensor *tokens) {
 		Tensor *dwv = tensor_matmul(tensor_transpose(tokens), dVk);
 
 
-
 		// TODO: Accumulation step tensor_inplace_gradients
-
 		int w_rows = tokens->shape[1];
 		int local_cols = dwq->shape[1];
 		//printf("local_cols: %d\n", local_cols);
