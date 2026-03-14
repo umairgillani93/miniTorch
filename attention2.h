@@ -22,6 +22,9 @@ typedef struct {
 	Tensor *dwq;
 	Tensor *dwk;
 	Tensor *dwv;
+	Tensor *dQ;
+	Tensor *dK;
+	Tensor *dV;
 	
 } MHA;
 

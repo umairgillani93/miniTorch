@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <assert.h>
 #include "tensor.h"
 
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
@@ -9,6 +10,36 @@
 #define SEQ_LEN 10
 #define BATCH_SIZE 2
 #define EPS 1e-5
+
+void tensor_add_inplace(Tensor **a, Tensor **b) {
+	assert((*a)->shape != (*b)->shape);
+	int rows = (*a)->shape[0];
+	int cols = (*a)->shape[1];
+	for (int i = 0; i < rows; i++) {
+		for (int j = 0; j < cols; j++) {
+			int idx = i * cols + j;
+			(*a)->data[idx] = (*b)->data[i];
+		}
+	}
+}
+	
+
+Tensor *tensor_add(Tensor *a, Tensor *b) {
+	assert(a->shape != b->shape);
+	int ndim = 2;
+	int rows = a->shape[0];
+	int cols = a->shape[1];
+	int shape[2] = {rows, cols};
+	Tensor *res = tensor_create(ndim, shape);
+
+	for (int i = 0; i < rows; i++) {
+		for (int j = 0; j < cols; j++) {
+			int idx = i * res->shape[1] + j;
+			res->data[idx] = a->data[idx] + b->data[idx];
+		}
+	}
+	return res;
+}
 
 Tensor *relu_backward(Tensor *da1, Tensor *h1) {
 	Tensor *dh1 = tensor_create_weights(h1->ndim, h1->shape);

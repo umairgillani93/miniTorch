@@ -110,6 +110,7 @@ int main() {
 	Tensor *final = ffn_backward(f, tokens, loss);
 
 	Tensor *mha_back = mha_backward(mha, final, tokens);
+	tensor_get(mha_back);
 
 	return 0;
 }

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <assert.h>
 #include "tensor.h"
 #include "attention2.h"
 
@@ -64,6 +65,19 @@ Tensor *mha_backward(MHA *m, Tensor *dx, Tensor *tokens) {
 	int rows = dx->shape[0];
 	int cols = dx->shape[1];
 
+	// Resultant matrix needs to be returend summing all the heads
+	Tensor *dX_total = tensor_create(2, tokens->shape);
+	int dw_shape[2] = {tokens->shape[1], tokens->shape[1]};
+
+	m->dwq = tensor_create(2, dw_shape);
+	m->dwk = tensor_create(2, dw_shape);
+	m->dwv = tensor_create(2, dw_shape);
+
+	int dQ_shape[2] = {10, 32};
+	m->dQ = tensor_create(2, dQ_shape);
+	m->dV = tensor_create(2, dQ_shape);
+	m->dK = tensor_create(2, dQ_shape);
+
 	for (int k = 0; k < heads; k++) {
 		Tensor *head = tensor_create_weights(2, shape);
 
@@ -75,6 +89,7 @@ Tensor *mha_backward(MHA *m, Tensor *dx, Tensor *tokens) {
 			}
 		}
 
+		// slicing the Q, K and V tensors for head 'k'
 		Tensor *Qk = tensor_create_weights(ndim, shape);
 		Tensor *Kk = tensor_create_weights(ndim, shape);
 		Tensor *Vk = tensor_create_weights(ndim, shape);
@@ -88,34 +103,113 @@ Tensor *mha_backward(MHA *m, Tensor *dx, Tensor *tokens) {
 				Vk->data[dest] = m->V->data[src];
 			}
 		}
-
+		float scale = 1.0f / sqrtf(dk);
 		Tensor *Kt = tensor_transpose(Kk);
 		Tensor *QKt = tensor_matmul(Qk, Kt);
 		for (int i = 0; i < QKt->shape[0]; i++) {
 			for (int j = 0; j < QKt->shape[1]; j++) {
-				QKt->data[i] = QKt->data[i] / sqrtf(dk);
+				QKt->data[i * QKt->shape[1] + j] *= scale;
 			}
 		}
 		Tensor *Ak = tensor_softmax(QKt);
 
 		
-		Tensor *dAk = tensor_create_weights(ndim, shape);
+		int ashape[2] = {rows, rows};
+		Tensor *dAk = tensor_create_weights(ndim, ashape);
 		Tensor *dVk = tensor_create_weights(ndim, shape);
-
-
 
 		mha_backward_temp_weights(head, Ak, Vk, &dAk, &dVk);
 
 		// so we got the derivatives of Value matrix and Attetion score matrix
 		// Now we need to produce grandients of weight matrices that produced 'V' i.e wv
 		// Since V = X @ wv => dwv = X^T @ dV
-		m->dwv = tensor_matmul(tensor_transpose(tokens), dVk);
+		// PROBLEM LIES HERE!!! BUGGGG
+		//m->dwv = tensor_matmul(tensor_transpose(tokens), dVk);
 		Tensor *dSk = softmax_gradient(dAk, Ak);
-		//Tensor *dQk = dSk / sqrt(
-		tensor_shape(dS);
 
-	} 
-return NULL;
+		Tensor *dKk = tensor_matmul(tensor_transpose(dSk), Qk);
+		Tensor *dQk = tensor_matmul(dSk, Kk);
+		
+		// Scaling dQk and dKk
+		for (int i = 0; i < dQk->shape[0]; i++) {
+			for (int j = 0; j < dQk->shape[1]; j++) {
+				dQk->data[i * dQk->shape[1] +j] *= scale;
+			}
+		}
+
+		for (int i = 0; i < dKk->shape[0]; i++) {
+			for (int j = 0; j < dKk->shape[1]; j++) {
+				dKk->data[i * dKk->shape[1] +j] *= scale;
+			}
+		}
+		//
+		// finding gradients for input 'X' weights
+	  Tensor *dwq = tensor_matmul(tensor_transpose(tokens), dQk);
+		Tensor *dwk = tensor_matmul(tensor_transpose(tokens), dKk);
+		Tensor *dwv = tensor_matmul(tensor_transpose(tokens), dVk);
+
+
+
+		// TODO: Accumulation step tensor_inplace_gradients
+
+		int w_rows = tokens->shape[1];
+		int local_cols = dwq->shape[1];
+		//printf("local_cols: %d\n", local_cols);
+		
+		for (int i = 0; i < w_rows; i++) {
+			for (int j = 0; j < local_cols; j++) {
+				int dest = i * w_rows + j + k * local_cols; // for dw matrices rows and cols are same [x, x]
+				int src = i * local_cols + j;
+				m->dwq->data[dest] += dwq->data[src];
+				m->dwk->data[dest] += dwk->data[src];
+				m->dwv->data[dest] += dwv->data[src];
+			}
+		}
+
+
+		int Q_rows = tokens->shape[0];
+		int Q_local_cols = dQk->shape[1];
+
+		for (int i = 0; i < Q_rows; i++) {
+			for (int j = 0; j < Q_local_cols; j++) {
+				int dest = i * 32 + j + k * Q_local_cols;
+				int src = i * Q_local_cols + j;
+
+				m->dQ->data[dest] += dQk->data[src];
+				m->dK->data[dest] += dKk->data[src];
+				m->dV->data[dest] += dVk->data[src];
+
+			}
+		}
+	}
+
+	//tensor_shape(m->dwq);
+	//tensor_shape(m->dwk);
+	//tensor_shape(m->dwv);
+
+	//printf("dQ shape: \n");
+	//tensor_shape(m->dQ);
+	//printf("dK shape: \n");
+	//tensor_shape(m->dK);
+	//printf("dV shape: \n");
+	//tensor_shape(m->dV);
+	
+	Tensor *dx1 = tensor_matmul(m->dQ, tensor_transpose(m->wq));
+	Tensor *dx2 = tensor_matmul(m->dK, tensor_transpose(m->wk));
+	Tensor *dx3 = tensor_matmul(m->dV, tensor_transpose(m->wv));
+
+	//printf("dx1 shape: \n");
+	//tensor_shape(dx1);
+	//printf("dx2 shape: \n");
+	//tensor_shape(dx2);
+	//printf("dx3 shape: \n");
+	//tensor_shape(dx3);
+
+	Tensor *temp = tensor_add(dx1, dx2);
+	temp = tensor_add(temp, dx3);
+
+	tensor_add_inplace(&dX_total, &temp);
+	return dX_total;
 }
 
 
