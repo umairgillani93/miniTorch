@@ -6,30 +6,34 @@
 
 int main() {
 
-	int seq_len = 10;
+	//int arr[10] = {1,2,3,4,5,6,7,8,9,10};
+	//int size = 10;
+	//int stride = 2;
+	//for (int i = 0; i < size/stride; i++) {
+	//	int *idx = arr + i * stride;
+	//	for (int j = 0; j < stride; j++) {
+	//		printf("%d ", idx[j]);
+	//	}
+	//	printf("\n");
+	//}
+
+	int ndim = 2;
+	int seq_len = 100;
 	int emb_dim = 32;
 	int shape[2] = {seq_len, emb_dim};
-	int heads = 8;
-	int ndim = 2;
+	int stride = emb_dim * 2;
 
-	Tensor *t = tensor_create(2, shape);
+	Tensor *t = tensor_create(ndim, shape);
 	int size = tensor_size(t);
-	int cols = t->shape[1];
-	int rows = t->shape[0];
 
-	for (int i = 0; i < rows; i++) {
-		float *row = t->data + i * cols;
-		float row_sum = 0.0f;
-		for (int j = 0; j < cols; j++) {
-			row_sum += (dA[j] * A[j]);
-			float val = dA[j] - row_sum;
+	for (int i = 0; i < size / stride; i++) {
+		float *idx = t->data + (i * emb_dim);
+		for (int i = 0; i < stride; i++) {
+			printf("%f ", idx[i]);
 		}
-
-
-	}
-
+		printf("\n");
+	}	
 
 	return 0;
-	
 }
 
