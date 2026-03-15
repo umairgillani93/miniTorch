@@ -76,48 +76,48 @@ Tensor *forward(Tensor *x) {
 	return out;
 }	
 
-int main() {
-	int BACH_SIZE = 10;
-	int EPOCHS = 2;
-	for (int i = 0; i < EPOCHS; i++) {
-		for (int j = 0; j < BACH_SIZE; j++) {
-			// .. Rest of logic comes here
-		}
-	}
-	int ndim = 2;
-	int *shape_tokens = malloc(ndim * sizeof(int));
-	int *shape_weights= malloc(ndim * sizeof(int));
-
-	shape_tokens[0] = SEQ_LEN;
-	shape_tokens[1] = EMB_DIM;
-
-	shape_weights[0] = EMB_DIM;
-	shape_weights[1] = EMB_DIM;
-
-	int num_heads = 8;
-
-	// define token tensors
-	Tensor *tokens = tensor_create(ndim, shape_tokens);
-
-
-	// define FFN weights
-	FFN *f = ffn_create(32, 128);
-	//ffn_backward(f);
-
-	int heads = 8;
-	MHA *mha = mha_create(heads, SEQ_LEN, EMB_DIM);
-	Tensor *score = mha_forward(tokens, mha);
-	Tensor *ln1 = layer_norm(score);
-	Tensor *res = ffn_forward(ln1, f);
-	Tensor *pred = layer_norm(res);
-	
-	// Backward pass functions start here
-	Tensor *target = tensor_create(ndim, shape_tokens);
-	Tensor *loss = tensor_mse_loss(pred, target);
-	Tensor *final = ffn_backward(f, tokens, loss);
-
-	Tensor *mha_back = mha_backward(mha, final, tokens);
-	tensor_get(mha_back);
-
-	return 0;
-}
+//int main() {
+//	int BACH_SIZE = 10;
+//	int EPOCHS = 2;
+//	for (int i = 0; i < EPOCHS; i++) {
+//		for (int j = 0; j < BACH_SIZE; j++) {
+//			// .. Rest of logic comes here
+//		}
+//	}
+//	int ndim = 2;
+//	int *shape_tokens = malloc(ndim * sizeof(int));
+//	int *shape_weights= malloc(ndim * sizeof(int));
+//
+//	shape_tokens[0] = SEQ_LEN;
+//	shape_tokens[1] = EMB_DIM;
+//
+//	shape_weights[0] = EMB_DIM;
+//	shape_weights[1] = EMB_DIM;
+//
+//	int num_heads = 8;
+//
+//	// define token tensors
+//	Tensor *tokens = tensor_create(ndim, shape_tokens);
+//
+//
+//	// define FFN weights
+//	FFN *f = ffn_create(32, 128);
+//	//ffn_backward(f);
+//
+//	int heads = 8;
+//	MHA *mha = mha_create(heads, SEQ_LEN, EMB_DIM);
+//	Tensor *score = mha_forward(tokens, mha);
+//	Tensor *ln1 = layer_norm(score);
+//	Tensor *res = ffn_forward(ln1, f);
+//	Tensor *pred = layer_norm(res);
+//	
+//	// Backward pass functions start here
+//	Tensor *target = tensor_create(ndim, shape_tokens);
+//	Tensor *loss = tensor_mse_loss(pred, target);
+//	Tensor *final = ffn_backward(f, tokens, loss);
+//
+//	Tensor *mha_back = mha_backward(mha, final, tokens);
+//	tensor_get(mha_back);
+//
+//	return 0;
+//}
