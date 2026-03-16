@@ -13,16 +13,30 @@ int main() {
 	srand(time(NULL));
 	int shape[2] = {SEQ_LEN, EMB_DIM};
 	
-	Tensor *t = tensor_create(2, shape);
-	int size = tensor_size(t);
-	int stride = EMB_DIM * 2;
+	Tensor *T = tensor_create(2, shape);
+	int size = tensor_size(T);
+	int stride = EMB_DIM * 2; // we need chunks of rows
+	
+	int batch_size = 10;
 
-	for (int i = 0; i < size / stride; i++) {
-		float *row_idx = t->data + i * EMB_DIM;
-		for (int j = 0; j < stride; j++) {
-			printf("%f ", row_idx[j]);
+	for (int b = 0; b < SEQ_LEN/batch_size; b++) { // divide the whole sequence in large batch chunks
+		// now insdie each row we have [10, 32] 2d tensor
+		// creating a Tensor of 2D with [100, 32] size
+		int ndim = 2;
+		int rows = SEQ_LEN / batch_size;
+		int cols = EMB_DIM;
+		int shape_2d[2] = {rows, cols};
+		Tensor *t = tensor_create(ndim, shape_2d);
+		int tensor_idx = 0;
+		for (int r = 0; r < batch_size; r++) {
+			for (int c = 0; c < EMB_DIM; c++) {
+				int idx = (b * batch_size + r) * EMB_DIM + c;
+				tensor_idx = idx;
+			}
 		}
-		printf("\n");
+
+		t->data[0] = T->data[tensor_idx];
+		tensor_shape(t);
 	}
 
 	return 0;
