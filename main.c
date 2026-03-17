@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <time.h>
+#include <string.h>
 #include "tensor.h"
 #include "attention2.h"
 #include "layer_norm.h"
@@ -15,29 +16,28 @@ int main() {
 	
 	Tensor *T = tensor_create(2, shape);
 	int size = tensor_size(T);
-	int stride = EMB_DIM * 2; // we need chunks of rows
-	
-	int batch_size = 10;
+	//int num_batches = SEQ_LEN / BATCH_SIZE;
 
-	for (int b = 0; b < SEQ_LEN/batch_size; b++) { // divide the whole sequence in large batch chunks
-		// now insdie each row we have [10, 32] 2d tensor
-		// creating a Tensor of 2D with [100, 32] size
-		int ndim = 2;
-		int rows = SEQ_LEN / batch_size;
-		int cols = EMB_DIM;
-		int shape_2d[2] = {rows, cols};
-		Tensor *t = tensor_create(ndim, shape_2d);
-		int tensor_idx = 0;
-		for (int r = 0; r < batch_size; r++) {
-			for (int c = 0; c < EMB_DIM; c++) {
-				int idx = (b * batch_size + r) * EMB_DIM + c;
-				tensor_idx = idx;
-			}
-		}
+	int num_chunks = SEQ_LEN / BATCH_SIZE;
+	for (int b = 0; b < num_chunks; b++) {
 
-		t->data[0] = T->data[tensor_idx];
-		tensor_shape(t);
-	}
+    float *batch_ptr = T->data + b * BATCH_SIZE * EMB_DIM;
+
+		int shape_local[2] = {BATCH_SIZE, EMB_DIM};
+    Tensor *batch_tensor = tensor_create(2, shape_local);
+		memcpy(batch_tensor->data, batch_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
+
+		MHA *m = mha_create(HEADS, BATCH_SIZE, EMB_DIM);
+		//tensor_shape(batch_tensor);
+		//tensor_shape(m->wq);
+		//tensor_shape(m->Q);
+		//printf("heads: %d\n", m->num_heads);
+		//printf("dk: %d\n", m->dk);
+		//break;
+		Tensor *multi_head = mha_forward(batch_tensor, m);
+		memcpy(batch_ptr, batch_tensor->data, BATCH_SIZE * EMB_DIM * sizeof(float));
+		tensor_shape(multi_head);
+}
 
 	return 0;
 }

@@ -317,6 +317,7 @@ MHA *mha_create(int num_heads, int seq_len, int emb_dim) {
 //	int heads = 8;
 //	int HEAD_DIM = EMB_DIM / heads;
 //	MHA *mha = mha_create(heads, SEQ_LEN, EMB_DIM);
+//	printf("MHA created\n");
 //	Tensor *multi_head = mha_forward(tokens, mha);
 //	tensor_shape(multi_head);
 //	tensor_get(multi_head);
