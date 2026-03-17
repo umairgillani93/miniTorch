@@ -62,9 +62,9 @@ Tensor *tensor_mse_loss(Tensor *pred, Tensor *target) {
 	int size = tensor_size(pred);
 	
 	for (int i = 0; i < size; i++) {
-		grad->data[i] = 2.0f * (pred->data[i] - target->data[i]) / size;
+		grad->data[i] = 2.0f * (pred->data[i] - target->data[i]);
 	}
-	return grad;
+	return grad; 
 }
 
 Tensor *tensor_create(int ndim, int *shape) {

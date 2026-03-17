@@ -116,6 +116,10 @@ Tensor *forward(Tensor *x) {
 //	Tensor *loss = tensor_mse_loss(pred, target);
 //	Tensor *final = ffn_backward(f, tokens, loss);
 //
+//	tensor_shape(final);
+//	tensor_shape(tokens);
+//	tensor_shape(mha->out);
+//
 //	Tensor *mha_back = mha_backward(mha, final, tokens);
 //	tensor_get(mha_back);
 //
