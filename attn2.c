@@ -73,7 +73,7 @@ Tensor *mha_backward(MHA *m, Tensor *dx, Tensor *tokens) {
 	m->dwk = tensor_create(2, dw_shape);
 	m->dwv = tensor_create(2, dw_shape);
 
-	int dQ_shape[2] = {10, 32};
+	int dQ_shape[2] = {16, 32};
 	m->dQ = tensor_create(2, dQ_shape);
 	m->dV = tensor_create(2, dQ_shape);
 	m->dK = tensor_create(2, dQ_shape);

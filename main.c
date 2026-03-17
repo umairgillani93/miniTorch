@@ -59,9 +59,6 @@ int main() {
 			Tensor *loss = tensor_mse_loss(ln2, target_batch);
 
 			Tensor *ffn_backpass = ffn_backward(f, batch_tensor, loss);
-			tensor_shape(m_batch->out);
-			tensor_shape(batch_tensor);
-			tensor_shape(loss);
 			
 			Tensor *mha_backpass = mha_backward(m_batch, ffn_backpass, batch_tensor);
 
