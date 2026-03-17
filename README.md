@@ -11,11 +11,11 @@ The goal is to explore **how attention-based models work at the lowest level**, 
 - attn2.c (All the methods related to multihead attention forward / backward pass)
 - ln.c (Layer normalization implementation)
 - ffn.c (Methods related to feed forward neural network; forward / backward pass) 
-attention2.h (Attention header file)
-tensor.h (Tensor header file)
-ln.h (Layer norm header file)
-feed_forward_nn.h (feed forward NN header file)
-main.c (main file)
+- attention2.h (Attention header file)
+- tensor.h (Tensor header file)
+- ln.h (Layer norm header file)
+- feed_forward_nn.h (feed forward NN header file)
+- main.c (main file)
 
 
 ---
