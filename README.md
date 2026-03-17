@@ -13,7 +13,7 @@ The goal is to explore **how attention-based models work at the lowest level**, 
 - ffn.c (Methods related to feed forward neural network; forward / backward pass) 
 - attention2.h (Attention header file)
 - tensor.h (Tensor header file)
-- ln.h (Layer norm header file)
+- layer_norm.h (Layer norm header file)
 - feed_forward_nn.h (feed forward NN header file)
 - main.c (main file)
 
