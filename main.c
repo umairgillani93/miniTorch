@@ -62,7 +62,23 @@ int main() {
 			
 			Tensor *mha_backpass = mha_backward(m_batch, ffn_backpass, batch_tensor);
 
+			sgd_optimizer(&ffn_backpass->w1, &ffn_backpass->dw1, LR);
+			sgd_optimizer(&ffn_backpass->w2, &ffn_backpass->dw2, LR);
+			sgd_optimizer(&ffn_backpass->a1, &ffn_backpass->da1, LR);
+			sgd_optimizer(&ffn_backpass->h1, &ffn_backpass->dh1, LR);
 
+			tensor_fill_zeros(&ffn_backpass->dw1);
+			tensor_fill_zeros(&ffn_backpass->dw2);
+			tensor_fill_zeros(&ffn_backpass->da1);
+			tensor_fill_zeros(&ffn_backpass->dh1);
+
+			sgd_optimizer(&m_batch->wq, &m->dwq, LR);
+			sgd_optimizer(&m_batch->wk, &m->dwk, LR);
+			sgd_optimizer(&m_batch->wv, &m->dwv, LR);
+
+			tensor_fill_zeros(&m->dwq);
+			tensor_fill_zeros(&m->dwk);
+			tensor_fill_zeros(&m->dwv);
 
 			// Copy the chunks back to main tensor
 			//memcpy(batch_ptr, ln2->data, BATCH_SIZE * EMB_DIM * sizeof(float));

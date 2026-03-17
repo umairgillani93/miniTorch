@@ -11,7 +11,7 @@
 #define BATCH_SIZE 2
 #define EPS 1e-5
 
-Tensor *tensor_fill(Tensor **x) {
+Tensor *tensor_fill_zeros(Tensor **x) {
 	int size = tensor_size(x);
 	for (int i = 0; i < size; i++) {
 		x[i] = 0.0f;
