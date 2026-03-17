@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <time.h>
+#include <string.h>
 #include "tensor.h"
 #include "attention2.h"
 #include "layer_norm.h"
@@ -13,31 +14,82 @@ int main() {
 	srand(time(NULL));
 	int shape[2] = {SEQ_LEN, EMB_DIM};
 	
+	// Creating actual data tensor
 	Tensor *T = tensor_create(2, shape);
 	int size = tensor_size(T);
-	int stride = EMB_DIM * 2; // we need chunks of rows
-	
-	int batch_size = 10;
 
-	for (int b = 0; b < SEQ_LEN/batch_size; b++) { // divide the whole sequence in large batch chunks
-		// now insdie each row we have [10, 32] 2d tensor
-		// creating a Tensor of 2D with [100, 32] size
-		int ndim = 2;
-		int rows = SEQ_LEN / batch_size;
-		int cols = EMB_DIM;
-		int shape_2d[2] = {rows, cols};
-		Tensor *t = tensor_create(ndim, shape_2d);
-		int tensor_idx = 0;
-		for (int r = 0; r < batch_size; r++) {
-			for (int c = 0; c < EMB_DIM; c++) {
-				int idx = (b * batch_size + r) * EMB_DIM + c;
-				tensor_idx = idx;
-			}
+
+	// Create global MHA
+	MHA *M = mha_create(HEADS, SEQ_LEN, EMB_DIM);
+
+	// Target tensor to compare the output against
+	int shape_target[2] = {SEQ_LEN, EMB_DIM};
+	Tensor *target = tensor_create(ndim, shape_target);
+
+	// define batches for Actual tensor
+	int num_chunks = SEQ_LEN / BATCH_SIZE;
+	int EPOCHS = 2;
+
+		for (int b = 0; b < num_chunks; b++) {
+
+			float *batch_ptr = T->data + b * BATCH_SIZE * EMB_DIM;
+			float *target_ptr = target->data + b * BATCH_SIZE * EMB_DIM;
+
+			int shape_local[2] = {BATCH_SIZE, EMB_DIM};
+			Tensor *batch_tensor = tensor_create(2, shape_local);
+			Tensor *target_batch = tensor_create(2, shape_local);
+			
+			memcpy(batch_tensor->data, batch_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
+			memcpy(target_batch->data, target_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
+
+			MHA *m_batch = mha_create(HEADS, BATCH_SIZE, EMB_DIM);
+
+			Tensor *attn_score = mha_forward(batch_tensor, m_batch);
+
+			// Apply layer_norm
+			Tensor *ln1 = layer_norm(attn_score);
+
+			// Create FFN feed-forward NN and run ffn_forward pass
+			FFN *f = ffn_create(EMB_DIM, 128);
+			Tensor *ffn_ln = ffn_forward(ln1, f);
+			
+			// Apply layer_norm
+			Tensor *ln2 = layer_norm(ffn_ln);
+			
+			Tensor *loss = tensor_mse_loss(ln2, target_batch);
+
+			Tensor *ffn_backpass = ffn_backward(f, batch_tensor, loss);
+			
+			Tensor *mha_backpass = mha_backward(m_batch, ffn_backpass, batch_tensor);
+
+			sgd_optimizer(&ffn_backpass->w1, &ffn_backpass->dw1, LR);
+			sgd_optimizer(&ffn_backpass->w2, &ffn_backpass->dw2, LR);
+			sgd_optimizer(&ffn_backpass->a1, &ffn_backpass->da1, LR);
+			sgd_optimizer(&ffn_backpass->h1, &ffn_backpass->dh1, LR);
+
+			tensor_fill_zeros(&ffn_backpass->dw1);
+			tensor_fill_zeros(&ffn_backpass->dw2);
+			tensor_fill_zeros(&ffn_backpass->da1);
+			tensor_fill_zeros(&ffn_backpass->dh1);
+
+			sgd_optimizer(&m_batch->wq, &m->dwq, LR);
+			sgd_optimizer(&m_batch->wk, &m->dwk, LR);
+			sgd_optimizer(&m_batch->wv, &m->dwv, LR);
+
+			tensor_fill_zeros(&m->dwq);
+			tensor_fill_zeros(&m->dwk);
+			tensor_fill_zeros(&m->dwv);
+
+			// Copy the chunks back to main tensor
+			//memcpy(batch_ptr, ln2->data, BATCH_SIZE * EMB_DIM * sizeof(float));
+
+			// free memory
+			//tensor_free(batch_tensor);
+			//tensor_free(attn_score);
+			//tensor_free(ln1);
+			//tensor_free(ffn_ln);
+			//tensor_free(ln2);
 		}
-
-		t->data[0] = T->data[tensor_idx];
-		tensor_shape(t);
-	}
 
 	return 0;
 }

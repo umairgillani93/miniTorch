@@ -11,6 +11,24 @@
 #define BATCH_SIZE 2
 #define EPS 1e-5
 
+Tensor *tensor_fill_zeros(Tensor **x) {
+	int size = tensor_size(x);
+	for (int i = 0; i < size; i++) {
+		x[i] = 0.0f;
+	}
+}
+
+void sgd_optimizer(Tensor **w, Tensor **dw), {
+	// simple SGD Soptmizer 
+	// w = w - lr * dw;
+	assert(shape(w) == shape(dw));
+	int size = tensor_size(w);
+	for (int i = 0; i < size; i++) {
+		w[i] = w[i] - lr * dw[i];
+	}
+}
+
+
 void tensor_add_inplace(Tensor **a, Tensor **b) {
 	assert((*a)->shape != (*b)->shape);
 	int rows = (*a)->shape[0];
@@ -62,9 +80,9 @@ Tensor *tensor_mse_loss(Tensor *pred, Tensor *target) {
 	int size = tensor_size(pred);
 	
 	for (int i = 0; i < size; i++) {
-		grad->data[i] = 2.0f * (pred->data[i] - target->data[i]) / size;
+		grad->data[i] = 2.0f * (pred->data[i] - target->data[i]);
 	}
-	return grad;
+	return grad; 
 }
 
 Tensor *tensor_create(int ndim, int *shape) {
