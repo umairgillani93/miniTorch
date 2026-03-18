@@ -23,16 +23,12 @@ int main() {
 	int shape[2] = {seq_len, emb_dim};
 	int stride = emb_dim * 2;
 
-	Tensor *t = tensor_create(ndim, shape);
-	int size = tensor_size(t);
+	Tensor *x = tensor_create(ndim, shape);
+	Tensor *y = tensor_create(ndim, shape);
 
-	for (int i = 0; i < size / stride; i++) {
-		float *idx = t->data + (i * emb_dim);
-		for (int i = 0; i < stride; i++) {
-			printf("%f ", idx[i]);
-		}
-		printf("\n");
-	}	
+	sgd_optimizer(
+
+	int size = tensor_size(t);
 
 	return 0;
 }

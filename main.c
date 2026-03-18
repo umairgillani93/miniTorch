@@ -28,8 +28,9 @@ int main() {
 
 	// define batches for Actual tensor
 	int num_chunks = SEQ_LEN / BATCH_SIZE;
-	int EPOCHS = 2;
+	int EPOCHS = 10;
 
+	for (int e = 0; e < EPOCHS; e++) {
 		for (int b = 0; b < num_chunks; b++) {
 
 			float *batch_ptr = T->data + b * BATCH_SIZE * EMB_DIM;
@@ -62,26 +63,33 @@ int main() {
 			
 			Tensor *mha_backpass = mha_backward(m_batch, ffn_backpass, batch_tensor);
 
-			sgd_optimizer(&ffn_backpass->w1, &ffn_backpass->dw1, LR);
-			sgd_optimizer(&ffn_backpass->w2, &ffn_backpass->dw2, LR);
-			sgd_optimizer(&ffn_backpass->a1, &ffn_backpass->da1, LR);
-			sgd_optimizer(&ffn_backpass->h1, &ffn_backpass->dh1, LR);
+			//printf("w1 shape: \n");
+			//tensor_shape(f->w1);
 
-			tensor_fill_zeros(&ffn_backpass->dw1);
-			tensor_fill_zeros(&ffn_backpass->dw2);
-			tensor_fill_zeros(&ffn_backpass->da1);
-			tensor_fill_zeros(&ffn_backpass->dh1);
+			//printf("dw1 shape: \n");
+			//tensor_shape(f->dw1);
 
-			sgd_optimizer(&m_batch->wq, &m->dwq, LR);
-			sgd_optimizer(&m_batch->wk, &m->dwk, LR);
-			sgd_optimizer(&m_batch->wv, &m->dwv, LR);
+			sgd_optimizer(f->w1, f->dw1, LR);
+			sgd_optimizer(f->w2, f->dw2, LR);
+			sgd_optimizer(f->a1, f->da1, LR);
+			sgd_optimizer(f->h1, f->dh1, LR);
 
-			tensor_fill_zeros(&m->dwq);
-			tensor_fill_zeros(&m->dwk);
-			tensor_fill_zeros(&m->dwv);
+			tensor_fill_zeros(f->dw1);
+			tensor_fill_zeros(f->dw2);
+			tensor_fill_zeros(f->da1);
+			tensor_fill_zeros(f->dh1);
+
+			sgd_optimizer(m_batch->wq, m_batch->dwq, LR);
+			sgd_optimizer(m_batch->wk, m_batch->dwk, LR);
+			sgd_optimizer(m_batch->wv, m_batch->dwv, LR);
+
+			tensor_fill_zeros(m_batch->dwq);
+			tensor_fill_zeros(m_batch->dwk);
+			tensor_fill_zeros(m_batch->dwv);
 
 			// Copy the chunks back to main tensor
-			//memcpy(batch_ptr, ln2->data, BATCH_SIZE * EMB_DIM * sizeof(float));
+			memcpy(batch_ptr, mha_backpass->data, BATCH_SIZE * EMB_DIM * sizeof(float));
+			printf("batch tensor copied to the main\n");
 
 			// free memory
 			//tensor_free(batch_tensor);
@@ -89,7 +97,13 @@ int main() {
 			//tensor_free(ln1);
 			//tensor_free(ffn_ln);
 			//tensor_free(ln2);
+			printf("Running Epoch: %d, on Batch: %d\n", e, b);
+			
 		}
+
+	}
+	printf("Traning finished!\n");
+	tensor_shape(T);
 
 	return 0;
 }
