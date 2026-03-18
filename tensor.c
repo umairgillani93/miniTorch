@@ -65,6 +65,16 @@ Tensor *relu_backward(Tensor *da1, Tensor *h1) {
 	return dh1;
 }
 
+float loss_curve(Tensor *pred, Tensor *target) {
+	float squared_err = 0.0f;
+	int size = tensor_size(pred);
+	
+	for (int i = 0; i < size; i++) {
+		float diff =  (pred->data[i] - target->data[i]);
+		squared_err += (diff * diff);
+	}
+	return squared_err / size;
+}
 
 Tensor *tensor_mse_loss(Tensor *pred, Tensor *target) {
 	Tensor *grad = tensor_create_weights(pred->ndim, pred->shape);	
@@ -258,7 +268,7 @@ int tensor_size(Tensor *t) {
 	for (int i = 0; i < t->ndim; i++) {
 		size *= t->shape[i];
 	}
-	printf("Tensor size: %d\n", size);
+	//printf("Tensor size: %d\n", size);
 	return size;
 }	
 

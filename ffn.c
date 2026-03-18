@@ -13,8 +13,8 @@
 void sgd_optimizer(Tensor *w, Tensor *dw, float lr) {
 	// simple SGD Soptmizer 
 	// w = w - lr * dw;
-	tensor_shape(w);
-	tensor_shape(dw);
+	//tensor_shape(w);
+	//tensor_shape(dw);
 	assert(w->shape != dw->shape);
 	int size = tensor_size(w);
 	for (int i = 0; i < size; i++) {

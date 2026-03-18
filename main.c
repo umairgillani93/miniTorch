@@ -28,9 +28,8 @@ int main() {
 
 	// define batches for Actual tensor
 	int num_chunks = SEQ_LEN / BATCH_SIZE;
-	int EPOCHS = 10;
 
-	for (int e = 0; e < EPOCHS; e++) {
+	for (int e = 1; e <= EPOCHS; e++) {
 		for (int b = 0; b < num_chunks; b++) {
 
 			float *batch_ptr = T->data + b * BATCH_SIZE * EMB_DIM;
@@ -58,6 +57,7 @@ int main() {
 			Tensor *ln2 = layer_norm(ffn_ln);
 			
 			Tensor *loss = tensor_mse_loss(ln2, target_batch);
+			float loss_to_show = loss_curve(ln2, target_batch);
 
 			Tensor *ffn_backpass = ffn_backward(f, batch_tensor, loss);
 			
@@ -89,7 +89,7 @@ int main() {
 
 			// Copy the chunks back to main tensor
 			memcpy(batch_ptr, mha_backpass->data, BATCH_SIZE * EMB_DIM * sizeof(float));
-			printf("batch tensor copied to the main\n");
+			//printf("batch tensor copied to the main\n");
 
 			// free memory
 			//tensor_free(batch_tensor);
@@ -97,10 +97,11 @@ int main() {
 			//tensor_free(ln1);
 			//tensor_free(ffn_ln);
 			//tensor_free(ln2);
-			printf("Running Epoch: %d, on Batch: %d\n", e, b);
-			
+			//printf("Running Epoch: %d, Batch: %d\n", e, b);
+			if (b % 10 == 0) {
+				printf("Loss: %f, after Epochs: %d\n", loss_to_show, e);
+			}
 		}
-
 	}
 	printf("Traning finished!\n");
 	tensor_shape(T);
