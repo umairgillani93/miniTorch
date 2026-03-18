@@ -7,5 +7,6 @@
 #define LR         0.001f
 #define HEADS      8
 #define HEAD_DIM EMB_DIM / HEADS
+#define EPOCHS     10
 
 #endif
