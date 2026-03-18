@@ -11,22 +11,13 @@
 #define BATCH_SIZE 2
 #define EPS 1e-5
 
-Tensor *tensor_fill_zeros(Tensor **x) {
+void tensor_fill_zeros(Tensor *x) {
 	int size = tensor_size(x);
 	for (int i = 0; i < size; i++) {
-		x[i] = 0.0f;
+		x->data[i] = 0.0f;
 	}
 }
 
-void sgd_optimizer(Tensor **w, Tensor **dw), {
-	// simple SGD Soptmizer 
-	// w = w - lr * dw;
-	assert(shape(w) == shape(dw));
-	int size = tensor_size(w);
-	for (int i = 0; i < size; i++) {
-		w[i] = w[i] - lr * dw[i];
-	}
-}
 
 
 void tensor_add_inplace(Tensor **a, Tensor **b) {

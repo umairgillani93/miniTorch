@@ -9,6 +9,18 @@
 #define SEQ_LEN 10
 #define EMB_DIM 32
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
+
+void sgd_optimizer(Tensor *w, Tensor *dw, float lr) {
+	// simple SGD Soptmizer 
+	// w = w - lr * dw;
+	tensor_shape(w);
+	tensor_shape(dw);
+	assert(w->shape != dw->shape);
+	int size = tensor_size(w);
+	for (int i = 0; i < size; i++) {
+		w->data[i] = w->data[i] - lr * dw->data[i];
+	}
+}
 	
 Tensor *ffn_backward(FFN *f, Tensor *x, Tensor *dout) {
 

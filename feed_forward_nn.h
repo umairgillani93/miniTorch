@@ -32,7 +32,7 @@ Tensor *ffn_forward(Tensor *x, FFN *y);
 Tensor *ffn_backward(FFN *f, Tensor *x, Tensor *loss);
 FFN *ffn_create(int input_dim, int hidden_dim);
 Tensor *relu(Tensor *x);
-
+void sgd_optimizer(Tensor *a, Tensor *b, float lr);
 
 
 #endif
