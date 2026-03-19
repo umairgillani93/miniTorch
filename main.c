@@ -104,7 +104,7 @@ int main() {
 		}
 	}
 	printf("Traning finished!\n");
-	tensor_shape(T);
+	//tensor_shape(T);
 
 	return 0;
 }
