@@ -23,7 +23,7 @@ void tensor_add_inplace(Tensor **a, Tensor **b);
 void tensor_free(Tensor *t);
 void tensor_get(Tensor *t);
 int tensor_size(Tensor *t);
-float loss_curve(Tensor *a, Tensor *b);
+float loss_value(Tensor *a, Tensor *b);
 void tensor_shape(Tensor *t);
 
 #endif

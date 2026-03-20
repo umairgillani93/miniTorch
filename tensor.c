@@ -65,7 +65,7 @@ Tensor *relu_backward(Tensor *da1, Tensor *h1) {
 	return dh1;
 }
 
-float loss_curve(Tensor *pred, Tensor *target) {
+float loss_value(Tensor *pred, Tensor *target) {
 	float squared_err = 0.0f;
 	int size = tensor_size(pred);
 	

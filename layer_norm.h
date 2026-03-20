@@ -4,6 +4,6 @@
 #include "tensor.h"
 #include "attention2.h"
 
-Tensor *layer_norm(Tensor *t);
+Tensor *layer_norm_forward(Tensor *t);
 
 #endif

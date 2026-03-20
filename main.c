@@ -9,6 +9,7 @@
 #include "feed_forward_nn.h"
 #include "config.h"
 
+
 int main() {
 	int ndim = 2;
 	srand(time(NULL));
@@ -17,7 +18,6 @@ int main() {
 	// Creating actual data tensor
 	Tensor *T = tensor_create(2, shape);
 	int size = tensor_size(T);
-
 
 	// Create global MHA
 	MHA *M = mha_create(HEADS, SEQ_LEN, EMB_DIM);
@@ -59,7 +59,7 @@ int main() {
 			Tensor *loss = tensor_mse_loss(ln2, target_batch);
 			float loss_to_show = loss_curve(ln2, target_batch);
 
-			Tensor *ffn_backpass = ffn_backward(f, batch_tensor, loss);
+			Tensor *ffn_backpass = ffn_backward(f, ln1, loss);
 			
 			Tensor *mha_backpass = mha_backward(m_batch, ffn_backpass, batch_tensor);
 
