@@ -13,6 +13,6 @@ typedef struct {
 	float *var; // cached per row variance
 } LayerNorm;
 
-Tensor *layer_norm_forward(Tensor *t);
+Tensor *layer_norm_forward(LayerNorm *ln, Tensor *t);
 
 #endif

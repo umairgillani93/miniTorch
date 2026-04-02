@@ -49,7 +49,7 @@ Tensor *layer_norm_forward(LayerNorm *ln, Tensor *t) {
 			row[c] = (row[c] - row_mean) / sqrtf(var_mean + EPS);
 		}
 	}
-
+	ln->x_hat = t;
 	return t;
 }
 
@@ -78,22 +78,27 @@ int main() {
 	shape_tokens[1] = EMB_DIM;
 
 	LayerNorm *ln = layer_norm_create(EMB_DIM);
-	printf("Created\n");
-	//Tensor *tokens = tensor_create(ndim, shape_tokens);
+	printf("before:\n");
+	printf("%p\n", ln->x_hat);
+	
+	printf("Created LayerNorm\n");
+	Tensor *tokens = tensor_create(ndim, shape_tokens);
 
-	//int *shape_weights = malloc(ndim * sizeof(int));
+	int *shape_weights = malloc(ndim * sizeof(int));
 
-	//shape_weights[0] = EMB_DIM;
-	//shape_weights[1] = EMB_DIM;
+	shape_weights[0] = EMB_DIM;
+	shape_weights[1] = EMB_DIM;
 
-	//int heads = 8;
+	int heads = 8;
 
-	//MHA *mha = mha_create(heads, SEQ_LEN, EMB_DIM);
-	//Tensor *score = mha_forward(tokens, mha);
-	//Tensor *t = layer_norm(score);
-	//printf("Success!\n");
-	//tensor_shape(t);
-	//tensor_get(t);
+	MHA *mha = mha_create(heads, SEQ_LEN, EMB_DIM);
+	Tensor *score = mha_forward(tokens, mha);
+	Tensor *t = layer_norm_forward(ln, score);
+	printf("after:\n");
+	tensor_shape(ln->x_hat);
+	printf("Success!\n");
+	tensor_shape(t);
+	tensor_get(t);
 	return 0;
 }
 
