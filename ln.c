@@ -42,8 +42,12 @@ Tensor *layer_norm_forward(LayerNorm *ln, Tensor *t) {
 			float diff = row[k] - row_mean;
 			var_sum += (diff * diff);
 		}
-
 		float var_mean = var_sum / (float) cols;
+
+		if (ln->var == NULL) {
+			ln->var = malloc(rows * sizeof(float));
+		}
+		ln->var[i] = var_mean;
 
 		for (int c = 0; c < cols; c++) {
 			row[c] = (row[c] - row_mean) / sqrtf(var_mean + EPS);
