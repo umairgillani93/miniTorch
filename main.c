@@ -47,17 +47,19 @@ int main() {
 			Tensor *attn_score = mha_forward(batch_tensor, m_batch);
 
 			// Apply layer_norm
-			Tensor *ln1 = layer_norm(attn_score);
+			Tensor *ln1 = layer_norm_forward(attn_score);
 
 			// Create FFN feed-forward NN and run ffn_forward pass
 			FFN *f = ffn_create(EMB_DIM, 128);
 			Tensor *ffn_ln = ffn_forward(ln1, f);
+			printf("ffn shape: \n");
+			tensor_shape(ffn_ln);
 			
 			// Apply layer_norm
-			Tensor *ln2 = layer_norm(ffn_ln);
+			Tensor *ln2 = layer_norm_forward(ffn_ln);
 			
 			Tensor *loss = tensor_mse_loss(ln2, target_batch);
-			float loss_to_show = loss_curve(ln2, target_batch);
+			//float loss_to_show = loss_curve(ln2, target_batch);
 
 			Tensor *ffn_backpass = ffn_backward(f, ln1, loss);
 			
@@ -99,7 +101,8 @@ int main() {
 			//tensor_free(ln2);
 			//printf("Running Epoch: %d, Batch: %d\n", e, b);
 			if (b % 10 == 0) {
-				printf("Loss: %f, after Epochs: %d\n", loss_to_show, e);
+				//printf("Loss: %f, after Epochs: %d\n", loss_to_show, e);
+				printf("Batch competed!\n");
 			}
 		}
 	}

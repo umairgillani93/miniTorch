@@ -27,7 +27,7 @@ float mean(float *arr, int size) {
 //	return var;
 //}	
 
-Tensor *layer_norm(Tensor *t) {
+Tensor *layer_norm_forward(Tensor *t) {
 	int rows = t->shape[0];
 	int cols = t->shape[1];
 
