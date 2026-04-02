@@ -11,7 +11,6 @@
 
 
 float mean(float *arr, int size) {
-	
 	float sum = 0.0f;
 	for (int i = 0; i < size; i++) {
 		sum += arr[i];
@@ -27,7 +26,7 @@ float mean(float *arr, int size) {
 //	return var;
 //}	
 
-Tensor *layer_norm_forward(Tensor *t) {
+Tensor *layer_norm_forward(LayerNorm *ln, Tensor *t) {
 	int rows = t->shape[0];
 	int cols = t->shape[1];
 
@@ -54,28 +53,47 @@ Tensor *layer_norm_forward(Tensor *t) {
 	return t;
 }
 
-//int main() {
-//	int ndim = 2;
-//	int *shape_tokens = malloc(ndim * sizeof(int));
-//	
-//	shape_tokens[0] = SEQ_LEN;
-//	shape_tokens[1] = EMB_DIM;
-//
-//	Tensor *tokens = tensor_create(ndim, shape_tokens);
-//
-//	int *shape_weights = malloc(ndim * sizeof(int));
-//
-//	shape_weights[0] = EMB_DIM;
-//	shape_weights[1] = EMB_DIM;
-//
-//	int heads = 8;
-//
-//	MHA *mha = mha_create(heads, SEQ_LEN, EMB_DIM);
-//	Tensor *score = mha_forward(tokens, mha);
-//	Tensor *t = layer_norm(score);
-//	printf("Success!\n");
-//	tensor_shape(t);
-//	tensor_get(t);
-//	return 0;
-//}
+LayerNorm *layer_norm_create(int features) {
+	LayerNorm *ln = malloc(sizeof(LayerNorm));
+	if (!ln) {
+		fprintf(stderr, "Allocation failed\n");
+		exit(1);
+	}
+	ln->features = features;
+	int ndim = 2;
+	int shape[2] = {1, features};
+	ln->beta = tensor_create_weights(ndim, shape);
+	ln->gemma = tensor_create_weights(ndim, shape);
+	ln->x_hat = NULL;
+	ln->var = NULL; // forward activations cache initially NULL
+	
+	return ln;
+}
+
+int main() {
+	int ndim = 2;
+	int *shape_tokens = malloc(ndim * sizeof(int));
+	
+	shape_tokens[0] = SEQ_LEN;
+	shape_tokens[1] = EMB_DIM;
+
+	LayerNorm *ln = layer_norm_create(EMB_DIM);
+	printf("Created\n");
+	//Tensor *tokens = tensor_create(ndim, shape_tokens);
+
+	//int *shape_weights = malloc(ndim * sizeof(int));
+
+	//shape_weights[0] = EMB_DIM;
+	//shape_weights[1] = EMB_DIM;
+
+	//int heads = 8;
+
+	//MHA *mha = mha_create(heads, SEQ_LEN, EMB_DIM);
+	//Tensor *score = mha_forward(tokens, mha);
+	//Tensor *t = layer_norm(score);
+	//printf("Success!\n");
+	//tensor_shape(t);
+	//tensor_get(t);
+	return 0;
+}
 
