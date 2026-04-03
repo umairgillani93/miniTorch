@@ -11,5 +11,6 @@
 #define EPOCHS     10
 #define BETA      1e-9
 #define GEMMA     1e-3
+#define EPS       1e-5
 
 #endif

@@ -9,7 +9,6 @@
 #include "feed_forward_nn.h"
 #include "config.h"
 
-
 int main() {
 	int ndim = 2;
 	srand(time(NULL));
@@ -47,18 +46,20 @@ int main() {
 			Tensor *attn_score = mha_forward(batch_tensor, m_batch);
 
 			// Apply layer_norm
-			LayerNorm *L = layer_norm_create(EMB_DIM);
-			Tensor *ln1 = layer_norm_forward(L, attn_score);
+			LayerNorm *L1 = layer_norm_create(EMB_DIM);
+			Tensor *ln1 = layer_norm_forward(L1, attn_score);
 			printf("LayerNorm #1 ran successfully!\n");
 
 			// Create FFN feed-forward NN and run ffn_forward pass
 			FFN *f = ffn_create(EMB_DIM, 128);
 			Tensor *ffn_ln = ffn_forward(ln1, f);
-			
+
 			// Apply layer_norm
-			Tensor *ln2 = layer_norm_forward(L, ffn_ln);
+			LayerNorm *L2 = layer_norm_create(EMB_DIM);
+			Tensor *ln2 = layer_norm_forward(L2, ffn_ln);
+			tensor_shape(ln2);
 			printf("LayerNorm #2 ran successfully!\n");
-			
+		
 			Tensor *loss = tensor_mse_loss(ln2, target_batch);
 			//float loss_to_show = loss_curve(ln2, target_batch);
 

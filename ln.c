@@ -4,11 +4,7 @@
 #include "tensor.h"
 #include "attention2.h"
 #include "layer_norm.h"
-
-#define EPS 1e-5
-#define SEQ_LEN 10
-#define EMB_DIM 32
-
+#include "config.h"
 
 float mean(float *arr, int size) {
 	float sum = 0.0f;
@@ -26,36 +22,89 @@ float mean(float *arr, int size) {
 //	return var;
 //}	
 
-Tensor *layer_norm_forward(LayerNorm *ln, Tensor *t) {
-	int rows = t->shape[0];
-	int cols = t->shape[1];
+Tensor *layer_norm_forward(LayerNorm *ln, Tensor *x) {
 
-	for (int i = 0; i < rows; i++) {
-		float *row = t->data + (i * cols);
-		
-		// row mean
-		float row_mean = mean(row, cols);
+    int rows = x->shape[0];
+    int cols = x->shape[1];
 
-		// row variance
-		float var_sum = 0.0f;
-		for (int k = 0; k < cols; k++) {
-			float diff = row[k] - row_mean;
-			var_sum += (diff * diff);
-		}
-		float var_mean = var_sum / (float) cols;
+    // allocate caches
+    if (ln->var) free(ln->var);
+    ln->var = malloc(rows * sizeof(float));
 
-		if (ln->var == NULL) {
-			ln->var = malloc(rows * sizeof(float));
-		}
-		ln->var[i] = var_mean;
+    // allocate x_hat tensor (cache)
+    if (ln->x_hat) tensor_free(ln->x_hat);
+    ln->x_hat = tensor_create(2, x->shape);
 
-		for (int c = 0; c < cols; c++) {
-			row[c] = (row[c] - row_mean) / sqrtf(var_mean + EPS);
-		}
-	}
-	ln->x_hat = t;
-	return t;
+    // output tensor y
+    Tensor *y = tensor_create(2, x->shape);
+
+    for (int i = 0; i < rows; i++) {
+
+        float *x_row   = x->data + i * cols;
+        float *xh_row  = ln->x_hat->data + i * cols;
+        float *y_row   = y->data + i * cols;
+
+        float mu = mean(x_row, cols);
+
+        float var_sum = 0.0f;
+        for (int k = 0; k < cols; k++) {
+            float diff = x_row[k] - mu;
+            var_sum += diff * diff;
+        }
+
+        float var = var_sum / cols;
+        ln->var[i] = var;
+        float inv_std = 1.0f / sqrtf(var + EPS);
+
+        for (int c = 0; c < cols; c++) {
+
+            // x_hat = normalized value (cache!)
+            float x_hat = (x_row[c] - mu) * inv_std;
+            xh_row[c] = x_hat;
+
+            // y = gamma * x_hat + beta
+            float gamma = ln->gamma->data[c];
+            float beta  = ln->beta->data[c];
+
+            y_row[c] = gamma * x_hat + beta;
+        }
+    }
+
+    return y;
 }
+
+//Tensor *layer_norm_forward(LayerNorm *ln, Tensor *t) {
+//	int rows = t->shape[0];
+//	int cols = t->shape[1];
+//	if (ln->var != NULL) free(ln->var);
+//	ln->var = malloc(rows * sizeof(float));
+//
+//	for (int i = 0; i < rows; i++) {
+//		float *row = t->data + (i * cols);
+//		
+//		// row mean
+//		float row_mean = mean(row, cols);
+//
+//		// row variance
+//		float var_sum = 0.0f;
+//		for (int k = 0; k < cols; k++) {
+//			float diff = row[k] - row_mean;
+//			var_sum += (diff * diff);
+//		}
+//		float var_mean = var_sum / (float) cols;
+//		
+//		ln->var[i] = var_mean;
+//
+//		for (int c = 0; c < cols; c++) {
+//			row[c] = (row[c] - row_mean) / sqrtf(var_mean + EPS);
+//		}
+//	}
+//
+//	ln->x_hat = t;
+//	t = tensor_scaler_multiplication(t, GEMMA);
+//	t = tensor_scaler_addition(t, BETA);
+//	return t;
+//}
 
 LayerNorm *layer_norm_create(int features) {
 	LayerNorm *ln = malloc(sizeof(LayerNorm));
@@ -67,7 +116,7 @@ LayerNorm *layer_norm_create(int features) {
 	int ndim = 2;
 	int shape[2] = {1, features};
 	ln->beta = tensor_create_weights(ndim, shape);
-	ln->gemma = tensor_create_weights(ndim, shape);
+	ln->gamma = tensor_create_weights(ndim, shape);
 	ln->x_hat = NULL;
 	ln->var = NULL; // forward activations cache initially NULL
 	
@@ -85,7 +134,7 @@ LayerNorm *layer_norm_create(int features) {
 //	printf("before:\n");
 //	printf("%p\n", ln->x_hat);
 //	
-//	printf("Created LayerNorm\n");
+//	printf("created layernorm\n");
 //	Tensor *tokens = tensor_create(ndim, shape_tokens);
 //
 //	int *shape_weights = malloc(ndim * sizeof(int));
@@ -100,7 +149,7 @@ LayerNorm *layer_norm_create(int features) {
 //	Tensor *t = layer_norm_forward(ln, score);
 //	printf("after:\n");
 //	tensor_shape(ln->x_hat);
-//	printf("Success!\n");
+//	printf("success!\n");
 //	tensor_shape(t);
 //	tensor_get(t);
 //	return 0;
