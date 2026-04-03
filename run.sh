@@ -1,2 +1,2 @@
-#gcc main.c ffn.c ln.c attn2.c tensor.c -lm && ./a.out
-gcc t.c tensor.c -lm && ./a.out
+gcc main.c ffn.c ln.c attn2.c tensor.c -lm && ./a.out
+#gcc ln.c attn2.c tensor.c -lm && ./a.out

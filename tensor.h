@@ -18,12 +18,14 @@ Tensor *tensor_transpose(Tensor *t);
 Tensor *relu_backward(Tensor *x, Tensor *y);
 Tensor *tensor_mse_loss(Tensor *pred, Tensor *target);
 Tensor *tensor_add(Tensor *a, Tensor *b);
+Tensor *tensor_scaler_multiplication(Tensor *x, float a);
+Tensor *tensor_scaler_addition(Tensor *x, float a);
 void tensor_fill_zeros(Tensor *a);
 void tensor_add_inplace(Tensor **a, Tensor **b);
 void tensor_free(Tensor *t);
 void tensor_get(Tensor *t);
 int tensor_size(Tensor *t);
-float loss_curve(Tensor *a, Tensor *b);
+float loss_value(Tensor *a, Tensor *b);
 void tensor_shape(Tensor *t);
 
 #endif

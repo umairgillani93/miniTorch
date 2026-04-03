@@ -18,7 +18,6 @@ int main() {
 	Tensor *T = tensor_create(2, shape);
 	int size = tensor_size(T);
 
-
 	// Create global MHA
 	MHA *M = mha_create(HEADS, SEQ_LEN, EMB_DIM);
 
@@ -47,19 +46,24 @@ int main() {
 			Tensor *attn_score = mha_forward(batch_tensor, m_batch);
 
 			// Apply layer_norm
-			Tensor *ln1 = layer_norm(attn_score);
+			LayerNorm *L1 = layer_norm_create(EMB_DIM);
+			Tensor *ln1 = layer_norm_forward(L1, attn_score);
+			printf("LayerNorm #1 ran successfully!\n");
 
 			// Create FFN feed-forward NN and run ffn_forward pass
 			FFN *f = ffn_create(EMB_DIM, 128);
 			Tensor *ffn_ln = ffn_forward(ln1, f);
-			
-			// Apply layer_norm
-			Tensor *ln2 = layer_norm(ffn_ln);
-			
-			Tensor *loss = tensor_mse_loss(ln2, target_batch);
-			float loss_to_show = loss_curve(ln2, target_batch);
 
-			Tensor *ffn_backpass = ffn_backward(f, batch_tensor, loss);
+			// Apply layer_norm
+			LayerNorm *L2 = layer_norm_create(EMB_DIM);
+			Tensor *ln2 = layer_norm_forward(L2, ffn_ln);
+			tensor_shape(ln2);
+			printf("LayerNorm #2 ran successfully!\n");
+		
+			Tensor *loss = tensor_mse_loss(ln2, target_batch);
+			//float loss_to_show = loss_curve(ln2, target_batch);
+
+			Tensor *ffn_backpass = ffn_backward(f, ln1, loss);
 			
 			Tensor *mha_backpass = mha_backward(m_batch, ffn_backpass, batch_tensor);
 
@@ -99,7 +103,8 @@ int main() {
 			//tensor_free(ln2);
 			//printf("Running Epoch: %d, Batch: %d\n", e, b);
 			if (b % 10 == 0) {
-				printf("Loss: %f, after Epochs: %d\n", loss_to_show, e);
+				//printf("Loss: %f, after Epochs: %d\n", loss_to_show, e);
+				printf("Batch competed!\n");
 			}
 		}
 	}

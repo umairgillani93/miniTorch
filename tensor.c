@@ -31,6 +31,27 @@ void tensor_add_inplace(Tensor **a, Tensor **b) {
 		}
 	}
 }
+
+
+Tensor *tensor_scaler_multiplication(Tensor *x, float val) {
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int size = tensor_size(x);
+	for (int i = 0; i < size; i++) {
+		x->data[i * cols + rows] = val * x->data[i * cols + rows];
+	}
+	return x;
+}
+
+Tensor *tensor_scaler_addition(Tensor *x, float val) {
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int size = tensor_size(x);
+	for (int i = 0; i < size; i++) {
+		x->data[i * cols + rows] = val + x->data[i * cols + rows];
+	}
+	return x;
+}
 	
 
 Tensor *tensor_add(Tensor *a, Tensor *b) {
@@ -65,7 +86,7 @@ Tensor *relu_backward(Tensor *da1, Tensor *h1) {
 	return dh1;
 }
 
-float loss_curve(Tensor *pred, Tensor *target) {
+float loss_value(Tensor *pred, Tensor *target) {
 	float squared_err = 0.0f;
 	int size = tensor_size(pred);
 	

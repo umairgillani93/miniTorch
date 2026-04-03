@@ -4,6 +4,16 @@
 #include "tensor.h"
 #include "attention2.h"
 
-Tensor *layer_norm(Tensor *t);
+typedef struct {
+	int features; // in out case it's d_model OR embedding dimension,
+								// as layer_norm is calculated along last dimention
+	Tensor *beta; // Learnable shift. shape: features OR emb_dim
+	Tensor *gamma; // Learnable sclae. shape: features OR emb_dim
+	Tensor *x_hat; // Normalized(x)
+	float *var; // cached per row variance
+} LayerNorm;
+
+Tensor *layer_norm_forward(LayerNorm *ln, Tensor *t);
+LayerNorm *layer_norm_create(int features);
 
 #endif
