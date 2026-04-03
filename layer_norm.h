@@ -14,5 +14,6 @@ typedef struct {
 } LayerNorm;
 
 Tensor *layer_norm_forward(LayerNorm *ln, Tensor *t);
+LayerNorm *layer_norm_create(int features);
 
 #endif

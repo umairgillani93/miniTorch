@@ -1,0 +1,8 @@
+input -> MHA -> Layer Norm -> FFN -> Layer Norm -> Loss
+
+Activations: 
+
+	MHA -> wq, wk, wv, Q, K, V
+	Layer Norm -> x_hat, var, beta and gemma
+	FFN -> w1, w1, h1, a1, dw1, dw2, dh1, da1, out etc
+

@@ -9,5 +9,7 @@
 #define HEADS      8
 #define HEAD_DIM EMB_DIM / HEADS
 #define EPOCHS     10
+#define BETA      1e-9
+#define GEMMA     1e-3
 
 #endif

@@ -31,6 +31,27 @@ void tensor_add_inplace(Tensor **a, Tensor **b) {
 		}
 	}
 }
+
+
+Tensor *tensor_scaler_multiplication(Tensor *x, float val) {
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int size = tensor_size(x);
+	for (int i = 0; i < size; i++) {
+		x->data[i * cols + rows] = val * x->data[i * cols + rows];
+	}
+	return x;
+}
+
+Tensor *tensor_scaler_addition(Tensor *x, float val) {
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int size = tensor_size(x);
+	for (int i = 0; i < size; i++) {
+		x->data[i * cols + rows] = val + x->data[i * cols + rows];
+	}
+	return x;
+}
 	
 
 Tensor *tensor_add(Tensor *a, Tensor *b) {
