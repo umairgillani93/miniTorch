@@ -71,6 +71,56 @@ Tensor *layer_norm_forward(LayerNorm *ln, Tensor *x) {
     return y;
 }
 
+// MHA -> LAYER NORM -> FFN -> LAYER NORM -> Loss
+// Loss -> LAYER NORM -> FFN -> LAYER NORM -> MHA
+// Loss(ln2, target) -> LAYER NORM(L2, ffn) -> FFN(ln1, F) -> LAYER NORM(L1, attn) -> input(X)
+
+void layer_norm_backward(LayerNorm *ln, Tensor *x, Tensor *dy, Tensor *dx, float lr) {
+    int rows = x->shape[0];
+    int cols = x->shape[1];
+
+    // 1. Calculate gradients for gamma and beta (accumulate over rows)
+    for (int i = 0; i < rows; i++) {
+        for (int c = 0; c < cols; c++) {
+            float dy_val = dy->data[i * cols + c];
+            float xh_val = ln->x_hat->data[i * cols + c];
+
+            ln->d_gamma->data[c] += dy_val * xh_val;
+            ln->d_beta->data[c]  += dy_val;
+        }
+    }
+
+    // 2. Calculate gradient for input x
+    for (int i = 0; i < rows; i++) {
+        float *dy_row = dy->data + i * cols;
+        float *xh_row = ln->x_hat->data + i * cols;
+        float *dx_row = dx->data + i * cols;
+        
+        float var = ln->var[i];
+        float inv_std = 1.0f / sqrtf(var + EPS);
+
+        // Intermediate terms for the simplified LayerNorm gradient formula
+        float sum_dy_gamma = 0.0f;
+        float sum_dy_gamma_xhat = 0.0f;
+
+        for (int c = 0; c < cols; c++) {
+            float dy_gamma = dy_row[c] * ln->gamma->data[c];
+            sum_dy_gamma += dy_gamma;
+            sum_dy_gamma_xhat += dy_gamma * xh_row[c];
+        }
+
+        // The "one-liner" derivative formula for LayerNorm:
+        // dx = (1/N) * inv_std * [N*dy_gamma - sum(dy_gamma) - x_hat*sum(dy_gamma*x_hat)]
+        for (int c = 0; c < cols; c++) {
+            float dy_gamma = dy_row[c] * ln->gamma->data[c];
+            dx_row[c] = (1.0f / cols) * inv_std * (
+                (cols * dy_gamma) - sum_dy_gamma - (xh_row[c] * sum_dy_gamma_xhat)
+            );
+        }
+    }
+}
+
+
 //Tensor *layer_norm_forward(LayerNorm *ln, Tensor *t) {
 //	int rows = t->shape[0];
 //	int cols = t->shape[1];
@@ -115,6 +165,8 @@ LayerNorm *layer_norm_create(int features) {
 	int shape[2] = {1, features};
 	ln->beta = tensor_create_weights(ndim, shape);
 	ln->gamma = tensor_create_weights(ndim, shape);
+	ln->d_gamma = tensor_create_weights(ndim, shape);
+	ln->d_beta = tensor_create_weights(ndim, shape);
 	ln->x_hat = NULL;
 	ln->var = NULL; // forward activations cache initially NULL
 	
