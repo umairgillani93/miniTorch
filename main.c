@@ -95,6 +95,16 @@ int main() {
 			tensor_fill_zeros(m_batch->dwq);
 			tensor_fill_zeros(m_batch->dwk);
 			tensor_fill_zeros(m_batch->dwv);
+			sgd_optimizer(L1->gamma, L1->d_gamma, LR);
+			sgd_optimizer(L1->beta,  L1->d_beta,  LR);
+			sgd_optimizer(L2->gamma, L2->d_gamma, LR);
+			sgd_optimizer(L2->beta,  L2->d_beta,  LR);
+
+			// Zero out gradients
+			tensor_fill_zeros(L1->d_gamma);
+			tensor_fill_zeros(L1->d_beta);
+			tensor_fill_zeros(L2->d_gamma);
+			tensor_fill_zeros(L2->d_beta);
 
 			// Copy the chunks back to main tensor
 			memcpy(batch_ptr, mha_backpass->data, BATCH_SIZE * EMB_DIM * sizeof(float));
