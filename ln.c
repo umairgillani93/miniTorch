@@ -27,11 +27,9 @@ Tensor *layer_norm_forward(LayerNorm *ln, Tensor *x) {
     int rows = x->shape[0];
     int cols = x->shape[1];
 
-    // allocate caches
     if (ln->var) free(ln->var);
     ln->var = malloc(rows * sizeof(float));
 
-    // allocate x_hat tensor (cache)
     if (ln->x_hat) tensor_free(ln->x_hat);
     ln->x_hat = tensor_create(2, x->shape);
 
