@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
+#include <stdbool.h>
 #include "tensor.h"
 #include "attention2.h"
 #include "layer_norm.h"
@@ -23,26 +25,31 @@ void sgd_optimizer(Tensor *w, Tensor *dw, float lr) {
 }
 
 
-bool is_exploding(Tensor **x) {
-	int size = x->shape[0] * x->shape[1];
+bool is_exploding(Tensor *x) {
+	int size = tensor_size(x);
 	for (int i = 0; i < size; i++) {
-		if (isnan(x[i])) {
+		float v = x->data[i];
+		if (isnan(v) || isinf(v)) {
 			return true;
 		}
 	}
 	return false;
 }
 
-void clip_gradient(Tensor **x) {
-	int size = x->shape[0] * x->shape[1];	
-	int MX = 1e-9;
+void clip_gradient(Tensor *x) {
+	int size = tensor_size(x);
+	float threshold = 1.0f;
+	float MX = 0.0f;
 	for (int i = 0; i < size; i++) {
-		if (x[i] > MX) {
-			MX = x[i];
-		}
+		float v = fabsf(x->data[i]);
+		if (v > MX) MX = v;
 	}
-	for (int i = 0; i < size; i++) {
-		x[i] /= MX;
+	// if gradients are too large -> scale the entire tensor
+	if (MX > threshold) {
+		for (int i = 0; i < size; i++) {
+			float scale = threshold / MX;
+			x->data[i] *= scale;
+		}
 	}
 }
 	

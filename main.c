@@ -78,6 +78,10 @@ int main() {
 			//printf("dw1 shape: \n");
 			//tensor_shape(f->dw1);
 
+			clip_gradient(f->dw1);
+			clip_gradient(f->dw2);
+			clip_gradient(f->da1);
+			clip_gradient(f->dh1);
 			sgd_optimizer(f->w1, f->dw1, LR);
 			sgd_optimizer(f->w2, f->dw2, LR);
 			sgd_optimizer(f->a1, f->da1, LR);
@@ -88,6 +92,9 @@ int main() {
 			tensor_fill_zeros(f->da1);
 			tensor_fill_zeros(f->dh1);
 
+			clip_gradient(m_batch->dwq);
+			clip_gradient(m_batch->dwk);
+			clip_gradient(m_batch->dwv);
 			sgd_optimizer(m_batch->wq, m_batch->dwq, LR);
 			sgd_optimizer(m_batch->wk, m_batch->dwk, LR);
 			sgd_optimizer(m_batch->wv, m_batch->dwv, LR);
@@ -95,6 +102,12 @@ int main() {
 			tensor_fill_zeros(m_batch->dwq);
 			tensor_fill_zeros(m_batch->dwk);
 			tensor_fill_zeros(m_batch->dwv);
+
+			clip_gradient(L1->d_gamma);
+			clip_gradient(L1->d_beta);
+			clip_gradient(L2->d_gamma);
+			clip_gradient(L2->d_beta);
+
 			sgd_optimizer(L1->gamma, L1->d_gamma, LR);
 			sgd_optimizer(L1->beta,  L1->d_beta,  LR);
 			sgd_optimizer(L2->gamma, L2->d_gamma, LR);
