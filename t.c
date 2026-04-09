@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 #include <time.h>
 #include <string.h>
 #include "tensor.h"
@@ -10,76 +11,73 @@
 #include "config.h"
 
 
-int main() {
-	int ndim = 2;
-	int shape_input[2] = {SEQ_LEN, EMB_DIM};
-	int shape_target[2] = {SEQ_LEN, EMB_DIM};
-
-	// Create input data tensor
-	Tensor *input = tensor_create(ndim, shape_input);
-	
-	// Create target tensor we want to compare out results with 
-	Tensor *target = tensor_create(ndim, shape_input);
-
-	// Create multi-head attention 
-	MHA *M = mha_create(HEADS, SEQ_LEN, EMB_DIM);
-
-	// Create FFN network
-	FFN *F = ffn_create(EMB_DIM, HIDDEN_DIM);
-
-	int batches = SEQ_LEN / BATCH_SIZE;
-
-	for (int b = 0; b < batches; b++) {
-		float *batch_ptr = input->data + (b * BATCH_SIZE * EMB_DIM);
-		int shape_batch[2] = {BATCH_SIZE, EMB_DIM};
-		
-		// Create input and target tensor dummy and copy ptr index data
-		Tensor *batch_tensor = tensor_create(2, shape_batch);
-		Tensor *target_tensor = tensor_create(2, shape_batch);
-		memcpy(batch_tensor->data, batch_ptr, EMB_DIM * BATCH_SIZE * sizeof(float));
-		memcpy(target->data, batch_ptr, EMB_DIM * BATCH_SIZE * sizeof(float));
-
-
-		// Run forward pass 
-		Tensor *att = mha_forward(batch_tensor, M);
-		Tensor *ln1 = layer_norm_forward(att);
-		Tensor *ffn_out = ffn_forward(ln1, F);
-		Tensor *ln2 = layer_norm_forward(ffn_out);
-
-
-		// Calculating loss 
-		Tensor *loss_grad = tensor_mse_loss(ln2, target_tensor);
-		float loss = loss_value(ln2, target_tensor);
-		printf("Loss value: %f \n", loss);
-
-		// Running Backward pass
-		Tensor *d_ffn_out = ffn_backward(F, ln2, loss_grad);
-		Tensor *d_mha_out = mha_backward(M, d_ffn_out, batch_tensor);
-
-		// Updating weights
-		sgd_optimizer(F->w1, F->dw1, LR);
-		sgd_optimizer(F->w2, F->dw2, LR);
-		sgd_optimizer(F->a1, F->da1, LR);
-		sgd_optimizer(F->h1, F->dh1, LR);
-
-		tensor_fill_zeros(F->dw1);
-		tensor_fill_zeros(F->dw2);
-		tensor_fill_zeros(F->da1);
-		tensor_fill_zeros(F->dh1);
-
-		sgd_optimizer(M->wq, M->dwq, LR);
-		sgd_optimizer(M->wk, M->dwk, LR);
-		sgd_optimizer(M->wv, M->dwv, LR);
-
-		tensor_fill_zeros(M->dwq);
-		tensor_fill_zeros(M->dwk);
-		tensor_fill_zeros(M->dwv);
-
-		printf("Batch completed!\n");
-
-
+float mean_new(float *row, int size) {
+	float row_sum = 0.0f;
+	for (int i = 0; i < size; i++) {
+		row_sum += row[i];
 	}
-	return 0;
+	return row_sum / (float) size;
 	
+}
+
+Tensor *forward(LayerNorm *ln, Tensor *x) {
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	// Till now we have calucalated 
+	// mean / row, variance / row, defined x_hat, defined output y, 
+	// append variance against the entry in ln i.e ln->var[i] = vf
+	// Now we need to populate actual xh_row_
+	// xh_row = x_row[i] - mean * inv_std;
+
+	Tensor *y = tensor_create(2, x->shape);
+	if (ln->x_hat) tensor_free(ln->x_hat);
+	ln->x_hat = tensor_create(2, x->shape);
+
+	if (ln->var) free(ln->var);
+	ln->var = malloc(rows * sizeof(float));
+
+
+	for (int i = 0; i < rows; i++) {
+		float *x_row = x->data + (i * cols);
+		float *xh_row = ln->x_hat->data + (i * cols);
+		float *y_row = y->data + (i * cols);
+
+		// calcuate row mean first
+		float mu = mean_new(x_row, cols);
+		
+		float var_sum = 0.0f;
+		for (int k = 0; k < cols; k++)  {
+			float v = x_row[k] - mu;
+			var_sum += v * v;
+		}
+		float vf = var_sum / cols;
+		// save this variance against the entry in ln->var which is off size rows
+		ln->var[i] = vf;
+
+		float inv_std = 1.0f / sqrtf(vf + EPS);
+		// populate x_hat
+		for (int c = 0; c < cols; c++) {
+			float x_hat = (x_row[c] - mu) * inv_std;
+			xh_row[c] = x_hat;
+
+
+			// populate gamman and beta too
+			float gamma = ln->gamma->data[c];
+			float beta = ln->beta->data[c];
+
+			y_row[c] = gamma * x_hat + beta;
+		}
+	}
+	return y;
+}
+
+int main() {
+	LayerNorm *ln = layer_norm_create(EMB_DIM);
+	int shape[2] = {SEQ_LEN, EMB_DIM};
+	Tensor *t = tensor_create(2, shape);
+	Tensor *out = forward(ln, t);
+	tensor_shape(out);
+	return 0;
+
 }
 

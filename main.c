@@ -133,6 +133,7 @@ int main() {
 			if (b % 10 == 0) {
 				printf("Loss: %f, after Epochs: %d\n", loss_to_show, e);
 				printf("Batch competed!\n");
+				//printf("Batch competed!\n");
 			}
 		}
 	}
