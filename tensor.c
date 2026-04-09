@@ -18,8 +18,6 @@ void tensor_fill_zeros(Tensor *x) {
 	}
 }
 
-
-
 void tensor_add_inplace(Tensor **a, Tensor **b) {
 	assert((*a)->shape != (*b)->shape);
 	int rows = (*a)->shape[0];

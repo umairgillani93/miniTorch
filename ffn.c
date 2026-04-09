@@ -21,6 +21,30 @@ void sgd_optimizer(Tensor *w, Tensor *dw, float lr) {
 		w->data[i] = w->data[i] - lr * dw->data[i];
 	}
 }
+
+
+bool is_exploding(Tensor **x) {
+	int size = x->shape[0] * x->shape[1];
+	for (int i = 0; i < size; i++) {
+		if (isnan(x[i])) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void clip_gradient(Tensor **x) {
+	int size = x->shape[0] * x->shape[1];	
+	int MX = 1e-9;
+	for (int i = 0; i < size; i++) {
+		if (x[i] > MX) {
+			MX = x[i];
+		}
+	}
+	for (int i = 0; i < size; i++) {
+		x[i] /= MX;
+	}
+}
 	
 Tensor *ffn_backward(FFN *f, Tensor *x, Tensor *dout) {
 

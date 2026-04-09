@@ -57,15 +57,15 @@ int main() {
 			// Apply layer_norm
 			LayerNorm *L2 = layer_norm_create(EMB_DIM);
 			Tensor *ln2 = layer_norm_forward(L2, ffn_ln);
-			tensor_shape(ln2);
+			//tensor_shape(ln2);
 			//printf("LayerNorm #2 ran successfully!\n");
 		
 			Tensor *loss = tensor_mse_loss(ln2, target_batch);
-			//float loss_to_show = loss_curve(ln2, target_batch);
+			float loss_to_show = loss_value(ln2, target_batch);
 
 			Tensor *dx_for_ffn = tensor_create(2, shape_local);
 			Tensor *dx_for_mha = tensor_create(2, shape_local);
-			printf("All good\n");
+			//printf("All good\n");
 			layer_norm_backward(L2, ffn_ln, loss, dx_for_ffn, LR);
 			Tensor *ffn_backpass = ffn_backward(f, ln1, dx_for_ffn);
 			layer_norm_backward(L1, attn_score, ffn_backpass, dx_for_mha, LR);
@@ -118,7 +118,7 @@ int main() {
 			//tensor_free(ln2);
 			//printf("Running Epoch: %d, Batch: %d\n", e, b);
 			if (b % 10 == 0) {
-				//printf("Loss: %f, after Epochs: %d\n", loss_to_show, e);
+				printf("Loss: %f, after Epochs: %d\n", loss_to_show, e);
 				printf("Batch competed!\n");
 			}
 		}
