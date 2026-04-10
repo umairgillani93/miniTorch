@@ -48,7 +48,12 @@ int main() {
 			memcpy(target_batch->data, target_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 
 			Tensor *attn_score = mha_forward(batch_tensor, m_batch);
+			tensor_shape(batch_tensor);
+			
+
+			//tensor_get(attn_score);
 			tensor_check("attn_score_forward", attn_score);
+			//tensor_get(attn_score);
 
 			// Apply layer_norm
 			Tensor *ln1 = layer_norm_forward(L1, attn_score);

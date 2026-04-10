@@ -5,6 +5,7 @@
 #include <assert.h>
 #include "tensor.h"
 #include "attention2.h"
+#include "feed_forward_nn.h"
 
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 #define EMB_DIM 32 // out model dimension, i.e Embedding size for each token
