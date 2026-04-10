@@ -19,7 +19,7 @@ int main() {
 	int size = tensor_size(T);
 
 	// Create global MHA
-	MHA *M = mha_create(HEADS, SEQ_LEN, EMB_DIM);
+	//MHA *M = mha_create(HEADS, SEQ_LEN, EMB_DIM);
 
 	// Target tensor to compare the output against
 	int shape_target[2] = {SEQ_LEN, EMB_DIM};
@@ -27,6 +27,12 @@ int main() {
 
 	// define batches for Actual tensor
 	int num_chunks = SEQ_LEN / BATCH_SIZE;
+
+	// CREATED THESET COMPONENETS OUTSIDE FOR TESTING!!!
+	MHA *m_batch = mha_create(HEADS, BATCH_SIZE, EMB_DIM);
+	LayerNorm *L1 = layer_norm_create(EMB_DIM);
+	FFN *f = ffn_create(EMB_DIM, 128);
+	LayerNorm *L2 = layer_norm_create(EMB_DIM);
 
 	for (int e = 1; e <= EPOCHS; e++) {
 		for (int b = 0; b < num_chunks; b++) {
@@ -41,22 +47,21 @@ int main() {
 			memcpy(batch_tensor->data, batch_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 			memcpy(target_batch->data, target_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 
-			MHA *m_batch = mha_create(HEADS, BATCH_SIZE, EMB_DIM);
-
 			Tensor *attn_score = mha_forward(batch_tensor, m_batch);
+			tensor_check("attn_score_forward", attn_score);
 
 			// Apply layer_norm
-			LayerNorm *L1 = layer_norm_create(EMB_DIM);
 			Tensor *ln1 = layer_norm_forward(L1, attn_score);
+			tensor_check("ln1_forward", ln1);
 			//printf("LayerNorm #1 ran successfully!\n");
 
 			// Create FFN feed-forward NN and run ffn_forward pass
-			FFN *f = ffn_create(EMB_DIM, 128);
 			Tensor *ffn_ln = ffn_forward(ln1, f);
+			tensor_check("ffn_ln_forward", ffn_ln);
 
 			// Apply layer_norm
-			LayerNorm *L2 = layer_norm_create(EMB_DIM);
 			Tensor *ln2 = layer_norm_forward(L2, ffn_ln);
+			tensor_check("ln2_forward", ln2);
 			//tensor_shape(ln2);
 			//printf("LayerNorm #2 ran successfully!\n");
 		
