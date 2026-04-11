@@ -1,5 +1,7 @@
 # Traning Loss Curve:
-![Training Curve](training_curve.png)
+
+Model successfully learns and reduces the Loss over Epochs.
+<img src="training_curve.png" width="700"/>
 
 # Transformer From Scratch in C
 
