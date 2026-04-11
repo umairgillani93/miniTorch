@@ -1,3 +1,6 @@
+# Traning Loss Curve:
+![Training Curve](training_curve.png)
+
 # Transformer From Scratch in C
 
 A **from-scratch implementation of the Transformer architecture in pure C**, built to deeply understand how modern deep learning models work internally.
