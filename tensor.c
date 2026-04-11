@@ -4,6 +4,7 @@
 #include <math.h>
 #include <assert.h>
 #include "tensor.h"
+#include "feed_forward_nn.h"
 
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 #define EMB_DIM 32 
@@ -18,8 +19,6 @@ void tensor_fill_zeros(Tensor *x) {
 	}
 }
 
-
-
 void tensor_add_inplace(Tensor **a, Tensor **b) {
 	assert((*a)->shape != (*b)->shape);
 	int rows = (*a)->shape[0];
@@ -29,6 +28,13 @@ void tensor_add_inplace(Tensor **a, Tensor **b) {
 			int idx = i * cols + j;
 			(*a)->data[idx] = (*b)->data[i];
 		}
+	}
+}
+
+void tensor_check(char *name, Tensor *x) {
+	if (is_exploding(x)) {
+		printf("NaN/Inf detected in: %s\n", name);
+		exit(1);
 	}
 }
 

@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
+#include <stdbool.h>
 #include "tensor.h"
 #include "attention2.h"
 #include "layer_norm.h"
@@ -20,6 +22,52 @@ void sgd_optimizer(Tensor *w, Tensor *dw, float lr) {
 	for (int i = 0; i < size; i++) {
 		w->data[i] = w->data[i] - lr * dw->data[i];
 	}
+}
+
+
+bool is_exploding(Tensor *x) {
+	int size = tensor_size(x);
+	for (int i = 0; i < size; i++) {
+		float v = x->data[i];
+		if (isnan(v) || isinf(v)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void clip_gradient(Tensor *x) {
+    int size = tensor_size(x);
+    float threshold = 1.0f;
+    float MX = 0.0f;
+    bool has_bad = false;
+
+    // Pass 1 — detect NaN/Inf and find max abs gradient
+    for (int i = 0; i < size; i++) {
+        float g = x->data[i];
+
+        if (!isfinite(g)) {
+            has_bad = true;
+            break;
+        }
+
+        float v = fabsf(g);
+        if (v > MX) MX = v;
+    }
+
+    // If NaN/Inf found → zero gradients and STOP
+    if (has_bad) {
+        for (int i = 0; i < size; i++)
+            x->data[i] = 0.0f;
+        return;
+    }
+
+    // Pass 2 — clip if too large
+    if (MX > threshold) {
+        float scale = threshold / MX;   // compute once
+        for (int i = 0; i < size; i++)
+            x->data[i] *= scale;
+    }
 }
 	
 Tensor *ffn_backward(FFN *f, Tensor *x, Tensor *dout) {
