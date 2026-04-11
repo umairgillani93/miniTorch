@@ -48,8 +48,7 @@ int main() {
 			memcpy(target_batch->data, target_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 
 			Tensor *attn_score = mha_forward(batch_tensor, m_batch);
-			tensor_shape(batch_tensor);
-			
+			clip_gradient(attn_score);
 
 			//tensor_get(attn_score);
 			tensor_check("attn_score_forward", attn_score);

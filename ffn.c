@@ -37,20 +37,37 @@ bool is_exploding(Tensor *x) {
 }
 
 void clip_gradient(Tensor *x) {
-	int size = tensor_size(x);
-	float threshold = 1.0f;
-	float MX = 0.0f;
-	for (int i = 0; i < size; i++) {
-		float v = fabsf(x->data[i]);
-		if (v > MX) MX = v;
-	}
-	// if gradients are too large -> scale the entire tensor
-	if (MX > threshold) {
-		for (int i = 0; i < size; i++) {
-			float scale = threshold / MX;
-			x->data[i] *= scale;
-		}
-	}
+    int size = tensor_size(x);
+    float threshold = 1.0f;
+    float MX = 0.0f;
+    bool has_bad = false;
+
+    // Pass 1 — detect NaN/Inf and find max abs gradient
+    for (int i = 0; i < size; i++) {
+        float g = x->data[i];
+
+        if (!isfinite(g)) {
+            has_bad = true;
+            break;
+        }
+
+        float v = fabsf(g);
+        if (v > MX) MX = v;
+    }
+
+    // If NaN/Inf found → zero gradients and STOP
+    if (has_bad) {
+        for (int i = 0; i < size; i++)
+            x->data[i] = 0.0f;
+        return;
+    }
+
+    // Pass 2 — clip if too large
+    if (MX > threshold) {
+        float scale = threshold / MX;   // compute once
+        for (int i = 0; i < size; i++)
+            x->data[i] *= scale;
+    }
 }
 	
 Tensor *ffn_backward(FFN *f, Tensor *x, Tensor *dout) {
