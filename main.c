@@ -34,6 +34,10 @@ int main() {
 	FFN *f = ffn_create(EMB_DIM, 128);
 	LayerNorm *L2 = layer_norm_create(EMB_DIM);
 
+	// Log file
+	FILE *logf = fopen("loss.csv", "w");
+	fprintf(logf, "step,loss\n");
+	int global_step = 0;
 	for (int e = 1; e <= EPOCHS; e++) {
 		for (int b = 0; b < num_chunks; b++) {
 
@@ -141,8 +145,8 @@ int main() {
 			//printf("Running Epoch: %d, Batch: %d\n", e, b);
 			if (b % 10 == 0) {
 				printf("Loss: %f, after Epochs: %d\n", loss_to_show, e);
-				printf("Batch competed!\n");
-				//printf("Batch competed!\n");
+				fprintf(logf, "%d,%f\n", global_step, loss_to_show);
+				global_step++;
 			}
 		}
 	}
