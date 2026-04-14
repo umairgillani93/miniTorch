@@ -4,6 +4,7 @@
 #include <math.h>
 #include <assert.h>
 #include "tensor.h"
+#include "attention2.h"
 #include "feed_forward_nn.h"
 #include "arena.h"
 

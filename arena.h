@@ -1,7 +1,7 @@
 #ifndef ARENA_H
 #define ARENA_H
 
-typedef struct {
+typedef struct Arena {
 	char *base;
 	size_t size;
 	size_t offset;

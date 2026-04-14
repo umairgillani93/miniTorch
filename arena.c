@@ -5,6 +5,8 @@
 #include <time.h>
 #include <string.h>
 #include "tensor.h"
+#include "feed_forward_nn.h"
+#include "attention2.h"
 #include "arena.h"
 #include "config.h"
 
@@ -29,7 +31,13 @@ int main() {
 	int shape[2] = {SEQ_LEN, EMB_DIM};
 	Tensor *x = tensor_create_new(A, ndim, shape);
 	int size = tensor_size(x);
+	printf("size of tensor is: %d\n", size);
+	int count = 0;
 	for (int i = 0; i < size; i++) {
 		printf("%f\n", x->data[i]);
+		if (count == 5) {
+			break;
+		}
+		++count;
 	}
 }

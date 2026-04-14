@@ -1,6 +1,8 @@
 #ifndef TENSOR_H
 #define TENSOR_H
 
+typedef struct Arena Arena;
+
 typedef struct {
 	int *shape;
 	int *stride;
@@ -31,6 +33,6 @@ void tensor_shape(Tensor *t);
 
 
 // Arena tensor methods
-Tensor *tensor_create_new(Arena *A, int ndim, *shape);
+Tensor *tensor_create_new(Arena *A, int ndim, int *shape);
 
 #endif
