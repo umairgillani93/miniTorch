@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 typedef struct {
 	char *base;
 	int size;
@@ -30,11 +29,9 @@ int main() {
 
 	int arr_size = 4;
 	int *arr = (int *)arena_alloc(A, arr_size);
-
 	for (int i = 0; i < arr_size; i++) {
 		printf("%d\n", arr[i]);
 	}
-
 
 	return 0;
 

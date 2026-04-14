@@ -29,4 +29,8 @@ int tensor_size(Tensor *t);
 float loss_value(Tensor *a, Tensor *b);
 void tensor_shape(Tensor *t);
 
+
+// Arena tensor methods
+Tensor *tensor_create_new(Arena *A, int ndim, *shape);
+
 #endif

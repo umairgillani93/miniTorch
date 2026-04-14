@@ -5,6 +5,7 @@
 #include <assert.h>
 #include "tensor.h"
 #include "feed_forward_nn.h"
+#include "arena.h"
 
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 #define EMB_DIM 32 
@@ -151,6 +152,62 @@ Tensor *tensor_create(int ndim, int *shape) {
 
 	return t;
 }
+
+Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
+	Tensor *t = arena_alloc(A, sizeof(Tensor));
+	t->ndim = ndim;
+	t->shape = arena_alloc(A, ndim * sizeof(int));
+	t->stride = arena_alloc(A, ndim * sizeof(int));
+
+	// define the shape of Tensor
+	int total = 1;
+	for (int i = ndim - 1; i >= 0; i--) {
+		t->shape[i] = shape[i];
+		t->stride[i] = total;
+		total *= shape[i];
+	}
+	t->data = arena_alloc(A, total * sizeof(float));
+	return t;
+}
+
+//Tensor *tensor_create(int ndim, int *shape) {
+//	Tensor *t = malloc(sizeof(Tensor));
+//	if (!t) {
+//		fprintf(stderr, "something's wrong with memory allocation\n-> aborting..");
+//		return NULL;
+//	}
+//	t->shape = malloc(ndim * sizeof(int));
+//	t->stride = malloc(ndim * sizeof(int));
+//	t->ndim = ndim;
+//
+//
+//	// define the shape of Tensor
+//	for (int i = 0; i < ndim; i++) {
+//		t->shape[i] = shape[i];
+//	}
+//	// calcuate size of tensor in self-contained fashion
+//	int size = 1;
+//	for (int i = 0; i < ndim; i++) {
+//		size *= shape[i];
+//	}
+//	//printf("Size of tensor: %d\n", size);
+//	//ndim - 1 > is always 1, fastest changing dimension
+//	// for next ones wer reveser loop and assign
+//	// stride[i] = t->stride[i + 1] * t->shape[i + 1]
+//	t->stride[ndim - 1] = 1;
+//	for (int i = ndim - 2; i >= 0; i--) {
+//		t->stride[i] = t->stride[i + 1] * t->shape[i + 1];
+//	}
+//	//printf("Stride: %d, %d, %d\n", t->stride[0], t->stride[1], t->stride[2]);
+//	// define the data now
+//	t->data = malloc(size * sizeof(float));
+//	for (int i = 0; i < size; i++) {
+//		t->data[i] = (rand() % 10) + 1.0f;
+//		// printf("%f ", t->data[i]);
+//	}	
+//
+//	return t;
+//}
 
 Tensor *tensor_create_weights(int ndim, int *shape) {
 	Tensor *t = malloc(sizeof(Tensor));
@@ -304,59 +361,14 @@ void tensor_shape(Tensor *t) {
 }
 
 //int main() {
-//	int seed = 32;
-//	srand(seed);
-//
+//	Arena *A = malloc(sizeof(Arena));
+//	int SIZE = 1024 * 1024 * 1024;
+//	arena_init(A, SIZE);
 //	int ndim = 2;
-//	//Tensor *tokens = malloc(sizeof(Tensor));
-//	//Tensor *q_weights = malloc(sizeof(Tensor));
-//	//Tensor *k_weights = malloc(sizeof(Tensor));
-//	//Tensor *v_weights = malloc(sizeof(Tensor));
-//
-//	int *shape_tokens = malloc(ndim * sizeof(int));
-//	int *shape_q_weights = malloc(ndim * sizeof(float));
-//	int *shape_k_weights = malloc(ndim * sizeof(float));
-//	int *shape_v_weights = malloc(ndim * sizeof(float));
-//
-//	// define shape_tokens
-//
-//	shape_tokens[0] = SEQ_LEN;
-//	shape_tokens[1] = EMB_DIM; // this is for token embeddings
-//	
-//	// consider this for a single token query weights
-//	shape_q_weights[0] = EMB_DIM;
-//	shape_q_weights[1] = EMB_DIM;
-//
-//	// key weights
-//	shape_k_weights[0] = EMB_DIM;
-//	shape_k_weights[1] = EMB_DIM;
-//
-//	// value weights
-//	shape_v_weights[0] = EMB_DIM;
-//	shape_v_weights[1] = EMB_DIM;
-//
-//
-//	/* let's say we have a single token word "sky"
-//	 * this token will have it's own embedding
-//	 * and this embedding will have it's own projections all of them query, key and value
-//	 * say "sky" has embedding -> e and has q_proj -> q and has key_proj -> k and has v_proj -> value
-//	 * so that becomes e * wq = Q, e * wk = K and e * wv = V
-//	 * then onwords we calculate the attention for each single token
-//	 *
-//	 */
-//
-//	// Attention(Q, K, V) = softmax(q * transpose(k) / sqrt(dk)) * v
-//	Tensor *tokens = tensor_create(ndim, shape_tokens);
-//	Tensor *qw = tensor_create_weights(ndim, shape_q_weights);	
-//	Tensor *kw = tensor_create_weights(ndim, shape_k_weights);
-//	Tensor *vw = tensor_create_weights(ndim, shape_v_weights);
-//
-//	Tensor *qwt = transpose(qw);
-//	tensor_shape(tokens);
-//	tensor_shape(qwt);
-//	Tensor *q_pro = matmul(tokens, qwt);
-//	tensor_shape(q_pro);
-//
-//
-//	return 0;
+//	int shape[2] = {SEQ_LEN, EMB_DIM};
+//	Tensor *x = tensor_create_new(A, ndim, shape);
+//	int size = tensor_size(x);
+//	for (int i = 0; i < size; i++) {
+//		printf("%f\n", x->data[i]);
+//	}
 //}
