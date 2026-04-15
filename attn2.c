@@ -288,16 +288,16 @@ MHA *mha_create_new(Arena *A, int num_heads, int seq_len, int emb_dim) {
 	int ndim = 2;
 	int shape_weights[2] = {emb_dim, emb_dim};
 	int shape_tokens[2] = {seq_len, emb_dim};
-	mha->wq = tensor_create_new(A, ndim, shape_weights);
-	mha->wk = tensor_create_new(A, ndim, shape_weights);
-	mha->wv = tensor_create_new(A, ndim, shape_weights);
-	mha->wo = tensor_create_new(A, ndim, shape_weights); // output weights
+	mha->wq = tensor_create_weights_new(A, ndim, shape_weights);
+	mha->wk = tensor_create_weights_new(A, ndim, shape_weights);
+	mha->wv = tensor_create_weights_new(A, ndim, shape_weights);
+	mha->wo = tensor_create_weights_new(A, ndim, shape_weights); // output weights
 	
 	// define the tensor
-	mha->Q = tensor_create_new(A, ndim, shape_tokens);
-	mha->K = tensor_create_new(A, ndim, shape_tokens);
-	mha->V = tensor_create_new(A, ndim, shape_tokens);
-	mha->out = tensor_create_new(A, ndim, shape_tokens);
+	mha->Q = tensor_create_weights_new(A, ndim, shape_tokens);
+	mha->K = tensor_create_weights_new(A, ndim, shape_tokens);
+	mha->V = tensor_create_weights_new(A, ndim, shape_tokens);
+	mha->out = tensor_create_weights_new(A, ndim, shape_tokens);
 	mha->num_heads= num_heads;
 	A->offset += sizeof(int); // bytes for head
 	mha->dk = emb_dim / mha->num_heads;

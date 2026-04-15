@@ -13,7 +13,8 @@ typedef struct {
 
 // prototypes definition
 Tensor *tensor_create(int ndim, int *shape);
-Tensor *tensor_create_weights(int ndim, int *shape);
+Tensor *tensor_create_new(Arena *A, int ndim, int *shape);
+Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape);
 Tensor *tensor_matmul(Tensor *a, Tensor *b);
 Tensor *tensor_softmax(Tensor *a);
 Tensor *tensor_transpose(Tensor *t);

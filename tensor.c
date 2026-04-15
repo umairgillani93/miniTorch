@@ -249,6 +249,25 @@ Tensor *tensor_create_weights(int ndim, int *shape) {
 	return t;
 }
 
+
+Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape) {
+	Tensor *t = arena_alloc(A, sizeof(Tensor));
+	t->shape = arena_alloc(A, ndim * sizeof(int));
+	t->stride = arena_alloc(A, ndim * sizeof(int));
+	// t->ndim = ndim;
+
+	int total = 1;
+	for (int i = ndim - 1; i >= 0; i--) {
+		t->shape[i] = shape[i];
+		t->stride[i] = total;
+		total *= shape[i];
+	}
+
+	t->data = arena_alloc(A, total * sizeof(float));
+
+	return t;
+}
+
 Tensor *tensor_matmul(Tensor *a, Tensor *b) {
 	int rows_a = a->shape[0];
 	int cols_a = a->shape[1];
