@@ -30,14 +30,18 @@ int main() {
 	int ndim = 2;
 	int shape[2] = {SEQ_LEN, EMB_DIM};
 	Tensor *x = tensor_create_new(A, ndim, shape);
-	int size = tensor_size(x);
-	printf("size of tensor is: %d\n", size);
-	int count = 0;
-	for (int i = 0; i < size; i++) {
-		printf("%f\n", x->data[i]);
-		if (count == 5) {
-			break;
-		}
-		++count;
+	Tensor *y = tensor_create_new(A, ndim, shape);
+
+	Tensor *z = tensor_matmul(x, y);;
+
+	MHA *m = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
+	printf("heads: %d\n", m->num_heads);
+
+	int wq_size = tensor_size(m->wq);
+	for (int i = 0; i < wq_size; i++) {
+		printf("item: %f ", m->wq->data[i]);
 	}
+	printf("\n");
+
+	return 0;
 }
