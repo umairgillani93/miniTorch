@@ -36,18 +36,10 @@ int main() {
 
 	MHA *m = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
 
-	printf("heads: %d\n", m->num_heads);
+	LayerNorm *ln = layer_norm_create_new(A, 128);
+	
+	tensor_shape(ln->beta);
 
-	int wq_size = tensor_size(m->wq);
-	int wk_size = tensor_size(m->wq);
-	int wv_size = tensor_size(m->wq);
-	printf("wq size: %d\n", wq_size);
-	printf("wk size: %d\n", wk_size);
-	printf("wv size: %d\n", wv_size);
-	printf("Q size: %d\n", tensor_size(m->Q));
-	//for (int i = 0; i < wq_size; i++) {
-	//	printf("item: %f ", m->wq->data[i]);
-	//}
 	printf("\n");
 
 	return 0;

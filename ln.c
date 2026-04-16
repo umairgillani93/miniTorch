@@ -173,6 +173,29 @@ LayerNorm *layer_norm_create(int features) {
 	return ln;
 }
 
+LayerNorm *layer_norm_create_new(Arena *A, int features) {
+	LayerNorm *ln = arena_alloc(A, sizeof(LayerNorm));
+	//if (!ln) {
+	//	fprintf(stderr, "Allocation failed\n");
+	//	exit(1);
+	//}
+	ln->features = features;
+	int ndim = 2;
+	int *shape = arena_alloc(A, ndim * sizeof(int));
+	shape[0] = 1;
+	shape[1] = features;
+
+	ln->beta = tensor_create_weights_new(A, ndim, shape);
+	ln->gamma = tensor_create_weights_new(A, ndim, shape);
+	ln->d_gamma = tensor_create_weights_new(A, ndim, shape);
+	ln->d_beta = tensor_create_weights_new(A, ndim, shape);
+
+	ln->x_hat = NULL;
+	ln->var = NULL; // forward activations cache initially NULL
+	
+	return ln;
+}
+
 //int main() {
 //	int ndim = 2;
 //	int *shape_tokens = malloc(ndim * sizeof(int));
