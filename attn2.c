@@ -286,8 +286,15 @@ Tensor *scaled_dot_product_attention(Tensor *Q, Tensor *K, Tensor *V, int dk) {
 MHA *mha_create_new(Arena *A, int num_heads, int seq_len, int emb_dim) {
 	MHA *mha = arena_alloc(A, sizeof(MHA));
 	int ndim = 2;
-	int shape_weights[2] = {emb_dim, emb_dim};
-	int shape_tokens[2] = {seq_len, emb_dim};
+	int *shape_weights = arena_alloc(A, ndim * sizeof(int));
+	int *shape_tokens = arena_alloc(A, ndim * sizeof(int));
+
+	shape_weights[0] = emb_dim;
+	shape_weights[1] = emb_dim;
+
+	shape_tokens[0] = seq_len;
+	shape_tokens[1] = emb_dim;
+
 	mha->wq = tensor_create_weights_new(A, ndim, shape_weights);
 	mha->wk = tensor_create_weights_new(A, ndim, shape_weights);
 	mha->wv = tensor_create_weights_new(A, ndim, shape_weights);
@@ -298,10 +305,10 @@ MHA *mha_create_new(Arena *A, int num_heads, int seq_len, int emb_dim) {
 	mha->K = tensor_create_weights_new(A, ndim, shape_tokens);
 	mha->V = tensor_create_weights_new(A, ndim, shape_tokens);
 	mha->out = tensor_create_weights_new(A, ndim, shape_tokens);
+
 	mha->num_heads= num_heads;
-	A->offset += sizeof(int); // bytes for head
 	mha->dk = emb_dim / mha->num_heads;
-	A->offset += sizeof(float);
+
 	return mha;
 }
 

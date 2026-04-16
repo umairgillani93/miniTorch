@@ -1,5 +1,7 @@
+#include <stdbool.h>
 #ifndef TENSOR_H
 #define TENSOR_H
+
 
 typedef struct Arena Arena;
 
@@ -15,6 +17,7 @@ typedef struct {
 Tensor *tensor_create(int ndim, int *shape);
 Tensor *tensor_create_new(Arena *A, int ndim, int *shape);
 Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape);
+Tensor *tensor_create_weights(int ndim, int *shape);
 Tensor *tensor_matmul(Tensor *a, Tensor *b);
 Tensor *tensor_softmax(Tensor *a);
 Tensor *tensor_transpose(Tensor *t);
@@ -31,6 +34,8 @@ void tensor_check(char *name, Tensor *x);
 int tensor_size(Tensor *t);
 float loss_value(Tensor *a, Tensor *b);
 void tensor_shape(Tensor *t);
+bool is_exploding(Tensor *x);
+
 
 
 // Arena tensor methods

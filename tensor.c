@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <stdbool.h>
 #include <assert.h>
 #include "tensor.h"
 #include "attention2.h"
@@ -21,6 +22,17 @@ void tensor_fill_zeros(Tensor *x) {
 	}
 }
 
+bool is_exploding(Tensor *x) {
+	int size = tensor_size(x);
+	for (int i = 0; i < size; i++) {
+		float v = x->data[i];
+		if (isnan(v) || isinf(v)) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void tensor_add_inplace(Tensor **a, Tensor **b) {
 	assert((*a)->shape != (*b)->shape);
 	int rows = (*a)->shape[0];
@@ -32,6 +44,8 @@ void tensor_add_inplace(Tensor **a, Tensor **b) {
 		}
 	}
 }
+
+
 
 void tensor_check(char *name, Tensor *x) {
 	if (is_exploding(x)) {
@@ -254,7 +268,7 @@ Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape) {
 	Tensor *t = arena_alloc(A, sizeof(Tensor));
 	t->shape = arena_alloc(A, ndim * sizeof(int));
 	t->stride = arena_alloc(A, ndim * sizeof(int));
-	// t->ndim = ndim;
+	t->ndim = ndim;
 
 	int total = 1;
 	for (int i = ndim - 1; i >= 0; i--) {
