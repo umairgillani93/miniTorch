@@ -39,6 +39,7 @@ int main() {
 	LayerNorm *ln = layer_norm_create_new(A, 128);
 	
 	tensor_shape(ln->beta);
+	// next for feed forward nn
 
 	printf("\n");
 
