@@ -282,7 +282,7 @@ Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape) {
 	return t;
 }
 
-Tensor *tensor_matmul(Tensor *a, Tensor *b) {
+Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 	int rows_a = a->shape[0];
 	int cols_a = a->shape[1];
 
@@ -291,11 +291,11 @@ Tensor *tensor_matmul(Tensor *a, Tensor *b) {
 
 	// resultant tensor having shape (rows_a, cols_b);
 	int ndim_r = 2;
-	int *shape_r = malloc(2 * sizeof(int));
+	int *shape_r = arena_alloc(A, ndim_r * sizeof(int));
 	shape_r[0] = a->shape[0];
 	shape_r[1] = b->shape[1];
 
-	Tensor *r = tensor_create(ndim_r, shape_r);
+	Tensor *r = tensor_create_new(A, ndim_r, shape_r);
 	//printf("Created resultant tensor\n");
 
 	for (int i = 0; i < rows_a; i++) {
