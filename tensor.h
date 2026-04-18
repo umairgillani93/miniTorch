@@ -28,7 +28,7 @@ Tensor *tensor_scaler_multiplication(Tensor *x, float a);
 Tensor *tensor_scaler_addition(Tensor *x, float a);
 void tensor_fill_zeros(Tensor *a);
 void tensor_add_inplace(Tensor **a, Tensor **b);
-void tensor_free(Tensor *t);
+//void tensor_free(Tensor *t);
 void tensor_get(Tensor *t);
 void tensor_check(char *name, Tensor *x);
 int tensor_size(Tensor *t);

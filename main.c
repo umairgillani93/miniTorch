@@ -60,9 +60,6 @@ int main() {
 			memcpy(batch_tensor->data, batch_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 			memcpy(target_batch->data, target_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 
-
-			printf("Data copied\n");
-
 			Tensor *attn_score = mha_forward(A, batch_tensor, m_batch);
 			clip_gradient(attn_score);
 

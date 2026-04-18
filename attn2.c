@@ -214,11 +214,6 @@ Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {
 
 
 Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
-	// free the existing Q, K and V to replace with tensor_matmul operations
-	tensor_free(mha->Q);
-	tensor_free(mha->K);
-	tensor_free(mha->V);
-
 	mha->Q = tensor_matmul(A, t, mha->wq);
 	mha->K = tensor_matmul(A, t, mha->wk);
 	mha->V = tensor_matmul(A, t, mha->wv);
@@ -230,7 +225,6 @@ Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
 	int dk = mha->dk;
 
 
-	tensor_free(mha->out);
 	mha->out = tensor_create_new(A, 2, t->shape);
 	int common_shape[2] = {rows, dk};
 
@@ -263,9 +257,6 @@ Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
 				mha->out->data[out_idx] = head_out->data[head_idx];
 			}
 		}
-		tensor_free(Q_h);
-		tensor_free(K_h);
-		tensor_free(V_h);
 	}
 	return mha->out;
 }	

@@ -27,11 +27,11 @@ Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {
     int rows = x->shape[0];
     int cols = x->shape[1];
 
-    if (ln->var) free(ln->var);
+    //if (ln->var) free(ln->var);
 		// TODO: Check this logic below:
     ln->var = arena_alloc(A, rows * sizeof(float));
 
-    if (ln->x_hat) tensor_free(ln->x_hat);
+    //if (ln->x_hat) tensor_free(ln->x_hat);
     ln->x_hat = tensor_create_new(A, 2, x->shape);
 
     // output tensor y

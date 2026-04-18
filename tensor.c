@@ -376,14 +376,14 @@ Tensor *tensor_softmax(Tensor *t) {
 	return r;
 }
 
-void tensor_free(Tensor *t) {
-	if (!t) return;
-	free(t->data);
-	free(t->stride);
-	free(t->shape);
-	free(t);
-	//printf("Freed successfully!\n");
-}
+//void tensor_free(Tensor *t) {
+//	if (!t) return;
+//	free(t->data);
+//	free(t->stride);
+//	free(t->shape);
+//	free(t);
+//	//printf("Freed successfully!\n");
+//}
 
 void tensor_get(Tensor *t) {
 	if (!t) return;
