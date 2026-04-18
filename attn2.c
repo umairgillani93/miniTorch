@@ -6,6 +6,7 @@
 #include "tensor.h"
 #include "attention2.h"
 #include "feed_forward_nn.h"
+#include "arena.h"
 
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 #define EMB_DIM 32 // out model dimension, i.e Embedding size for each token
@@ -51,14 +52,14 @@ Tensor *softmax_gradient(Tensor *A, Tensor *dA) {
 }
 
 
-void mha_backward_temp_weights(Tensor *dO, Tensor *A, Tensor *B, Tensor **dA, Tensor **dV) {
-	*dA = tensor_matmul(dO, tensor_transpose(B));
-	*dV = tensor_matmul(tensor_transpose(A), dO);
+void mha_backward_temp_weights(Arena *AA, Tensor *dO, Tensor *A, Tensor *B, Tensor **dA, Tensor **dV) {
+	*dA = tensor_matmul(AA, dO, tensor_transpose(B));
+	*dV = tensor_matmul(AA, tensor_transpose(A), dO);
 	//tensor_shape(*(dA));
 	//tensor_shape(*(dV));
 }
 
-Tensor *mha_backward(MHA *m, Tensor *dx, Tensor *tokens) {
+Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {
 	int ndim = 2;
 	int heads = m->num_heads;
 	int dk = m->dk;
@@ -67,20 +68,20 @@ Tensor *mha_backward(MHA *m, Tensor *dx, Tensor *tokens) {
 	int cols = dx->shape[1];
 
 	// Resultant matrix needs to be returend summing all the heads
-	Tensor *dX_total = tensor_create(2, tokens->shape);
+	Tensor *dX_total = tensor_create_new(A, 2, tokens->shape);
 	int dw_shape[2] = {tokens->shape[1], tokens->shape[1]};
 
-	m->dwq = tensor_create(2, dw_shape);
-	m->dwk = tensor_create(2, dw_shape);
-	m->dwv = tensor_create(2, dw_shape);
+	m->dwq = tensor_create_new(A, 2, dw_shape);
+	m->dwk = tensor_create_new(A, 2, dw_shape);
+	m->dwv = tensor_create_new(A, 2, dw_shape);
 
 	int dQ_shape[2] = {16, 32};
-	m->dQ = tensor_create(2, dQ_shape);
-	m->dV = tensor_create(2, dQ_shape);
-	m->dK = tensor_create(2, dQ_shape);
+	m->dQ = tensor_create_new(A, 2, dQ_shape);
+	m->dV = tensor_create_new(A, 2, dQ_shape);
+	m->dK = tensor_create_new(A, 2, dQ_shape);
 
 	for (int k = 0; k < heads; k++) {
-		Tensor *head = tensor_create_weights(2, shape);
+		Tensor *head = tensor_create_weights_new(A, 2, shape);
 
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < dk; j++) {
@@ -91,9 +92,9 @@ Tensor *mha_backward(MHA *m, Tensor *dx, Tensor *tokens) {
 		}
 
 		// slicing the Q, K and V tensors for head 'k'
-		Tensor *Qk = tensor_create_weights(ndim, shape);
-		Tensor *Kk = tensor_create_weights(ndim, shape);
-		Tensor *Vk = tensor_create_weights(ndim, shape);
+		Tensor *Qk = tensor_create_weights_new(A, ndim, shape);
+		Tensor *Kk = tensor_create_weights_new(A, ndim, shape);
+		Tensor *Vk = tensor_create_weights_new(A, ndim, shape);
 
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < dk; j++) {
@@ -106,7 +107,7 @@ Tensor *mha_backward(MHA *m, Tensor *dx, Tensor *tokens) {
 		}
 		float scale = 1.0f / sqrtf(dk);
 		Tensor *Kt = tensor_transpose(Kk);
-		Tensor *QKt = tensor_matmul(Qk, Kt);
+		Tensor *QKt = tensor_matmul(A, Qk, Kt);
 		for (int i = 0; i < QKt->shape[0]; i++) {
 			for (int j = 0; j < QKt->shape[1]; j++) {
 				QKt->data[i * QKt->shape[1] + j] *= scale;
@@ -116,20 +117,20 @@ Tensor *mha_backward(MHA *m, Tensor *dx, Tensor *tokens) {
 
 		
 		int ashape[2] = {rows, rows};
-		Tensor *dAk = tensor_create_weights(ndim, ashape);
-		Tensor *dVk = tensor_create_weights(ndim, shape);
+		Tensor *dAk = tensor_create_weights_new(A, ndim, ashape);
+		Tensor *dVk = tensor_create_weights_new(A, ndim, shape);
 
-		mha_backward_temp_weights(head, Ak, Vk, &dAk, &dVk);
+		mha_backward_temp_weights(A, head, Ak, Vk, &dAk, &dVk);
 
 		// so we got the derivatives of Value matrix and Attetion score matrix
 		// Now we need to produce grandients of weight matrices that produced 'V' i.e wv
 		// Since V = X @ wv => dwv = X^T @ dV
 		// PROBLEM LIES HERE!!! BUGGGG
-		//m->dwv = tensor_matmul(tensor_transpose(tokens), dVk);
+		//m->dwv = tensor_matmul(A, tensor_transpose(tokens), dVk);
 		Tensor *dSk = softmax_gradient(dAk, Ak);
 
-		Tensor *dKk = tensor_matmul(tensor_transpose(dSk), Qk);
-		Tensor *dQk = tensor_matmul(dSk, Kk);
+		Tensor *dKk = tensor_matmul(A, tensor_transpose(dSk), Qk);
+		Tensor *dQk = tensor_matmul(A, dSk, Kk);
 		
 		// Scaling dQk and dKk
 		for (int i = 0; i < dQk->shape[0]; i++) {
@@ -145,9 +146,9 @@ Tensor *mha_backward(MHA *m, Tensor *dx, Tensor *tokens) {
 		}
 		//
 		// finding gradients for input 'X' weights
-	  Tensor *dwq = tensor_matmul(tensor_transpose(tokens), dQk);
-		Tensor *dwk = tensor_matmul(tensor_transpose(tokens), dKk);
-		Tensor *dwv = tensor_matmul(tensor_transpose(tokens), dVk);
+	  Tensor *dwq = tensor_matmul(A, tensor_transpose(tokens), dQk);
+		Tensor *dwk = tensor_matmul(A, tensor_transpose(tokens), dKk);
+		Tensor *dwv = tensor_matmul(A, tensor_transpose(tokens), dVk);
 
 
 		// TODO: Accumulation step tensor_inplace_gradients
@@ -193,9 +194,9 @@ Tensor *mha_backward(MHA *m, Tensor *dx, Tensor *tokens) {
 	//printf("dV shape: \n");
 	//tensor_shape(m->dV);
 	
-	Tensor *dx1 = tensor_matmul(m->dQ, tensor_transpose(m->wq));
-	Tensor *dx2 = tensor_matmul(m->dK, tensor_transpose(m->wk));
-	Tensor *dx3 = tensor_matmul(m->dV, tensor_transpose(m->wv));
+	Tensor *dx1 = tensor_matmul(A, m->dQ, tensor_transpose(m->wq));
+	Tensor *dx2 = tensor_matmul(A, m->dK, tensor_transpose(m->wk));
+	Tensor *dx3 = tensor_matmul(A, m->dV, tensor_transpose(m->wv));
 
 	//printf("dx1 shape: \n");
 	//tensor_shape(dx1);
@@ -212,15 +213,10 @@ Tensor *mha_backward(MHA *m, Tensor *dx, Tensor *tokens) {
 }
 
 
-Tensor *mha_forward(Tensor *t, MHA *mha) {
-	// free the existing Q, K and V to replace with tensor_matmul operations
-	tensor_free(mha->Q);
-	tensor_free(mha->K);
-	tensor_free(mha->V);
-
-	mha->Q = tensor_matmul(t, mha->wq);
-	mha->K = tensor_matmul(t, mha->wk);
-	mha->V = tensor_matmul(t, mha->wv);
+Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
+	mha->Q = tensor_matmul(A, t, mha->wq);
+	mha->K = tensor_matmul(A, t, mha->wk);
+	mha->V = tensor_matmul(A, t, mha->wv);
 
 	// extract the required parameters
 	int rows = t->shape[0];
@@ -229,17 +225,16 @@ Tensor *mha_forward(Tensor *t, MHA *mha) {
 	int dk = mha->dk;
 
 
-	tensor_free(mha->out);
-	mha->out = tensor_create(2, t->shape);
+	mha->out = tensor_create_new(A, 2, t->shape);
 	int common_shape[2] = {rows, dk};
 
 	for (int k = 0; k < heads; k++) {
 		// first of all I need scaled_dot_product_scores
 		// for which I need slicing Q, K and V
 		// slicing logic first
-		Tensor *Q_h = tensor_create(2, common_shape);
-		Tensor *K_h = tensor_create(2, common_shape);
-		Tensor *V_h = tensor_create(2, common_shape);
+		Tensor *Q_h = tensor_create_new(A, 2, common_shape);
+		Tensor *K_h = tensor_create_new(A, 2, common_shape);
+		Tensor *V_h = tensor_create_new(A, 2, common_shape);
 
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < dk; j++) {
@@ -253,7 +248,7 @@ Tensor *mha_forward(Tensor *t, MHA *mha) {
 			}
 		}
 
-		Tensor *head_out = scaled_dot_product_attention(Q_h, K_h, V_h, dk);
+		Tensor *head_out = scaled_dot_product_attention(A, Q_h, K_h, V_h, dk);
 		// Write this back to the output
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < dk; j++) {
@@ -262,25 +257,51 @@ Tensor *mha_forward(Tensor *t, MHA *mha) {
 				mha->out->data[out_idx] = head_out->data[head_idx];
 			}
 		}
-		tensor_free(Q_h);
-		tensor_free(K_h);
-		tensor_free(V_h);
 	}
 	return mha->out;
 }	
 
 
-Tensor *scaled_dot_product_attention(Tensor *Q, Tensor *K, Tensor *V, int dk) {
+Tensor *scaled_dot_product_attention(Arena *A, Tensor *Q, Tensor *K, Tensor *V, int dk) {
 	Tensor *kt = tensor_transpose(K);
-	Tensor *qkt = tensor_matmul(Q, kt);
+	Tensor *qkt = tensor_matmul(A, Q, kt);
 	for (int i = 0; i < qkt->shape[0]; i++) {
 		for (int j = 0; j < qkt->shape[1]; j++) {
 			qkt->data[i * qkt->shape[1] + j] = qkt->data[i * qkt->shape[1] +j] / sqrtf(dk);;
 		}
 	}
 	Tensor *qkt_soft = tensor_softmax(qkt); // RAND_FLOAT is random we'll calculate this later
-	Tensor *ret = tensor_matmul(qkt_soft, V);
+	Tensor *ret = tensor_matmul(A, qkt_soft, V);
 	return ret;
+}
+
+MHA *mha_create_new(Arena *A, int num_heads, int seq_len, int emb_dim) {
+	MHA *mha = arena_alloc(A, sizeof(MHA));
+	int ndim = 2;
+	int *shape_weights = arena_alloc(A, ndim * sizeof(int));
+	int *shape_tokens = arena_alloc(A, ndim * sizeof(int));
+
+	shape_weights[0] = emb_dim;
+	shape_weights[1] = emb_dim;
+
+	shape_tokens[0] = seq_len;
+	shape_tokens[1] = emb_dim;
+
+	mha->wq = tensor_create_weights_new(A, ndim, shape_weights);
+	mha->wk = tensor_create_weights_new(A, ndim, shape_weights);
+	mha->wv = tensor_create_weights_new(A, ndim, shape_weights);
+	mha->wo = tensor_create_weights_new(A, ndim, shape_weights); // output weights
+	
+	// define the tensor
+	mha->Q = tensor_create_weights_new(A, ndim, shape_tokens);
+	mha->K = tensor_create_weights_new(A, ndim, shape_tokens);
+	mha->V = tensor_create_weights_new(A, ndim, shape_tokens);
+	mha->out = tensor_create_weights_new(A, ndim, shape_tokens);
+
+	mha->num_heads= num_heads;
+	mha->dk = emb_dim / mha->num_heads;
+
+	return mha;
 }
 
 MHA *mha_create(int num_heads, int seq_len, int emb_dim) {

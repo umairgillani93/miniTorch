@@ -3,6 +3,7 @@
 
 #include "tensor.h"
 #include "attention2.h"
+#include "arena.h"
 
 typedef struct {
 	int features; // in out case it's d_model OR embedding dimension,
@@ -15,8 +16,9 @@ typedef struct {
 	float *var; // cached per row variance
 } LayerNorm;
 
-Tensor *layer_norm_forward(LayerNorm *ln, Tensor *t);
+Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *t);
 LayerNorm *layer_norm_create(int features);
+LayerNorm *layer_norm_create_new(Arena *A, int features);
 void layer_norm_backward(LayerNorm *ln, Tensor *x, Tensor *dy, Tensor *dx, float lr);
 
 #endif

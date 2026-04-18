@@ -22,19 +22,20 @@ float mean(float *arr, int size) {
 //	return var;
 //}	
 
-Tensor *layer_norm_forward(LayerNorm *ln, Tensor *x) {
+Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {
 
     int rows = x->shape[0];
     int cols = x->shape[1];
 
-    if (ln->var) free(ln->var);
-    ln->var = malloc(rows * sizeof(float));
+    //if (ln->var) free(ln->var);
+		// TODO: Check this logic below:
+    ln->var = arena_alloc(A, rows * sizeof(float));
 
-    if (ln->x_hat) tensor_free(ln->x_hat);
-    ln->x_hat = tensor_create(2, x->shape);
+    //if (ln->x_hat) tensor_free(ln->x_hat);
+    ln->x_hat = tensor_create_new(A, 2, x->shape);
 
     // output tensor y
-    Tensor *y = tensor_create(2, x->shape);
+    Tensor *y = tensor_create_new(A, 2, x->shape);
 
     for (int i = 0; i < rows; i++) {
 
@@ -167,6 +168,29 @@ LayerNorm *layer_norm_create(int features) {
 	ln->gamma = tensor_create_weights(ndim, shape);
 	ln->d_gamma = tensor_create_weights(ndim, shape);
 	ln->d_beta = tensor_create_weights(ndim, shape);
+	ln->x_hat = NULL;
+	ln->var = NULL; // forward activations cache initially NULL
+	
+	return ln;
+}
+
+LayerNorm *layer_norm_create_new(Arena *A, int features) {
+	LayerNorm *ln = arena_alloc(A, sizeof(LayerNorm));
+	//if (!ln) {
+	//	fprintf(stderr, "Allocation failed\n");
+	//	exit(1);
+	//}
+	ln->features = features;
+	int ndim = 2;
+	int *shape = arena_alloc(A, ndim * sizeof(int));
+	shape[0] = 1;
+	shape[1] = features;
+
+	ln->beta = tensor_create_weights_new(A, ndim, shape);
+	ln->gamma = tensor_create_weights_new(A, ndim, shape);
+	ln->d_gamma = tensor_create_weights_new(A, ndim, shape);
+	ln->d_beta = tensor_create_weights_new(A, ndim, shape);
+
 	ln->x_hat = NULL;
 	ln->var = NULL; // forward activations cache initially NULL
 	

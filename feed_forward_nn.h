@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "attention2.h"
 #include "layer_norm.h"
+#include "arena.h"
 
 typedef struct {
 	// create the required tensors
@@ -28,13 +29,13 @@ typedef struct {
 
 } FFN;
 
-Tensor *ffn_forward(Tensor *x, FFN *y);
-Tensor *ffn_backward(FFN *f, Tensor *x, Tensor *loss);
-FFN *ffn_create(int input_dim, int hidden_dim);
+Tensor *ffn_forward(Arena *A, Tensor *x, FFN *y);
+Tensor *ffn_backward(Arena *A, FFN *f, Tensor *x, Tensor *loss);
+FFN *ffn_create(Arena *A, int input_dim, int hidden_dim);
 Tensor *relu(Tensor *x);
 void sgd_optimizer(Tensor *a, Tensor *b, float lr);
-bool is_exploding(Tensor *x);
-void clip_gradient(Tensor *x);
+//bool is_exploding(Tensor *x);
+//void clip_gradient(Tensor *x);
 
 
 #endif
