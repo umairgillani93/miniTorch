@@ -8,31 +8,39 @@
 #include "layer_norm.h"
 #include "feed_forward_nn.h"
 #include "config.h"
+#include "arena.h"
 
 int main() {
-	int ndim = 2;
+
 	srand(time(NULL));
+
+	size_t SIZE = 1024 * 1024 * 1024;
+	Arena *A = malloc(sizeof(Arena));
+	arena_init(A, SIZE);
+	printf("Arena initilized\n");
+
+	int ndim = 2;
 	int shape[2] = {SEQ_LEN, EMB_DIM};
 	
 	// Creating actual data tensor
-	Tensor *T = tensor_create(2, shape);
+	Tensor *T = tensor_create_new(A, 2, shape);
 	int size = tensor_size(T);
 
 	// Create global MHA
-	//MHA *M = mha_create(HEADS, SEQ_LEN, EMB_DIM);
+	//MHA *M = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
 
 	// Target tensor to compare the output against
 	int shape_target[2] = {SEQ_LEN, EMB_DIM};
-	Tensor *target = tensor_create(ndim, shape_target);
+	Tensor *target = tensor_create_new(A, ndim, shape_target);
 
 	// define batches for Actual tensor
 	int num_chunks = SEQ_LEN / BATCH_SIZE;
 
 	// CREATED THESET COMPONENETS OUTSIDE FOR TESTING!!!
-	MHA *m_batch = mha_create(HEADS, BATCH_SIZE, EMB_DIM);
-	LayerNorm *L1 = layer_norm_create(EMB_DIM);
-	FFN *f = ffn_create(EMB_DIM, 128);
-	LayerNorm *L2 = layer_norm_create(EMB_DIM);
+	MHA *m_batch = mha_create_new(A, HEADS, BATCH_SIZE, EMB_DIM);
+	LayerNorm *L1 = layer_norm_create_new(A, EMB_DIM);
+	FFN *f = ffn_create(A, EMB_DIM, 128);
+	LayerNorm *L2 = layer_norm_create_new(A, EMB_DIM);
 
 	// Log file
 	FILE *logf = fopen("loss.csv", "w");
@@ -45,13 +53,17 @@ int main() {
 			float *target_ptr = target->data + b * BATCH_SIZE * EMB_DIM;
 
 			int shape_local[2] = {BATCH_SIZE, EMB_DIM};
-			Tensor *batch_tensor = tensor_create(2, shape_local);
-			Tensor *target_batch = tensor_create(2, shape_local);
+			Tensor *batch_tensor = tensor_create_new(A, 2, shape_local);
+			Tensor *target_batch = tensor_create_new(A, 2, shape_local);
 			
+			// TODO: Check this code down, may have bugs!!
 			memcpy(batch_tensor->data, batch_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 			memcpy(target_batch->data, target_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 
-			Tensor *attn_score = mha_forward(batch_tensor, m_batch);
+
+			printf("Data copied\n");
+
+			Tensor *attn_score = mha_forward(A, batch_tensor, m_batch);
 			clip_gradient(attn_score);
 
 			//tensor_get(attn_score);
@@ -59,31 +71,31 @@ int main() {
 			//tensor_get(attn_score);
 
 			// Apply layer_norm
-			Tensor *ln1 = layer_norm_forward(L1, attn_score);
+			Tensor *ln1 = layer_norm_forward(A, L1, attn_score);
 			tensor_check("ln1_forward", ln1);
 			//printf("LayerNorm #1 ran successfully!\n");
 
 			// Create FFN feed-forward NN and run ffn_forward pass
-			Tensor *ffn_ln = ffn_forward(ln1, f);
+			Tensor *ffn_ln = ffn_forward(A, ln1, f);
 			tensor_check("ffn_ln_forward", ffn_ln);
 
 			// Apply layer_norm
-			Tensor *ln2 = layer_norm_forward(L2, ffn_ln);
+			Tensor *ln2 = layer_norm_forward(A, L2, ffn_ln);
 			tensor_check("ln2_forward", ln2);
 			//tensor_shape(ln2);
 			//printf("LayerNorm #2 ran successfully!\n");
 		
-			Tensor *loss = tensor_mse_loss(ln2, target_batch);
+			Tensor *loss = tensor_mse_loss(A, ln2, target_batch);
 			float loss_to_show = loss_value(ln2, target_batch);
 
-			Tensor *dx_for_ffn = tensor_create(2, shape_local);
-			Tensor *dx_for_mha = tensor_create(2, shape_local);
+			Tensor *dx_for_ffn = tensor_create_new(A, 2, shape_local);
+			Tensor *dx_for_mha = tensor_create_new(A, 2, shape_local);
 			//printf("All good\n");
 			layer_norm_backward(L2, ffn_ln, loss, dx_for_ffn, LR);
-			Tensor *ffn_backpass = ffn_backward(f, ln1, dx_for_ffn);
+			Tensor *ffn_backpass = ffn_backward(A, f, ln1, dx_for_ffn);
 			layer_norm_backward(L1, attn_score, ffn_backpass, dx_for_mha, LR);
 			
-			Tensor *mha_backpass = mha_backward(m_batch, dx_for_mha, batch_tensor);
+			Tensor *mha_backpass = mha_backward(A, m_batch, dx_for_mha, batch_tensor);
 
 			//printf("w1 shape: \n");
 			//tensor_shape(f->w1);

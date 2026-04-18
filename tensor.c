@@ -22,6 +22,40 @@ void tensor_fill_zeros(Tensor *x) {
 	}
 }
 
+void clip_gradient(Tensor *x) {
+    int size = tensor_size(x);
+    float threshold = 1.0f;
+    float MX = 0.0f;
+    bool has_bad = false;
+
+    // Pass 1 — detect NaN/Inf and find max abs gradient
+    for (int i = 0; i < size; i++) {
+        float g = x->data[i];
+
+        if (!isfinite(g)) {
+            has_bad = true;
+            break;
+        }
+
+        float v = fabsf(g);
+        if (v > MX) MX = v;
+    }
+
+    // If NaN/Inf found → zero gradients and STOP
+    if (has_bad) {
+        for (int i = 0; i < size; i++)
+            x->data[i] = 0.0f;
+        return;
+    }
+
+    // Pass 2 — clip if too large
+    if (MX > threshold) {
+        float scale = threshold / MX;   // compute once
+        for (int i = 0; i < size; i++)
+            x->data[i] *= scale;
+    }
+}
+
 bool is_exploding(Tensor *x) {
 	int size = tensor_size(x);
 	for (int i = 0; i < size; i++) {
@@ -119,8 +153,8 @@ float loss_value(Tensor *pred, Tensor *target) {
 	return squared_err / size;
 }
 
-Tensor *tensor_mse_loss(Tensor *pred, Tensor *target) {
-	Tensor *grad = tensor_create_weights(pred->ndim, pred->shape);	
+Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target) {
+	Tensor *grad = tensor_create_weights_new(A, pred->ndim, pred->shape);	
 	int size = tensor_size(pred);
 	
 	for (int i = 0; i < size; i++) {

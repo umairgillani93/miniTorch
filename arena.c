@@ -23,26 +23,24 @@ void *arena_alloc(Arena *A, int size) {
 	return ptr;
 }	
 
-int main() {
-	Arena *A = malloc(sizeof(Arena));
-	int SIZE = 1024 * 1024 * 1024;
-	arena_init(A, SIZE);
-	int ndim = 2;
-	int shape[2] = {SEQ_LEN, EMB_DIM};
-	Tensor *x = tensor_create_new(A, ndim, shape);
-	Tensor *y = tensor_create_new(A, ndim, shape);
-	
-	Tensor *z = tensor_matmul(A, x, y);
-	
-
-	MHA *m = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
-
-	LayerNorm *ln = layer_norm_create_new(A, 128);
-
-	int input = 32;
-	int hidden = 64;
-	FFN *f = ffn_create(A, input, hidden);
-	printf("done");
-
-	return 0;
-}
+//int main() {
+//	Arena *A = malloc(sizeof(Arena));
+//	int SIZE = 1024 * 1024 * 1024;
+//	arena_init(A, SIZE);
+//	int ndim = 2;
+//	int shape[2] = {SEQ_LEN, EMB_DIM};
+//	Tensor *x = tensor_create_new(A, ndim, shape);
+//	Tensor *y = tensor_create_new(A, ndim, shape);
+//	
+//	Tensor *z = tensor_matmul(A, x, y);
+//
+//	MHA *m = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
+//
+//	LayerNorm *ln = layer_norm_create_new(A, 128);
+//
+//	int input = 32;
+//	int hidden = 64;
+//	FFN *f = ffn_create(A, input, hidden);
+//
+//	return 0;
+//}

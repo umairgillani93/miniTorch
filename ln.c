@@ -22,19 +22,20 @@ float mean(float *arr, int size) {
 //	return var;
 //}	
 
-Tensor *layer_norm_forward(LayerNorm *ln, Tensor *x) {
+Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {
 
     int rows = x->shape[0];
     int cols = x->shape[1];
 
     if (ln->var) free(ln->var);
-    ln->var = malloc(rows * sizeof(float));
+		// TODO: Check this logic below:
+    ln->var = arena_alloc(A, rows * sizeof(float));
 
     if (ln->x_hat) tensor_free(ln->x_hat);
-    ln->x_hat = tensor_create(2, x->shape);
+    ln->x_hat = tensor_create_new(A, 2, x->shape);
 
     // output tensor y
-    Tensor *y = tensor_create(2, x->shape);
+    Tensor *y = tensor_create_new(A, 2, x->shape);
 
     for (int i = 0; i < rows; i++) {
 
