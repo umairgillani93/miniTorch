@@ -64,6 +64,20 @@ bool is_exploding(Tensor *x) {
 	return false;
 }
 
+void tensor_randomize_weights(Tensor *x) {
+	size_t size = tensor_size(x);
+	for (int i = 0; i < size; i++) {
+		x->data[i] = RAND_FLOAT;
+	}
+}
+
+void tensor_randomize(Tensor *x) {
+	size_t size = tensor_size(x);
+	for (int i = 0; i < size; i++) {
+		x->data[i] = (rand() % 10) + 1.0f;
+	}
+}
+
 void tensor_add_inplace(Tensor **a, Tensor **b) {
 	assert((*a)->shape != (*b)->shape);
 	int rows = (*a)->shape[0];

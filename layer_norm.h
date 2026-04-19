@@ -20,5 +20,6 @@ Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *t);
 LayerNorm *layer_norm_create(int features);
 LayerNorm *layer_norm_create_new(Arena *A, int features);
 void layer_norm_backward(LayerNorm *ln, Tensor *x, Tensor *dy, Tensor *dx, float lr);
+void layer_norm_init_params(LayerNorm *ln);
 
 #endif

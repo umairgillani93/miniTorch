@@ -9,6 +9,7 @@
 #include "feed_forward_nn.h"
 #include "config.h"
 #include "arena.h"
+#include "model.c"
 
 int main() {
 
@@ -24,23 +25,35 @@ int main() {
 	
 	// Creating actual data tensor
 	Tensor *T = tensor_create_new(A, 2, shape);
+	tensor_randomize(T); 
 	int size = tensor_size(T);
 
 	// Create global MHA
+	// we are here now....
 	//MHA *M = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
 
 	// Target tensor to compare the output against
 	int shape_target[2] = {SEQ_LEN, EMB_DIM};
 	Tensor *target = tensor_create_new(A, ndim, shape_target);
+	tensor_randomize(target);
 
 	// define batches for Actual tensor
 	int num_chunks = SEQ_LEN / BATCH_SIZE;
 
 	// CREATED THESET COMPONENETS OUTSIDE FOR TESTING!!!
 	MHA *m_batch = mha_create_new(A, HEADS, BATCH_SIZE, EMB_DIM);
+	
+	// Initialize parameters for MHA
+	mha_init_params(m_batch);
+
 	LayerNorm *L1 = layer_norm_create_new(A, EMB_DIM);
+	layer_norm_init_params(L1);
+
 	FFN *f = ffn_create(A, EMB_DIM, 128);
+	ffn_init_params(f);
+
 	LayerNorm *L2 = layer_norm_create_new(A, EMB_DIM);
+	layer_norm_init_params(L2);
 
 	// Log file
 	FILE *logf = fopen("loss.csv", "w");

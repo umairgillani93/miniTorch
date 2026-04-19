@@ -24,25 +24,25 @@ void *arena_alloc(Arena *A, int size) {
 	return ptr;
 }	
 
-int main() {
-	srand(time(NULL));
-	Arena *A = malloc(sizeof(Arena));
-	int SIZE = 1024 * 1024 * 1024;
-	arena_init(A, SIZE);
-	int ndim = 2;
-	int shape[2] = {SEQ_LEN, EMB_DIM};
-	Tensor *x = tensor_create_new(A, ndim, shape);
-	int size = tensor_size(x);
-	tensor_randomize(x);
-
-	int count = 1;
-	for (int i = 0; i < size; i++) {
-		printf("%f\n", x->data[i]);
-		if (count == 5) {
-			break;
-		}
-		++count;
-	}
-
-	return 0;
-}
+//int main() {
+//	srand(time(NULL));
+//	Arena *A = malloc(sizeof(Arena));
+//	int SIZE = 1024 * 1024 * 1024;
+//	arena_init(A, SIZE);
+//	int ndim = 2;
+//	int shape[2] = {SEQ_LEN, EMB_DIM};
+//	Tensor *x = tensor_create_new(A, ndim, shape);
+//	int size = tensor_size(x);
+//	tensor_randomize(x);
+//
+//	int count = 1;
+//	for (int i = 0; i < size; i++) {
+//		printf("%f\n", x->data[i]);
+//		if (count == 5) {
+//			break;
+//		}
+//		++count;
+//	}
+//
+//	return 0;
+//}
