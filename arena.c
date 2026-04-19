@@ -8,6 +8,7 @@
 #include "feed_forward_nn.h"
 #include "attention2.h"
 #include "arena.h"
+#include "model.h"
 #include "config.h"
 
 
@@ -23,24 +24,25 @@ void *arena_alloc(Arena *A, int size) {
 	return ptr;
 }	
 
-//int main() {
-//	Arena *A = malloc(sizeof(Arena));
-//	int SIZE = 1024 * 1024 * 1024;
-//	arena_init(A, SIZE);
-//	int ndim = 2;
-//	int shape[2] = {SEQ_LEN, EMB_DIM};
-//	Tensor *x = tensor_create_new(A, ndim, shape);
-//	Tensor *y = tensor_create_new(A, ndim, shape);
-//	
-//	Tensor *z = tensor_matmul(A, x, y);
-//
-//	MHA *m = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
-//
-//	LayerNorm *ln = layer_norm_create_new(A, 128);
-//
-//	int input = 32;
-//	int hidden = 64;
-//	FFN *f = ffn_create(A, input, hidden);
-//
-//	return 0;
-//}
+int main() {
+	srand(time(NULL));
+	Arena *A = malloc(sizeof(Arena));
+	int SIZE = 1024 * 1024 * 1024;
+	arena_init(A, SIZE);
+	int ndim = 2;
+	int shape[2] = {SEQ_LEN, EMB_DIM};
+	Tensor *x = tensor_create_new(A, ndim, shape);
+	int size = tensor_size(x);
+	tensor_randomize(x);
+
+	int count = 1;
+	for (int i = 0; i < size; i++) {
+		printf("%f\n", x->data[i]);
+		if (count == 5) {
+			break;
+		}
+		++count;
+	}
+
+	return 0;
+}

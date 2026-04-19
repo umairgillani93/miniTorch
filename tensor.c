@@ -10,9 +10,6 @@
 #include "arena.h"
 
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
-#define EMB_DIM 32 
-#define SEQ_LEN 10
-#define BATCH_SIZE 2
 #define EPS 1e-5
 
 void tensor_fill_zeros(Tensor *x) {
