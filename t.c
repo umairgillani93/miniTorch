@@ -1,23 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include "tensor.h"
-#include "config.h"
-#include "arena.h"
-#include "model.h"
-
-#define RAND_FLOAT (float) rand() / (float) RAND_MAX
 
 int main() {
-	Arena *A = malloc(sizeof(Arena));
-	arena_init(A, ARENA_SIZE);
-	int ndim = 2;
-	int shape[2] = {SEQ_LEN, EMB_DIM};
+	int a = 2;
+	int b = 3;
+	int e = 4;
 
-	Tensor *x = tensor_create_new(A, ndim, shape);
-	tensor_randomize_weights(x);
+	int c = a + b;
+	int d = c * e;
 
-	tensor_get(x);
-
-	return 0;
+	a---
+		 |
+		 +--c
+	b--|
 }
