@@ -38,6 +38,11 @@ bool is_exploding(Tensor *x);
 void clip_gradient(Tensor *x);
 
 
+// new methods added for model struct
+void tensor_randomize_weights(Tensor *x);
+void tensor_randomize(Tensor *x);
+
+
 
 // Arena tensor methods
 Tensor *tensor_create_new(Arena *A, int ndim, int *shape);

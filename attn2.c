@@ -51,6 +51,12 @@ Tensor *softmax_gradient(Tensor *A, Tensor *dA) {
 	return dS;
 }
 
+void mha_init_params(MHA *m) {
+	tensor_randomize_weights(m->wq);
+	tensor_randomize_weights(m->wk);
+	tensor_randomize_weights(m->wv);
+	tensor_randomize_weights(m->wo);
+}
 
 void mha_backward_temp_weights(Arena *AA, Tensor *dO, Tensor *A, Tensor *B, Tensor **dA, Tensor **dV) {
 	*dA = tensor_matmul(AA, dO, tensor_transpose(B));

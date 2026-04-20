@@ -10,9 +10,6 @@
 #include "arena.h"
 
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
-#define EMB_DIM 32 
-#define SEQ_LEN 10
-#define BATCH_SIZE 2
 #define EPS 1e-5
 
 void tensor_fill_zeros(Tensor *x) {
@@ -65,6 +62,20 @@ bool is_exploding(Tensor *x) {
 		}
 	}
 	return false;
+}
+
+void tensor_randomize_weights(Tensor *x) {
+	size_t size = tensor_size(x);
+	for (int i = 0; i < size; i++) {
+		x->data[i] = RAND_FLOAT;
+	}
+}
+
+void tensor_randomize(Tensor *x) {
+	size_t size = tensor_size(x);
+	for (int i = 0; i < size; i++) {
+		x->data[i] = (rand() % 10) + 1.0f;
+	}
 }
 
 void tensor_add_inplace(Tensor **a, Tensor **b) {

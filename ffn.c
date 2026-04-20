@@ -70,6 +70,11 @@ void sgd_optimizer(Tensor *w, Tensor *dw, float lr) {
 //    }
 //}
 	
+void ffn_init_params(FFN *F) {
+	tensor_randomize_weights(F->w1);
+	tensor_randomize_weights(F->w1);
+}
+
 Tensor *ffn_backward(Arena *A, FFN *f, Tensor *x, Tensor *dout) {
 
 	f->dw2 = tensor_matmul(A, tensor_transpose(f->a1), dout);

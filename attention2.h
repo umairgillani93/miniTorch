@@ -34,6 +34,7 @@ MHA *mha_create_new(Arena *A, int heads, int seq_len, int emb_dim);
 Tensor *scaled_dot_product_attention(Arena *A, Tensor *Q, Tensor *K, Tensor *V, int heads);
 Tensor *mha_forward(Arena *A, Tensor *t, MHA *m);
 Tensor *mha_backward(Arena *A, MHA *m, Tensor *t, Tensor *tokens);
+void mha_init_params(MHA *m);
 
 #endif
 

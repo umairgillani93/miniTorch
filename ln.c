@@ -22,6 +22,13 @@ float mean(float *arr, int size) {
 //	return var;
 //}	
 
+void layer_norm_init_params(LayerNorm *ln) {
+	tensor_randomize_weights(ln->beta);
+	tensor_randomize_weights(ln->gamma);
+	tensor_randomize_weights(ln->d_beta);
+	tensor_randomize_weights(ln->d_gamma);
+}
+
 Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {
 
     int rows = x->shape[0];
