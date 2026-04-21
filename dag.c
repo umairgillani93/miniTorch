@@ -23,7 +23,7 @@ Node *node_create(int data) {
 Graph *graph_create(int nodes) {
 	Graph *g = (Graph *)malloc(sizeof(Graph));
 	g->num_nodes = nodes;
-	g->adj_list = malloc(nodes * sizeof(Node));
+	g->adj_list = malloc(nodes * sizeof(Node *));
 
 	for (int n = 0; n < nodes; ++n) {
 		g->adj_list[n] = NULL;
@@ -48,7 +48,7 @@ void dfs(Node *node, bool *visited) {
 	visited[v] = true;
 	printf("%d\n", v);
 	Node *temp = node->nextNode;
-	while(temp->nextNode != NULL) {
+	while(temp!= NULL) {
 		dfs(temp, visited);
 		temp = temp->nextNode;
 	}
@@ -63,11 +63,13 @@ int main() {
 	 * add all the Nodes that are visisted in some list *visited
 	 * Do it for all the Nodes, and remember ONCE A NODE IS VISITED YOU WON'T BE VISITING THAT AGAIN
 	 */
-	Graph *g = graph_create(2);
-	graph_edge(g, 0, 1);
-	graph_edge(g, 0, 2);
-	graph_edge(g, 1, 3);
-	graph_edge(g, 2, 3);
+	Graph *g = graph_create(6);
+	graph_edge(g, 1, 4);
+	graph_edge(g, 2, 4);
+	graph_edge(g, 3, 4);
+	graph_edge(g, 1, 5);
+	graph_edge(g, 2, 5);
+	graph_edge(g, 3, 5);
 
 	bool visited[g->num_nodes];
 	for (int i = 0; i < g->num_nodes; i++) {
@@ -80,6 +82,5 @@ int main() {
 		}
 	}
 	return 0;
-
 }
 
