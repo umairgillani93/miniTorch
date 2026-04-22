@@ -4,8 +4,11 @@
 
 
 typedef struct Arena Arena;
+typedef struct Tensor Tensor;
 
-typedef struct {
+
+
+typedef struct Tensor {
 	int *shape;
 	int *stride;
 	int ndim;
