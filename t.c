@@ -41,7 +41,14 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 
 	Tensor *out = tensor_create(A, a->ndim, out_shape);
 
-	if (a->requires_grad || b->requires_grad) out->requires_grad = true;
+	if (a->requires_grad || b->requires_grad) {
+		out->requires_grad = true;
+		// TODO:
+		// 1. NEED TO SAVE THE PARENTS
+		// 2. NEED TO POPULATE THE grad
+		// 3. Need to SAVE THE OPERATIONS for computation graph
+
+	}
 
 	for (int r = 0; r < a_rows; r++) {
 		for (int c = 0; c < b_cols; c++) {
