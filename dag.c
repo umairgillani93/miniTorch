@@ -78,7 +78,8 @@ int main() {
 
 	for (int i = 0; i < g->num_nodes; i++) {
 		if (!visited[i]) {
-			dfs(g->adj_list[i], visited);
+			Node start = {i, g->adj_list[i]};
+			dfs(&start,  visited);
 		}
 	}
 	return 0;

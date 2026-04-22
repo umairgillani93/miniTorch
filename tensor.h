@@ -10,13 +10,6 @@ typedef struct {
 	int *stride;
 	int ndim;
 	float *data;
-	// Modify this tensor for AutoGrad
-	// what more parameters do we need
-	//Op *creators; // operations that created this tenosr
-	//Tensor **parents; // Array of Tensor pointers
-	//									// [*A, *B]
-	//bool requires_grad;
-
 } Tensor;
 
 
