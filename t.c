@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "arena.h"
 #include <stdbool.h>
+#include <assert.h>
+#include "arena.h"
 #include "config.h"
 
 typedef struct Tensor Tensor;
@@ -43,10 +44,20 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 
 	if (a->requires_grad || b->requires_grad) {
 		out->requires_grad = true;
-		// TODO:
 		// 1. NEED TO SAVE THE PARENTS
+		out->num_parents = 2;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = a;
+		out->parents[1] = b;
+		out->requires_grad = true;
+		
 		// 2. NEED TO POPULATE THE grad
+		out->grad = NULL;
+		
 		// 3. Need to SAVE THE OPERATIONS for computation graph
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = matmul;
+		out->operations = op;
 
 	}
 
