@@ -7,9 +7,10 @@
 
 typedef struct Tensor Tensor;
 Tensor *tensor_create(Arena *A, int ndim, int *shape);
-Tensor *tensor_matmul(Arena *A, Tensor *x, Tensor *y);
+Tensor *tensor_matmul_forward(Arena *A, Tensor *x, Tensor *y);
+void tensor_matmul_backward(Tensor *self);
 
-typedef struct Op{
+typedef struct Op {
 	void (*backward)(struct Tensor *self);
 } Op;
 
@@ -27,8 +28,11 @@ typedef struct Tensor{
 	int num_parents;
 } Tensor;
 
+void tensor_matmul_backward(Tensor *self) {
+	// TODO: implement backward later
+}
 
-Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
+Tensor *tensor_matmul_forward(Arena *A, Tensor *a, Tensor *b) {
 	// let's say bot tensors are off same shape
 	assert(a->shape[1] == b->shape[0]);
 	int a_rows = a->shape[0];
@@ -52,11 +56,12 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 		out->requires_grad = true;
 		
 		// 2. NEED TO POPULATE THE grad
-		out->grad = NULL;
+		int out_size = a->shape[0] * b->shape[1];
+		out->grad = arena_alloc(A, out_size * sizeof(float));
 		
 		// 3. Need to SAVE THE OPERATIONS for computation graph
 		Op *op = arena_alloc(A, sizeof(Op));
-		op->backward = matmul;
+		op->backward = tensor_matmul_backward;
 		out->operations = op;
 
 	}
@@ -110,11 +115,11 @@ int main() {
 	printf("Arena allocated\n");
 	int ndim = 2;
 	int *shape = arena_alloc(A, ndim * sizeof(int));
-	shape[0] = 16;
+	shape[0] = 32;
 	shape[1] = 32;
 	Tensor *x = tensor_create(A, ndim, shape);
 	Tensor *y = tensor_create(A, ndim, shape);
-	Tensor *z = tensor_matmul(A, x, y);
+	Tensor *z = tensor_matmul_forward(A, x, y);
 		
 	printf("%d\n", z->requires_grad);
 
