@@ -226,7 +226,12 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
 		t->stride[i] = total;
 		total *= shape[i];
 	}
+	// For autograd
 	t->data = arena_alloc(A, total * sizeof(float));
+	t->parents = NULL;
+	t->operations = NULL;
+	t->grad = NULL;
+	t->num_parents = 0;
 	return t;
 }
 
@@ -323,45 +328,98 @@ Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape) {
 	}
 
 	t->data = arena_alloc(A, total * sizeof(float));
+	// For autograd
+	t->data = arena_alloc(A, total * sizeof(float));
+	t->parents = NULL;
+	t->operations = NULL;
+	t->grad = NULL;
+	t->num_parents = 0;
 
 	return t;
 }
 
-Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
-	int rows_a = a->shape[0];
-	int cols_a = a->shape[1];
+Tensor *tensor_matmul_forward(Arena *A, Tensor *a, Tensor *b) {
+	// let's say bot tensors are off same shape
+	assert(a->shape[1] == b->shape[0]);
+	int a_rows = a->shape[0];
+	int a_cols = a->shape[1];
+	int b_rows = b->shape[0];
+	int b_cols = b->shape[1];
 
-	int rows_b = b->shape[0];
-	int cols_b = b->shape[1];
+	int *out_shape = arena_alloc(A, a->ndim * sizeof(int));
+	out_shape[0] = a_rows;
+	out_shape[1] = b_cols;
 
-	// resultant tensor having shape (rows_a, cols_b);
-	int ndim_r = 2;
-	int *shape_r = arena_alloc(A, ndim_r * sizeof(int));
-	shape_r[0] = a->shape[0];
-	shape_r[1] = b->shape[1];
+	Tensor *out = tensor_create(A, a->ndim, out_shape);
 
-	Tensor *r = tensor_create_new(A, ndim_r, shape_r);
-	//printf("Created resultant tensor\n");
+	if (a->requires_grad || b->requires_grad) {
+		out->requires_grad = true;
+		// 1. NEED TO SAVE THE PARENTS
+		out->num_parents = 2;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = a;
+		out->parents[1] = b;
+		out->requires_grad = true;
+		
+		// 2. NEED TO POPULATE THE grad
+		int out_size = a->shape[0] * b->shape[1];
+		out->grad = arena_alloc(A, out_size * sizeof(float));
+		
+		// 3. Need to SAVE THE OPERATIONS for computation graph
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_matmul_backward;
+		out->operations = op;
 
-	for (int i = 0; i < rows_a; i++) {
-		for (int j = 0; j < cols_b; j++) {
+	}
+
+	for (int r = 0; r < a_rows; r++) {
+		for (int c = 0; c < b_cols; c++) {
 			float sum = 0.0f;
-			for (int k = 0; k < cols_a; k++) {
-				sum += (a->data[i * a->stride[0] + k * a->stride[1]]  * b->data[k * b->stride[0] + j * b->stride[1]]);
+			for (int k = 0; k < a_cols; k++) {
+				sum += (a->data[(r * a_cols + k)] *
+					 	b->data[(k * b_cols + c)]);
 			}
-			r->data[i * r->stride[0] + j * r->stride[1]] = sum;
+			out->data[r * b_cols + c] = sum;
 		}
 	}
-	return r;
+	return out;
 }
 
-Tensor *tensor_softmax(Tensor *t) {
-	Tensor *r = malloc(sizeof(Tensor));
+//Tensor *tensor_matmul_forward(Arena *A, Tensor *a, Tensor *b) {
+//	int rows_a = a->shape[0];
+//	int cols_a = a->shape[1];
+//
+//	int rows_b = b->shape[0];
+//	int cols_b = b->shape[1];
+//
+//	// resultant tensor having shape (rows_a, cols_b);
+//	int ndim_r = 2;
+//	int *shape_r = arena_alloc(A, ndim_r * sizeof(int));
+//	shape_r[0] = a->shape[0];
+//	shape_r[1] = b->shape[1];
+//
+//	Tensor *r = tensor_create_new(A, ndim_r, shape_r);
+//	//printf("Created resultant tensor\n");
+//
+//	for (int i = 0; i < rows_a; i++) {
+//		for (int j = 0; j < cols_b; j++) {
+//			float sum = 0.0f;
+//			for (int k = 0; k < cols_a; k++) {
+//				sum += (a->data[i * a->stride[0] + k * a->stride[1]]  * b->data[k * b->stride[0] + j * b->stride[1]]);
+//			}
+//			r->data[i * r->stride[0] + j * r->stride[1]] = sum;
+//		}
+//	}
+//	return r;
+//}
+
+Tensor *tensor_softmax_forward(Arena *A, Tensor *t) {
+	Tensor *r = arena_alloc(A, sizeof(Tensor));
 	if (!r) {return NULL;}
 	r->shape = t->shape;
 	r->stride = t->stride;
 	r->ndim = t->ndim;
-	r->data = malloc(r->shape[0] * r->shape[1] * sizeof(float));
+	r->data = arena_alloc(A, r->shape[0] * r->shape[1] * sizeof(float));
 
 	int rows = t->shape[0];
 	int cols = t->shape[1];

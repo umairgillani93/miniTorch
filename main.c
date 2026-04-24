@@ -24,6 +24,7 @@ int main() {
 	int shape[2] = {SEQ_LEN, EMB_DIM};
 	
 	// Creating actual data tensor
+	// this should work
 	Tensor *T = tensor_create_new(A, 2, shape);
 	tensor_randomize(T); 
 	int size = tensor_size(T);
@@ -69,7 +70,6 @@ int main() {
 			Tensor *batch_tensor = tensor_create_new(A, 2, shape_local);
 			Tensor *target_batch = tensor_create_new(A, 2, shape_local);
 			
-			// TODO: Check this code down, may have bugs!!
 			memcpy(batch_tensor->data, batch_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 			memcpy(target_batch->data, target_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 

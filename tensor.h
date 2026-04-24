@@ -6,13 +6,17 @@
 typedef struct Arena Arena;
 typedef struct Tensor Tensor;
 
-
-
 typedef struct Tensor {
 	int *shape;
 	int *stride;
 	int ndim;
 	float *data;
+	
+	// New parameters
+	bool requires_grad;
+	Op *operations;
+	Tensor **parents;
+	int num_parents;
 } Tensor;
 
 
@@ -21,8 +25,8 @@ Tensor *tensor_create(int ndim, int *shape);
 Tensor *tensor_create_new(Arena *A, int ndim, int *shape);
 Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape);
 Tensor *tensor_create_weights(int ndim, int *shape);
-Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b);
-Tensor *tensor_softmax(Tensor *a);
+Tensor *tensor_matmul_forward(Arena *A, Tensor *a, Tensor *b);
+Tensor *tensor_softmax_forward(Arena *A, Tensor *a);
 Tensor *tensor_transpose(Tensor *t);
 Tensor *relu_backward(Tensor *x, Tensor *y);
 Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target);
