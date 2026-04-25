@@ -32,7 +32,7 @@ typedef struct {
 Tensor *ffn_forward(Arena *A, Tensor *x, FFN *y);
 Tensor *ffn_backward(Arena *A, FFN *f, Tensor *x, Tensor *loss);
 FFN *ffn_create(Arena *A, int input_dim, int hidden_dim);
-Tensor *relu(Tensor *x);
+Tensor *relu_forward(Tensor *x);
 void sgd_optimizer(Tensor *a, Tensor *b, float lr);
 void ffn_init_params(FFN *f);
 //bool is_exploding(Tensor *x);

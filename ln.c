@@ -31,52 +31,66 @@ void layer_norm_init_params(LayerNorm *ln) {
 
 Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {
 
-    int rows = x->shape[0];
-    int cols = x->shape[1];
+	/*1. Instead of float maths we need Tensor graph maths here
+	2. Each operation should have their own reletive tensor
+	3. tensor_mean, tensor_variance, tensor_add, tensor_sub etc ROW WISE
+	4. [[1,2,3,]
+ 			[4,5,6]]
+			[7,8, 9]]	
+	5. Create computational graph using Tensor
+	- tensor_mean
+	- tensor_variance
+	- tensor_add
+	- tensor_sub etc..
+	*/
 
-    //if (ln->var) free(ln->var);
-		// TODO: Check this logic below:
-    ln->var = arena_alloc(A, rows * sizeof(float));
 
-    //if (ln->x_hat) tensor_free(ln->x_hat);
-    ln->x_hat = tensor_create_new(A, 2, x->shape);
+    //int rows = x->shape[0];
+    //int cols = x->shape[1];
 
-    // output tensor y
-    Tensor *y = tensor_create_new(A, 2, x->shape);
+    ////if (ln->var) free(ln->var);
+		//// TODO: Check this logic below:
+    //ln->var = arena_alloc(A, rows * sizeof(float));
 
-    for (int i = 0; i < rows; i++) {
+    ////if (ln->x_hat) tensor_free(ln->x_hat);
+    //ln->x_hat = tensor_create_new(A, 2, x->shape);
 
-        float *x_row   = x->data + i * cols;
-        float *xh_row  = ln->x_hat->data + i * cols;
-        float *y_row   = y->data + i * cols;
+    //// output tensor y
+    //Tensor *y = tensor_create_new(A, 2, x->shape);
 
-        float mu = mean(x_row, cols);
+    //for (int i = 0; i < rows; i++) {
 
-        float var_sum = 0.0f;
-        for (int k = 0; k < cols; k++) {
-            float diff = x_row[k] - mu;
-            var_sum += diff * diff;
-        }
+    //    float *x_row   = x->data + i * cols;
+    //    float *xh_row  = ln->x_hat->data + i * cols;
+    //    float *y_row   = y->data + i * cols;
 
-        float var = var_sum / cols;
-        ln->var[i] = var;
-        float inv_std = 1.0f / sqrtf(var + EPS);
+    //    float mu = mean(x_row, cols);
 
-        for (int c = 0; c < cols; c++) {
+    //    float var_sum = 0.0f;
+    //    for (int k = 0; k < cols; k++) {
+    //        float diff = x_row[k] - mu;
+    //        var_sum += diff * diff;
+    //    }
 
-            // x_hat = normalized value (cache!)
-            float x_hat = (x_row[c] - mu) * inv_std;
-            xh_row[c] = x_hat;
+    //    float var = var_sum / cols;
+    //    ln->var[i] = var;
+    //    float inv_std = 1.0f / sqrtf(var + EPS);
 
-            // y = gamma * x_hat + beta
-            float gamma = ln->gamma->data[c];
-            float beta  = ln->beta->data[c];
+    //    for (int c = 0; c < cols; c++) {
 
-            y_row[c] = gamma * x_hat + beta;
-        }
-    }
+    //        // x_hat = normalized value (cache!)
+    //        float x_hat = (x_row[c] - mu) * inv_std;
+    //        xh_row[c] = x_hat;
 
-    return y;
+    //        // y = gamma * x_hat + beta
+    //        float gamma = ln->gamma->data[c];
+    //        float beta  = ln->beta->data[c];
+
+    //        y_row[c] = gamma * x_hat + beta;
+    //    }
+    //}
+
+    //return y;
 }
 
 // MHA -> LAYER NORM -> FFN -> LAYER NORM -> Loss

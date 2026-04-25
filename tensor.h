@@ -43,7 +43,9 @@ float loss_value(Tensor *a, Tensor *b);
 void tensor_shape(Tensor *t);
 bool is_exploding(Tensor *x);
 void clip_gradient(Tensor *x);
-
+Tensor tensor_mean(int *row, int cols); 
+Tensor tensor_add(int *row1, int *row2); 
+Tensor tensor_sub(int *row1, int *row2);
 
 // new methods added for model struct
 void tensor_randomize_weights(Tensor *x);

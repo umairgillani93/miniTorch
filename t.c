@@ -108,6 +108,27 @@ Tensor *tensor_create(Arena *A, int ndim, int *shape) {
 	return t;
 }
 
+
+/*
+ * Mean intution:
+ * Tensor *tensor_mean(Tensor *a) {
+ * 	 int out_dim = 1;
+ * 	 int out_shape[2] = {rows, 1};
+ * 	 Tensor *out = tensor_create(A, out_dim, out_shape);
+ *   int rows = a->shape[0];
+ *   int cols = a->shape[1];
+ *   int row_mean = 0;
+ *   for (int r = 0; r < rows; r++) {
+ *     int *row_ptr = a->data + r * cols;
+ *     int row_sum = 0;
+ *     for (int r = 0; r < cols; r++) {
+ *       row_sum += row_ptr[r];
+ *     } 
+ *     row_mean = row_sum / cols;
+ *     out->data[r] = row_mean;
+ *   }
+ * }
+
 int main() {
 	Arena *A = malloc(sizeof(Arena));
 	size_t SIZE = 1024 * 1024;

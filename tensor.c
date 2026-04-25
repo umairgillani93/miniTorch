@@ -497,6 +497,10 @@ void tensor_shape(Tensor *t) {
 	printf("(%d, %d)\n", t->shape[0], t->shape[1]);
 }
 
+
+
+
+
 //int main() {
 //	Arena *A = malloc(sizeof(Arena));
 //	int SIZE = 1024 * 1024 * 1024;
