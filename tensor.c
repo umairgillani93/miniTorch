@@ -125,7 +125,7 @@ Tensor *tensor_scaler_addition(Tensor *x, float val) {
 	
 
 Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b) {
-	assert(a->shape != b->shape);
+	assert(a->shape[0] == b->shape[0] && a->shape[1] == b->shape[1]);
 	int ndim = a->ndim;
 	int rows = a->shape[0];
 	int cols = a->shape[1];
@@ -589,6 +589,7 @@ int main() {
 	Tensor *out = tensor_add(A, x, y);
 	Tensor *mean = tensor_mean(A, x);
 	
-	tensor_shape(mean);
-	tensor_get(mean);
+	tensor_shape(out);
+	tensor_get(out);
+	
 }
