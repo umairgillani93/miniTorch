@@ -32,6 +32,13 @@ void tensor_matmul_backward(Tensor *self) {
 	// TODO: implement backward later
 }
 
+void tensor_randomize(Tensor *x) {
+	size_t size = tensor_size(x);
+	for (int i = 0; i < size; i++) {
+		x->data[i] = (rand() % 10) + 1.0f;
+	}
+}
+
 Tensor *tensor_matmul_forward(Arena *A, Tensor *a, Tensor *b) {
 	// let's say bot tensors are off same shape
 	assert(a->shape[1] == b->shape[0]);
@@ -128,6 +135,37 @@ Tensor *tensor_create(Arena *A, int ndim, int *shape) {
  *     out->data[r] = row_mean;
  *   }
  * }
+ */
+
+Tensor *tensor_mean(arena *a, tensor *a) {
+	// computes row-wise mean 
+	// out_shape = (rows, 1)
+	int rows = a->shape[0];
+	int cols = a->shape[1];
+	int out_shape[2] = {rows, 1};
+	Tensor *out = arena_alloc(A, rows * sizeof(float));
+
+	for (int r = 0; r < rows; r++) {
+		float *row = a->data + r * cols;
+		float row_sum = 0.0f;
+		float row_mean = 0.0f;
+		for (int c = 0; c < cols; c++) {
+			row_sum += row[c];
+		}
+		row_mean = row_sum / cols;
+		out->data[r * cols] = row_mean;
+	}
+	return out;
+}
+
+int tensor_size(Tensor *t) {
+	int rows = t->shape[0];
+	int cols = t->shape[1];
+	int size = rows * cols;
+	return size;
+
+}
+
 
 int main() {
 	Arena *A = malloc(sizeof(Arena));
@@ -139,19 +177,8 @@ int main() {
 	shape[0] = 32;
 	shape[1] = 32;
 	Tensor *x = tensor_create(A, ndim, shape);
-	Tensor *y = tensor_create(A, ndim, shape);
-	Tensor *z = tensor_matmul_forward(A, x, y);
-		
-	printf("%d\n", z->requires_grad);
-
-	int rows = 16;
-	int cols = 32;
-	for (int r = 0; r < rows; r++) {
-		for (int c = 0; c < cols; c++) {
-			printf("%f ", z->data[r * cols + c]);
-		}
-		printf("\n");
-	}
+	tensor_randomize(x);
+	Tensor *mean = tensor_mean(A, x);
 
 	return 0;
 }

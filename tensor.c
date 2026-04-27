@@ -8,6 +8,7 @@
 #include "attention2.h"
 #include "feed_forward_nn.h"
 #include "arena.h"
+#include "config.h"
 
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 #define EPS 1e-5
@@ -98,6 +99,7 @@ void tensor_check(char *name, Tensor *x) {
 		exit(1);
 	}
 }
+
 
 
 Tensor *tensor_scaler_multiplication(Tensor *x, float val) {
@@ -350,7 +352,7 @@ Tensor *tensor_matmul_forward(Arena *A, Tensor *a, Tensor *b) {
 	out_shape[0] = a_rows;
 	out_shape[1] = b_cols;
 
-	Tensor *out = tensor_create(A, a->ndim, out_shape);
+	Tensor *out = tensor_create_new(A, a->ndim, out_shape);
 
 	if (a->requires_grad || b->requires_grad) {
 		out->requires_grad = true;
@@ -497,19 +499,48 @@ void tensor_shape(Tensor *t) {
 	printf("(%d, %d)\n", t->shape[0], t->shape[1]);
 }
 
+// Auto-grad methods
+Tensor *tensor_mean(Arena *A, Tensor *a) {
+	// computes row-wise mean 
+	// out_shape = (rows, 1)
+	int rows = a->shape[0];
+	int cols = a->shape[1];
+	int out_shape[2] = {rows, 1};
+	Tensor *out = tensor_create_new(A, 1, out_shape);
+
+	for (int r = 0; r < rows; r++) {
+		float *row = a->data + r * cols;
+		float row_sum = 0.0f;
+		float row_mean = 0.0f;
+		for (int c = 0; c < cols; c++) {
+			row_sum += row[c];
+		}
+		row_mean = row_sum / cols;
+		out->data[r * cols] = row_mean;
+	}
+	return out;
+}
+
+void tensor_matmul_backward(Tensor *x) {
+	// Will be implemented later. IA
+}
 
 
-
-
-//int main() {
-//	Arena *A = malloc(sizeof(Arena));
-//	int SIZE = 1024 * 1024 * 1024;
-//	arena_init(A, SIZE);
-//	int ndim = 2;
-//	int shape[2] = {SEQ_LEN, EMB_DIM};
-//	Tensor *x = tensor_create_new(A, ndim, shape);
-//	int size = tensor_size(x);
-//	for (int i = 0; i < size; i++) {
-//		printf("%f\n", x->data[i]);
-//	}
-//}
+int main() {
+	Arena *A = malloc(sizeof(Arena));
+	int SIZE = 1024 * 1024 * 1024;
+	arena_init(A, SIZE);
+	int ndim = 2;
+	int shape[2] = {SEQ_LEN, EMB_DIM};
+	Tensor *x = tensor_create_new(A, ndim, shape);
+	tensor_randomize(x);
+	tensor_get(x);
+	printf("\n");
+	printf("\n");
+	printf("\n");
+	printf("====================================\n");
+	Tensor *mean = tensor_mean(A, x);
+	tensor_shape(mean);
+	tensor_get(mean);
+	printf("done\n");
+}
