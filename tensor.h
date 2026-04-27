@@ -35,7 +35,6 @@ Tensor *tensor_softmax_forward(Arena *A, Tensor *a);
 Tensor *tensor_transpose(Tensor *t);
 Tensor *relu_backward(Tensor *x, Tensor *y);
 Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target);
-Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b);
 Tensor *tensor_scaler_multiplication(Tensor *x, float a);
 Tensor *tensor_scaler_addition(Tensor *x, float a);
 void tensor_fill_zeros(Tensor *a);
@@ -65,6 +64,8 @@ void tensor_matmul_backward(Tensor *x);
 void tensor_mean_backward(Tensor *x);
 void tensor_add_backward(Tensor *x);
 Tensor *tensor_mean(Arena *A, Tensor *x);
+Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b);
+Tensor *tensor_substract(Arena *A, Tensor *a, Tensor *b);
 
 
 #endif
