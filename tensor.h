@@ -48,18 +48,21 @@ float loss_value(Tensor *a, Tensor *b);
 void tensor_shape(Tensor *t);
 bool is_exploding(Tensor *x);
 void clip_gradient(Tensor *x);
-Tensor *tensor_mean(Arena *A, Tensor *x); 
+//Tensor *tensor_mean(Arena *A, Tensor *x); 
 //Tensor tensor_add(int *row1, int *row2); 
 //Tensor tensor_sub(int *row1, int *row2);
 
 // new methods added for model struct
 void tensor_randomize_weights(Tensor *x);
 void tensor_randomize(Tensor *x);
-void tensor_matmul_backward(Tensor *x);
-
-
 
 // Arena tensor methods
 Tensor *tensor_create_new(Arena *A, int ndim, int *shape);
+
+
+// Autograd tensor methods
+void tensor_matmul_backward(Tensor *x);
+void tensor_mean_backward(Tensor *x);
+Tensor *tensor_mean_forward(Arena *A, Tensor *x);
 
 #endif

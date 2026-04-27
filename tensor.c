@@ -500,13 +500,30 @@ void tensor_shape(Tensor *t) {
 }
 
 // Auto-grad methods
-Tensor *tensor_mean(Arena *A, Tensor *a) {
+Tensor *tensor_mean_forward(Arena *A, Tensor *a) {
 	// computes row-wise mean 
 	// out_shape = (rows, 1)
 	int rows = a->shape[0];
 	int cols = a->shape[1];
 	int out_shape[2] = {rows, 1};
-	Tensor *out = tensor_create_new(A, 1, out_shape);
+	Tensor *out = tensor_create_new(A, 2, out_shape);
+
+	if (a->requires_grad) {
+		// Build computation graph
+		// define requires_grad = true for out;
+		out->requires_grad = true;
+
+		// define number of parents
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, 1 * sizeof(Tensor *));;
+		out->parents[0] = a;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_mean_backward;
+		out->operations = op;
+
+		// define gradients matrix
+		out->grad = arena_alloc(A, rows * 1 * sizeof(float));
+	}
 
 	for (int r = 0; r < rows; r++) {
 		float *row = a->data + r * cols;
@@ -516,9 +533,13 @@ Tensor *tensor_mean(Arena *A, Tensor *a) {
 			row_sum += row[c];
 		}
 		row_mean = row_sum / cols;
-		out->data[r * cols] = row_mean;
+		out->data[r] = row_mean; // cols = 1, c = 0 so r * 1 + 0 = r
 	}
 	return out;
+}
+
+void tensor_mean_backward(Tensor *x) {
+	// will implement later. IA
 }
 
 void tensor_matmul_backward(Tensor *x) {
@@ -539,7 +560,7 @@ int main() {
 	printf("\n");
 	printf("\n");
 	printf("====================================\n");
-	Tensor *mean = tensor_mean(A, x);
+	Tensor *mean = tensor_mean_forward(A, x);
 	tensor_shape(mean);
 	tensor_get(mean);
 	printf("done\n");
