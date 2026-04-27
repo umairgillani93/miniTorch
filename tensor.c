@@ -13,6 +13,7 @@
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 #define EPS 1e-5
 
+
 void tensor_fill_zeros(Tensor *x) {
 	int size = tensor_size(x);
 	for (int i = 0; i < size; i++) {
@@ -123,21 +124,40 @@ Tensor *tensor_scaler_addition(Tensor *x, float val) {
 }
 	
 
-Tensor *tensor_add(Tensor *a, Tensor *b) {
+Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b) {
 	assert(a->shape != b->shape);
-	int ndim = 2;
+	int ndim = a->ndim;
 	int rows = a->shape[0];
 	int cols = a->shape[1];
-	int shape[2] = {rows, cols};
-	Tensor *res = tensor_create(ndim, shape);
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
 
-	for (int i = 0; i < rows; i++) {
-		for (int j = 0; j < cols; j++) {
-			int idx = i * res->shape[1] + j;
-			res->data[idx] = a->data[idx] + b->data[idx];
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (a->requires_grad || b->requires_grad) {
+		out->requires_grad = true;
+
+		// out parents
+		out->num_parents = 2;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+
+		// Operations
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_add_backward;
+		out->operations = op;
+
+		// gradients
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+
+	}
+
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = a->data[r * cols + c] + b->data[r * cols + c];
 		}
 	}
-	return res;
+	return out;
 }
 
 Tensor *relu_backward(Tensor *da1, Tensor *h1) {
@@ -500,12 +520,15 @@ void tensor_shape(Tensor *t) {
 }
 
 // Auto-grad methods
-Tensor *tensor_mean_forward(Arena *A, Tensor *a) {
+Tensor *tensor_mean(Arena *A, Tensor *a) {
 	// computes row-wise mean 
 	// out_shape = (rows, 1)
 	int rows = a->shape[0];
 	int cols = a->shape[1];
-	int out_shape[2] = {rows, 1};
+	int ndim = a->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = 1;
 	Tensor *out = tensor_create_new(A, 2, out_shape);
 
 	if (a->requires_grad) {
@@ -546,6 +569,10 @@ void tensor_matmul_backward(Tensor *x) {
 	// Will be implemented later. IA
 }
 
+void tensor_add_backward(Tensor *x) {
+	// Will be implemented later. IA
+}
+
 
 int main() {
 	Arena *A = malloc(sizeof(Arena));
@@ -554,14 +581,14 @@ int main() {
 	int ndim = 2;
 	int shape[2] = {SEQ_LEN, EMB_DIM};
 	Tensor *x = tensor_create_new(A, ndim, shape);
+	Tensor *y = tensor_create_new(A, ndim, shape);
+
 	tensor_randomize(x);
-	tensor_get(x);
-	printf("\n");
-	printf("\n");
-	printf("\n");
-	printf("====================================\n");
-	Tensor *mean = tensor_mean_forward(A, x);
+	tensor_randomize(y);
+
+	Tensor *out = tensor_add(A, x, y);
+	Tensor *mean = tensor_mean(A, x);
+	
 	tensor_shape(mean);
 	tensor_get(mean);
-	printf("done\n");
 }
