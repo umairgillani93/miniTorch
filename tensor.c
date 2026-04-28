@@ -679,7 +679,41 @@ Tensor *tensor_square(Arena *A, Tensor *a, Tensor *b) {
 
 }
 
-Tensor *tensor_sqrt(Arena *A, Tensor *x) {
+Tensor *tensor_sqrt(Arena *A, Tensor *a) {
+	int rows = a->shape[0];
+	int cols = a->shape[1];
+	int ndim = 2;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (a->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = a;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_sqrt_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	}
+
+	// IMPORTANT!!!
+	// row_offset = r * row_stride;
+	// col_offset = c * col_strid;
+	// index = row_offset + col_offset;
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = sqrt(a->data[r * cols + c] + EPS); // Need to CORRECT. Apply another tensor_add() here.
+		}
+	}
+	return out;
+}
+
+Tensor *tensor_div(Arena *A, Tensor *a, Tensor *b) {
 	assert(a->shape[0] == b->shape[0] && a->shape[1] == b->shape[1]);
 	int rows = a->shape[0];
 	int cols = a->shape[1];
@@ -709,11 +743,15 @@ Tensor *tensor_sqrt(Arena *A, Tensor *x) {
 	// index = row_offset + col_offset;
 	for (int r = 0; r < rows; r++) {
 		for (int c = 0; c < cols; c++) {
-			out->data[r * cols + c] = a->data[r * cols + c] * b->data[r * cols + c];
+			out->data[r * cols + c] = a->data[r * cols + c] / b->data[r * cols + c];
 		}
 	}
 	return out;
 
+}
+
+void tensor_sqrt_backward(Tensor *x) {
+	// Will be implemented later IA
 }
 
 void tensor_square_backward(Tensor *x) {
@@ -749,14 +787,18 @@ int main() {
 	tensor_randomize(y);
 
 	Tensor *mean = tensor_mean(A, x);
-	
-	Tensor *e = tensor_expand_cols(A, mean, x->shape[1]);
-
-	Tensor *diff = tensor_subtract(A, x, e);
+	Tensor *mean_exp = tensor_expand_cols(A, mean, x->shape[1]);
+	Tensor *diff = tensor_subtract(A, x, mean_exp);
 	Tensor *sq = tensor_square(A, diff, diff);
 	Tensor *var = tensor_mean(A, sq);
-	Tensor *out = tensor_expand_cols(A, var, x->shape[1]);
-	tensor_get_2d(out);
+	Tensor *var_exp = tensor_expand_cols(A, var, x->shape[1]);
+	//Tensor *eps = tensor_fill_like(A, var_exp, 1e-5);
+	//Tensor *var_eps = tensor_add(A, var_exp, eps);
+	Tensor *std = tensor_sqrt(A, var_exp);
+	Tensor *out = tensor_div(A, diff, std);
+
 	tensor_shape_2d(out);
-	
+	tensor_get_2d(out);
+
+	return 0;
 }

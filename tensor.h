@@ -47,7 +47,7 @@ float loss_value(Tensor *a, Tensor *b);
 void tensor_shape_2d(Tensor *t);
 bool is_exploding(Tensor *x);
 void clip_gradient(Tensor *x);
-//Tensor *tensor_mean(Arena *A, Tensor *x); 
+Tensor *tensor_sqrt(Arena *A, Tensor *x);
 //Tensor tensor_add(int *row1, int *row2); 
 //Tensor tensor_sub(int *row1, int *row2);
 
@@ -64,6 +64,7 @@ void tensor_matmul_backward(Tensor *x);
 void tensor_mean_backward(Tensor *x);
 void tensor_add_backward(Tensor *x);
 void tensor_square_backward(Tensor *x);
+void tensor_sqrt_backward(Tensor *x);
 void tensor_expand_cols_backward(Tensor *x);
 Tensor *tensor_mean(Arena *A, Tensor *x);
 Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_shape);
