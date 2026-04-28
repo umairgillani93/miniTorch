@@ -642,8 +642,85 @@ Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_cols) {
 	return out;
 }
 
-void tensor_expand_cols_backward(Tensor *x) {
+Tensor *tensor_square(Arena *A, Tensor *a, Tensor *b) {
+	assert(a->shape[0] == b->shape[0] && a->shape[1] == b->shape[1]);
+	int rows = a->shape[0];
+	int cols = a->shape[1];
+	int ndim = a->ndim;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (a->requires_grad || b->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 2;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = a;
+		out->parents[1] = b;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_square_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	}
+
+	// IMPORTANT!!!
+	// row_offset = r * row_stride;
+	// col_offset = c * col_strid;
+	// index = row_offset + col_offset;
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = a->data[r * cols + c] * b->data[r * cols + c];
+		}
+	}
+	return out;
+
+}
+
+Tensor *tensor_sqrt(Arena *A, Tensor *x) {
+	assert(a->shape[0] == b->shape[0] && a->shape[1] == b->shape[1]);
+	int rows = a->shape[0];
+	int cols = a->shape[1];
+	int ndim = a->ndim;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (a->requires_grad || b->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 2;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = a;
+		out->parents[1] = b;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_square_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	}
+
+	// IMPORTANT!!!
+	// row_offset = r * row_stride;
+	// col_offset = c * col_strid;
+	// index = row_offset + col_offset;
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = a->data[r * cols + c] * b->data[r * cols + c];
+		}
+	}
+	return out;
+
+}
+
+void tensor_square_backward(Tensor *x) {
 	// Will be implemented later IA
+}
+
+void tensor_expand_cols_backward(Tensor *x) {
 }
 
 void tensor_mean_backward(Tensor *x) {
@@ -671,23 +748,15 @@ int main() {
 	tensor_randomize(x);
 	tensor_randomize(y);
 
-	printf("x shape: \n");
-	tensor_shape_2d(x);
 	Tensor *mean = tensor_mean(A, x);
-	printf("mean shape: \n");
-	//tensor_get_2d(mean);
 	
 	Tensor *e = tensor_expand_cols(A, mean, x->shape[1]);
-	tensor_shape_2d(e);
-	//tensor_get_2d(e);
 
 	Tensor *diff = tensor_subtract(A, x, e);
-	printf("diff shape: \n");
-	tensor_shape_2d(diff);
-	Tensor *sq = tensor_matmul_forward(A, diff, tensor_transpose(diff));
+	Tensor *sq = tensor_square(A, diff, diff);
 	Tensor *var = tensor_mean(A, sq);
-	
-	tensor_shape_2d(var);
-	//tensor_get_2d(var);
+	Tensor *out = tensor_expand_cols(A, var, x->shape[1]);
+	tensor_get_2d(out);
+	tensor_shape_2d(out);
 	
 }
