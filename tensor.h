@@ -63,9 +63,11 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape);
 void tensor_matmul_backward(Tensor *x);
 void tensor_mean_backward(Tensor *x);
 void tensor_add_backward(Tensor *x);
+void tensor_expand_cols_backward(Tensor *x);
 Tensor *tensor_mean(Arena *A, Tensor *x);
+Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_shape);
 Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b);
-Tensor *tensor_substract(Arena *A, Tensor *a, Tensor *b);
+Tensor *tensor_subtract(Arena *A, Tensor *a, Tensor *b);
 
 
 #endif

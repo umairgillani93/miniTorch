@@ -160,8 +160,8 @@ Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b) {
 	return out;
 }
 
-Tensor *tensor_substract(Arena *A, Tensor *a, Tensor *b) {
-	assert(a->shape[0] == b->shape[0] && a->shape[1] == b->shape[1]);
+Tensor *tensor_subtract(Arena *A, Tensor *a, Tensor *b) {
+	assert((a->shape[0] == b->shape[0]) && (a->shape[1] == b->shape[1]));
 	int ndim = a->ndim;
 	int rows = a->shape[0];
 	int cols = a->shape[1];
@@ -597,6 +597,50 @@ Tensor *tensor_mean(Arena *A, Tensor *a) {
 	return out;
 }
 
+Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_cols) {
+	// Takes the mean value for each row 
+	// and expands it column number of times to match the other tensor
+	// reduce_mean = [m1],
+	//               [m2],
+	//               [m3]
+	// expand_mean = [m1, m1, m1]
+	//               [m2, m2, m2]
+	//               [m3, m3, m3]
+	
+	assert(m->ndim == 2);
+	assert(m->shape[1] == 1);
+	int rows = m->shape[0];
+	int ndim = 2;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = out_cols;
+
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (m->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, sizeof(Tensor *));
+		out->parents[0] = m;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_expand_cols_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * out_cols * sizeof(float));
+	}
+
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < out_cols; c++) {
+			out->data[r * out_cols * c] = m->data[r];
+		}
+	}
+	return out;
+}
+
+void tensor_expand_cols_backward(Tensor *x) {
+	// Will be implemented later IA
+}
+
 void tensor_mean_backward(Tensor *x) {
 	// will implement later. IA
 }
@@ -622,8 +666,18 @@ int main() {
 	tensor_randomize(x);
 	tensor_randomize(y);
 
+	printf("x shape: \n");
+	tensor_shape(x);
 	Tensor *mean = tensor_mean(A, x);
-	Tensor *diff = tensor_substract(A, x, mean);
+	printf("mean shape: \n");
+	tensor_shape(mean);
+	
+	Tensor *e = tensor_expand_cols(A, mean, x->shape[1]);
+	tensor_shape(e);
+	tensor_get(e);
+	exit(1);
+
+	Tensor *diff = tensor_subtract(A, x, mean);
 	Tensor *sq = tensor_matmul_forward(A, diff, diff);
 	Tensor *var = tensor_mean(A, sq);
 	
