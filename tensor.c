@@ -512,17 +512,17 @@ Tensor *tensor_softmax_forward(Arena *A, Tensor *t) {
 //	//printf("Freed successfully!\n");
 //}
 
-void tensor_get(Tensor *t) {
+void tensor_get_2d(Tensor *t) {
 	if (!t) return;
-	int size = 1;
-	for (int i = 0; i < t->ndim; i++) {
-		size *= t->shape[i];
+	int rows = t->shape[0];
+	int cols = t->shape[1];
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			printf("%0.2f ", t->data[r * cols + c]);
+		}
+		printf("\n");
 	}
-	//printf("size: %d\n", size);
-	for (int i = 0; i < size; i++) {
-		printf("%0.2f ", t->data[i]);
-	}		
-}
+}		
 
 Tensor *tensor_transpose(Tensor *a) {
 	int ndim = 2;
@@ -551,7 +551,7 @@ int tensor_size(Tensor *t) {
 	return size;
 }	
 
-void tensor_shape(Tensor *t) {
+void tensor_shape_2d(Tensor *t) {
 	printf("(%d, %d)\n", t->shape[0], t->shape[1]);
 }
 
@@ -629,9 +629,14 @@ Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_cols) {
 		out->grad = arena_alloc(A, rows * out_cols * sizeof(float));
 	}
 
+	// IMPORTANT!!!
+	// row_offset = r * row_stride;
+	// col_offset = c * col_strid;
+	// index = row_offset + col_offset;
 	for (int r = 0; r < rows; r++) {
+		float v = m->data[r];
 		for (int c = 0; c < out_cols; c++) {
-			out->data[r * out_cols * c] = m->data[r];
+			out->data[r * out_cols + c] = v;
 		}
 	}
 	return out;
@@ -667,21 +672,22 @@ int main() {
 	tensor_randomize(y);
 
 	printf("x shape: \n");
-	tensor_shape(x);
+	tensor_shape_2d(x);
 	Tensor *mean = tensor_mean(A, x);
 	printf("mean shape: \n");
-	tensor_shape(mean);
+	//tensor_get_2d(mean);
 	
 	Tensor *e = tensor_expand_cols(A, mean, x->shape[1]);
-	tensor_shape(e);
-	tensor_get(e);
-	exit(1);
+	tensor_shape_2d(e);
+	//tensor_get_2d(e);
 
-	Tensor *diff = tensor_subtract(A, x, mean);
-	Tensor *sq = tensor_matmul_forward(A, diff, diff);
+	Tensor *diff = tensor_subtract(A, x, e);
+	printf("diff shape: \n");
+	tensor_shape_2d(diff);
+	Tensor *sq = tensor_matmul_forward(A, diff, tensor_transpose(diff));
 	Tensor *var = tensor_mean(A, sq);
 	
-	tensor_shape(var);
-	tensor_get(var);
+	tensor_shape_2d(var);
+	//tensor_get_2d(var);
 	
 }
