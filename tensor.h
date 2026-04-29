@@ -26,6 +26,10 @@ typedef struct Tensor {
 
 
 // prototypes definition
+
+Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b);
+Tensor *tensor_square(Arena *A, Tensor *a, Tensor *b);
+Tensor *tensor_div(Arena *A, Tensor *a, Tensor *b);
 Tensor *tensor_create(int ndim, int *shape);
 Tensor *tensor_create_new(Arena *A, int ndim, int *shape);
 Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape);
@@ -70,6 +74,7 @@ Tensor *tensor_mean(Arena *A, Tensor *x);
 Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_shape);
 Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b);
 Tensor *tensor_subtract(Arena *A, Tensor *a, Tensor *b);
+Tensor *tensor_expand_rows(Arena *A, Tensor *a, int out_rows);
 
 
 #endif

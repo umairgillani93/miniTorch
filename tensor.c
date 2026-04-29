@@ -7,6 +7,7 @@
 #include "tensor.h"
 #include "attention2.h"
 #include "feed_forward_nn.h"
+#include "layer_norm.h"
 #include "arena.h"
 #include "config.h"
 
@@ -101,6 +102,62 @@ void tensor_check(char *name, Tensor *x) {
 	}
 }
 
+
+// for rows expansion
+Tensor *tensor_expand_rows(Arena *A, Tensor *a, int out_rows) {
+	assert(a->shape[0] = 1); // has only single row
+	int cols = a->shape[1];
+	int ndim = a->ndim;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = out_rows;
+	out_shape[1] = cols;
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	// computing logic
+	for (int r = 0; r < out_rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = a->data[c];
+		}
+	}
+	return out;
+}
+
+Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b) {
+	assert(a->shape[0] == b->shape[0] && a->shape[1] == b->shape[1]);
+	int rows = a->shape[0];
+	int cols = a->shape[1];
+	int ndim = a->ndim;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (a->requires_grad || b->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 2;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = a;
+		out->parents[1] = b;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_square_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	}
+
+	// IMPORTANT!!!
+	// row_offset = r * row_stride;
+	// col_offset = c * col_strid;
+	// index = row_offset + col_offset;
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = a->data[r * cols + c] * b->data[r * cols + c];
+		}
+	}
+	return out;
+}
 
 
 Tensor *tensor_scaler_multiplication(Tensor *x, float val) {
@@ -773,32 +830,47 @@ void tensor_add_backward(Tensor *x) {
 	// Will be implemented later. IA
 }
 
-
-int main() {
-	Arena *A = malloc(sizeof(Arena));
-	int SIZE = 1024 * 1024 * 1024;
-	arena_init(A, SIZE);
-	int ndim = 2;
-	int shape[2] = {SEQ_LEN, EMB_DIM};
-	Tensor *x = tensor_create_new(A, ndim, shape);
-	Tensor *y = tensor_create_new(A, ndim, shape);
-
-	tensor_randomize(x);
-	tensor_randomize(y);
-
-	Tensor *mean = tensor_mean(A, x);
-	Tensor *mean_exp = tensor_expand_cols(A, mean, x->shape[1]);
-	Tensor *diff = tensor_subtract(A, x, mean_exp);
-	Tensor *sq = tensor_square(A, diff, diff);
-	Tensor *var = tensor_mean(A, sq);
-	Tensor *var_exp = tensor_expand_cols(A, var, x->shape[1]);
-	//Tensor *eps = tensor_fill_like(A, var_exp, 1e-5);
-	//Tensor *var_eps = tensor_add(A, var_exp, eps);
-	Tensor *std = tensor_sqrt(A, var_exp);
-	Tensor *out = tensor_div(A, diff, std);
-
-	tensor_shape_2d(out);
-	tensor_get_2d(out);
-
-	return 0;
+void tensor_scalling_backward(Tensor *x) {
+	// Will be implemented later. IA
 }
+
+
+//int main() {
+//	Arena *A = malloc(sizeof(Arena));
+//	int SIZE = 1024 * 1024 * 1024;
+//	arena_init(A, SIZE);
+//	int ndim = 2;
+//	int shape[2] = {SEQ_LEN, EMB_DIM};
+//	Tensor *x = tensor_create_new(A, ndim, shape);
+//	tensor_randomize(x);
+//	int features = 32;
+//	LayerNorm *ln = layer_norm_create_new(A, features);
+//
+//	Tensor *out = layer_norm_forward(A, ln, x); // x is out MHA output
+//	printf("shape out: \n");
+//	tensor_shape_2d(out);
+//	
+//
+//
+//	//Tensor *mean = tensor_mean(A, x);
+//	//// Docs reference: pytorch -> LINK HERE
+//	//Tensor *mean_exp = tensor_expand_cols(A, mean, x->shape[1]);
+//	//Tensor *diff = tensor_subtract(A, x, mean_exp);
+//	//Tensor *sq = tensor_square(A, diff, diff);
+//	//Tensor *var = tensor_mean(A, sq);
+//	//Tensor *var_exp = tensor_expand_cols(A, var, x->shape[1]);
+//	////Tensor *eps = tensor_fill_like(A, var_exp, 1e-5);
+//	////Tensor *var_eps = tensor_add(A, var_exp, eps);
+//	//Tensor *std = tensor_sqrt(A, var_exp);
+//	//Tensor *out = tensor_div(A, diff, std);
+//
+//	//tensor_shape_2d(out);
+//	//tensor_get_2d(out);
+//
+//	// import torch
+//	// import torch.nn as nn
+//	// Ln = nn.LayerNorm(feature)
+//	// ln.forward()
+//
+//	return 0;
+//}

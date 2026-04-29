@@ -13,7 +13,7 @@ typedef struct {
 	Tensor *d_beta;
 	Tensor *d_gamma;
 	Tensor *x_hat; // Normalized(x)
-	float *var; // cached per row variance
+	Tensor *var; // cached per row variance
 } LayerNorm;
 
 Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *t);
