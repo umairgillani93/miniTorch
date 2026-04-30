@@ -56,32 +56,29 @@ Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {
 
 	Tensor *y = tensor_create_new(A, ndim, y_shape);
 	Tensor *mean = tensor_mean(A, x);
+	
 	// Docs reference: pytorch -> LINK HERE
 	Tensor *mean_exp = tensor_expand_cols(A, mean, x->shape[1]);
 	Tensor *diff = tensor_subtract(A, x, mean_exp);
 	Tensor *sq = tensor_square(A, diff, diff);
 	Tensor *var = tensor_mean(A, sq);
 	Tensor *var_exp = tensor_expand_cols(A, var, x->shape[1]);
-	//Tensor *eps = tensor_fill_like(A, var_exp, 1e-5);
-	//Tensor *var_eps = tensor_add(A, var_exp, eps);
-	Tensor *std = tensor_sqrt(A, var_exp);
-	Tensor *out = tensor_div(A, diff, std);
+	Tensor *eps = tensor_fill_like(A, var_exp, 1e-3);
+
+	Tensor *var_eps = tensor_add(A, var_exp, eps);
+	Tensor *std = tensor_sqrt(A, var_eps);
+	Tensor *out = tensor_div(A, var_eps, std);
 
 	ln->var = var;
 	ln->x_hat = out;
 
 	Tensor *gamma_exp = tensor_expand_rows(A, ln->gamma, rows);
 	Tensor *beta_exp = tensor_expand_rows(A, ln->beta, rows);
-
+	tensor_randomize_weights(gamma_exp);
+	tensor_randomize_weights(beta_exp);
 	Tensor *yhat = tensor_scalling(A, gamma_exp, out);
 
-	printf("yhat shape: \n");
-	tensor_shape_2d(yhat);
-
 	y = tensor_add(A, yhat, beta_exp);
-
-	printf("y shape: \n");
-	tensor_shape_2d(y);
 
 	return y;
 }

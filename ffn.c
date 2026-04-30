@@ -113,11 +113,11 @@ Tensor *ffn_forward(Arena *A, Tensor *x, FFN *f) {
 	if (f->save_inputs == true) {
 		f->inputs = x;
 	}
-	Tensor *h1 = tensor_matmul_forward(A, x, f->w1);
+	Tensor *h1 = tensor_matmul(A, x, f->w1);
 	f->h1 = h1;
 	f->a1 = relu_forward(f->h1);
 	assert(f->a1->shape[1] == f->w2->shape[0]);
-	f->out = tensor_matmul_forward(A, f->a1, f->w2);
+	f->out = tensor_matmul(A, f->a1, f->w2);
 	
 
 	return f->out;

@@ -67,6 +67,103 @@ bool is_exploding(Tensor *x) {
 	return false;
 }
 
+float max_element(float *row, int cols) {
+	float mx = row[0];
+	for (int i = 1; i < cols; i++) {
+		if (row[i] > row[i - 1]) {
+			mx = row[i];
+		}
+	}
+	return mx;
+}
+
+Tensor *tensor_row_max(Arena *A, Tensor *x) {
+	int rows = x->shape[0];
+	int cols = x->shape[1]; // row sum shrinks cols dimention
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	// Create output tensor
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (x->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = x;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_softmax_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	}
+
+	for (int r = 0; r < rows; r++) {
+		float *row = x->data + r * cols;
+		float MX = max_element(row, cols);
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = MX;
+		}
+	}
+	return out;
+}
+
+Tensor *tensor_row_sum(Arena *A, Tensor *x) {
+	int rows = x->shape[0];
+	int cols = 1; // row sum shrinks cols dimention
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, rows * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	// Create output tensor
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (x->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = x;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_softmax_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * sizeof(float));
+	}
+
+	for (int r = 0; r < rows; r++) {
+		float *row = x->data + r * cols;
+		float sum = 0.0f;
+		for (int c = 0; c < cols; c++) {
+			sum += row[c];
+		}
+		out->data[r] = sum;
+	}
+	return out;
+}
+
+Tensor *tensor_fill_like(Arena *A, Tensor *x, double eps) {
+	// No grad = true for this
+	// Hence this is not the part of Computational graph
+	printf("rows: %d\n", x->shape[0]);
+	printf("cols : %d\n", x->shape[1]);
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = x->shape[0]; // rows of out
+	out_shape[1] = x->shape[1]; // cols of out
+															//
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = x->data[r *cols + c] + eps;
+		}
+	}
+	return out;
+}
+
 void tensor_randomize_weights(Tensor *x) {
 	size_t size = tensor_size(x);
 	for (int i = 0; i < size; i++) {
@@ -453,7 +550,7 @@ Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape) {
 	return t;
 }
 
-Tensor *tensor_matmul_forward(Arena *A, Tensor *a, Tensor *b) {
+Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 	// let's say bot tensors are off same shape
 	assert(a->shape[1] == b->shape[0]);
 	int a_rows = a->shape[0];
@@ -528,36 +625,42 @@ Tensor *tensor_matmul_forward(Arena *A, Tensor *a, Tensor *b) {
 //	return r;
 //}
 
-Tensor *tensor_softmax_forward(Arena *A, Tensor *t) {
-	Tensor *r = arena_alloc(A, sizeof(Tensor));
-	if (!r) {return NULL;}
-	r->shape = t->shape;
-	r->stride = t->stride;
-	r->ndim = t->ndim;
-	r->data = arena_alloc(A, r->shape[0] * r->shape[1] * sizeof(float));
+Tensor *tensor_softmax(Arena *A, Tensor *t) {
+	/*
+	 * Tensor *max = tensor_row_max(A, Tensor *x)
+	 * Tensor *max_exp = tensor_expand_cols(A, Tensor *x)
+	 * Tensor *shifted = tensor_sub(A, max_exp, num_cols);
+	 */
 
-	int rows = t->shape[0];
-	int cols = t->shape[1];
+	//Tensor *r = arena_alloc(A, sizeof(Tensor));
+	//if (!r) {return NULL;}
+	//r->shape = t->shape;
+	//r->stride = t->stride;
+	//r->ndim = t->ndim;
+	//r->data = arena_alloc(A, r->shape[0] * r->shape[1] * sizeof(float));
 
-	for (int i = 0; i < rows; i++) {
-		float max = -INFINITY;
-		for (int j = 0; j < cols; j++) {
-			if (t->data[i * cols + j] > max) {
-				max = t->data[i * cols + j];
-			}
-		}
+	//int rows = t->shape[0];
+	//int cols = t->shape[1];
 
-		float sum = 0.0f;
-		for (int j = 0; j < cols; j++) {
-			sum += expf(t->data[i * cols + j] - max);
-		}
+	//for (int i = 0; i < rows; i++) {
+	//	float max = -INFINITY;
+	//	for (int j = 0; j < cols; j++) {
+	//		if (t->data[i * cols + j] > max) {
+	//			max = t->data[i * cols + j];
+	//		}
+	//	}
 
-		// now find division
-		for (int k = 0; k < cols; k++) {
-			r->data[i * cols + k] = expf(t->data[i * cols + k] - max) / sum;
-		}
-	}
-	return r;
+	//	float sum = 0.0f;
+	//	for (int j = 0; j < cols; j++) {
+	//		sum += expf(t->data[i * cols + j] - max);
+	//	}
+
+	//	// now find division
+	//	for (int k = 0; k < cols; k++) {
+	//		r->data[i * cols + k] = expf(t->data[i * cols + k] - max) / sum;
+	//	}
+	//}
+	//return r;
 }
 
 //void tensor_free(Tensor *t) {
@@ -834,43 +937,23 @@ void tensor_scalling_backward(Tensor *x) {
 	// Will be implemented later. IA
 }
 
+void tensor_softmax_backward(Tensor *x) {
+	// Will be implemented later. IA
+}
 
-//int main() {
-//	Arena *A = malloc(sizeof(Arena));
-//	int SIZE = 1024 * 1024 * 1024;
-//	arena_init(A, SIZE);
-//	int ndim = 2;
-//	int shape[2] = {SEQ_LEN, EMB_DIM};
-//	Tensor *x = tensor_create_new(A, ndim, shape);
-//	tensor_randomize(x);
-//	int features = 32;
-//	LayerNorm *ln = layer_norm_create_new(A, features);
-//
-//	Tensor *out = layer_norm_forward(A, ln, x); // x is out MHA output
-//	printf("shape out: \n");
-//	tensor_shape_2d(out);
-//	
-//
-//
-//	//Tensor *mean = tensor_mean(A, x);
-//	//// Docs reference: pytorch -> LINK HERE
-//	//Tensor *mean_exp = tensor_expand_cols(A, mean, x->shape[1]);
-//	//Tensor *diff = tensor_subtract(A, x, mean_exp);
-//	//Tensor *sq = tensor_square(A, diff, diff);
-//	//Tensor *var = tensor_mean(A, sq);
-//	//Tensor *var_exp = tensor_expand_cols(A, var, x->shape[1]);
-//	////Tensor *eps = tensor_fill_like(A, var_exp, 1e-5);
-//	////Tensor *var_eps = tensor_add(A, var_exp, eps);
-//	//Tensor *std = tensor_sqrt(A, var_exp);
-//	//Tensor *out = tensor_div(A, diff, std);
-//
-//	//tensor_shape_2d(out);
-//	//tensor_get_2d(out);
-//
-//	// import torch
-//	// import torch.nn as nn
-//	// Ln = nn.LayerNorm(feature)
-//	// ln.forward()
-//
-//	return 0;
-//}
+
+int main() {
+	Arena *A = malloc(sizeof(Arena));
+	int SIZE = 1024 * 1024 * 1024;
+	arena_init(A, SIZE);
+	int ndim = 2;
+	int shape[2] = {SEQ_LEN, EMB_DIM};
+	Tensor *x = tensor_create_new(A, ndim, shape);
+	tensor_randomize(x);
+
+	Tensor *sum = tensor_row_max(A, x);
+	tensor_get_2d(sum);
+	tensor_shape_2d(sum);
+
+	return 0;
+}

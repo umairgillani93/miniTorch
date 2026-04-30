@@ -27,6 +27,8 @@ typedef struct Tensor {
 
 // prototypes definition
 
+Tensor *tensor_fill_like(Arena *A, Tensor *a, double eps);
+Tensor *tensor_row_sum(Arena *A, Tensor *x);
 Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b);
 Tensor *tensor_square(Arena *A, Tensor *a, Tensor *b);
 Tensor *tensor_div(Arena *A, Tensor *a, Tensor *b);
@@ -34,8 +36,8 @@ Tensor *tensor_create(int ndim, int *shape);
 Tensor *tensor_create_new(Arena *A, int ndim, int *shape);
 Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape);
 Tensor *tensor_create_weights(int ndim, int *shape);
-Tensor *tensor_matmul_forward(Arena *A, Tensor *a, Tensor *b);
-Tensor *tensor_softmax_forward(Arena *A, Tensor *a);
+Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b);
+Tensor *tensor_softmax(Arena *A, Tensor *a);
 Tensor *tensor_transpose(Tensor *t);
 Tensor *relu_backward(Tensor *x, Tensor *y);
 Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target);
@@ -70,6 +72,7 @@ void tensor_add_backward(Tensor *x);
 void tensor_square_backward(Tensor *x);
 void tensor_sqrt_backward(Tensor *x);
 void tensor_expand_cols_backward(Tensor *x);
+void tensor_softmax_backward(Tensor *x);
 Tensor *tensor_mean(Arena *A, Tensor *x);
 Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_shape);
 Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b);
