@@ -14,6 +14,25 @@
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 #define EPS 1e-5
 
+Tensor *tensor_fill_val(Arena *A, Tensor *x, int v) {
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+	
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	// No computational graph for this
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = v;
+		}
+	}
+	return out;
+}
+
 
 void tensor_fill_zeros(Tensor *x) {
 	int size = tensor_size(x);
@@ -970,18 +989,18 @@ void tensor_softmax_backward(Tensor *x) {
 }
 
 
-int main() {
-	Arena *A = malloc(sizeof(Arena));
-	int SIZE = 1024 * 1024 * 1024;
-	arena_init(A, SIZE);
-	int ndim = 2;
-	int shape[2] = {SEQ_LEN, EMB_DIM};
-	Tensor *x = tensor_create_new(A, ndim, shape);
-	tensor_randomize(x);
-
-	Tensor *out= tensor_softmax(A, x);
-	tensor_get_2d(out);
-	tensor_shape_2d(out);
-
-	return 0;
-}
+//int main() {
+//	Arena *A = malloc(sizeof(Arena));
+//	int SIZE = 1024 * 1024 * 1024;
+//	arena_init(A, SIZE);
+//	int ndim = 2;
+//	int shape[2] = {SEQ_LEN, EMB_DIM};
+//	Tensor *x = tensor_create_new(A, ndim, shape);
+//	tensor_randomize(x);
+//
+//	Tensor *out= tensor_softmax(A, x);
+//	tensor_get_2d(out);
+//	tensor_shape_2d(out);
+//
+//	return 0;
+//}

@@ -28,6 +28,7 @@ typedef struct Tensor {
 // prototypes definition
 
 Tensor *tensor_fill_like(Arena *A, Tensor *a, double eps);
+Tensor *tensor_fill_val(Arena *A, Tensor *a, int val);
 Tensor *tensor_row_sum(Arena *A, Tensor *x);
 Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b);
 Tensor *tensor_square(Arena *A, Tensor *a, Tensor *b);

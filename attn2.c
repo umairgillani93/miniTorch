@@ -119,7 +119,7 @@ Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {
 				QKt->data[i * QKt->shape[1] + j] *= scale;
 			}
 		}
-		Tensor *Ak = tensor_softmax(QKt);
+		Tensor *Ak = tensor_softmax(A, QKt);
 
 		
 		int ashape[2] = {rows, rows};
@@ -211,8 +211,8 @@ Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {
 	//printf("dx3 shape: \n");
 	//tensor_shape(dx3);
 
-	Tensor *temp = tensor_add(dx1, dx2);
-	temp = tensor_add(temp, dx3);
+	Tensor *temp = tensor_add(A, dx1, dx2);
+	temp = tensor_add(A, temp, dx3);
 
 	tensor_add_inplace(&dX_total, &temp);
 	return dX_total;
@@ -220,9 +220,9 @@ Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {
 
 
 Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
-	mha->Q = tensor_matmul_forward(A, t, mha->wq);
-	mha->K = tensor_matmul_forward(A, t, mha->wk);
-	mha->V = tensor_matmul_forward(A, t, mha->wv);
+	mha->Q = tensor_matmul(A, t, mha->wq);
+	mha->K = tensor_matmul(A, t, mha->wk);
+	mha->V = tensor_matmul(A, t, mha->wv);
 
 	// extract the required parameters
 	int rows = t->shape[0];
@@ -270,14 +270,29 @@ Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
 
 Tensor *scaled_dot_product_attention(Arena *A, Tensor *Q, Tensor *K, Tensor *V, int dk) {
 	Tensor *kt = tensor_transpose(K); // CHECK THIS LATER FOR AUTO GRAD
-	Tensor *qkt = tensor_matmul_forward(A, Q, kt);
-	for (int i = 0; i < qkt->shape[0]; i++) {
-		for (int j = 0; j < qkt->shape[1]; j++) {
-			qkt->data[i * qkt->shape[1] + j] = qkt->data[i * qkt->shape[1] +j] / sqrtf(dk);;
-		}
-	}
-	Tensor *qkt_soft = tensor_softmax_forward(Arena *A, qkt); // RAND_FLOAT is random we'll calculate this later CHECK FOR AUTOGRAD
-	Tensor *ret = tensor_matmul_forward(A, qkt_soft, V);
+	Tensor *qkt = tensor_matmul(A, Q, kt);
+	//Tensor *sq = tensor_sqrt(A, 
+	//for (int i = 0; i < qkt->shape[0]; i++) {
+	//	for (int j = 0; j < qkt->shape[1]; j++) {
+	//		qkt->data[i * qkt->shape[1] + j] = qkt->data[i * qkt->shape[1] +j] / sqrtf(dk);
+	//	}
+	//}
+	int dkk_rows = qkt->shape[0];
+	int dkk_cols = qkt->shape[1];
+	int dkk_ndim = qkt->ndim;
+	int *dkk_shape = arena_alloc(A, dkk_ndim * sizeof(int));
+	dkk_shape[0] = dkk_rows;
+	dkk_shape[1] = dkk_cols;
+	
+	Tensor *dkk_tensor = tensor_create_new(A, dkk_ndim, dkk_shape);
+	dkk_tensor = tensor_fill_val(A, dkk_tensor, (float) dk);
+	
+	Tensor *dkk_sqrt = tensor_sqrt(A, dkk_tensor);
+
+	Tensor *dkk_div = tensor_div(A, qkt, dkk_sqrt);
+
+	Tensor *qkt_soft = tensor_softmax(A, dkk_div); // RAND_FLOAT is random we'll calculate this later CHECK FOR AUTOGRAD
+	Tensor *ret = tensor_matmul(A, qkt_soft, V);
 	return ret;
 }
 

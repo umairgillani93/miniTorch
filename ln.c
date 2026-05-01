@@ -207,21 +207,21 @@ LayerNorm *layer_norm_create_new(Arena *A, int features) {
 	return ln;
 }
 
-int main() {
-	Arena *A = malloc(sizeof(Arena));
-	int SIZE = 1024 * 1024 * 1024;
-	arena_init(A, SIZE);
-	int ndim = 2;
-	int shape[2] = {SEQ_LEN, EMB_DIM};
-	Tensor *x = tensor_create_new(A, ndim, shape);
-	tensor_randomize(x);
-	int features = 32;
-	LayerNorm *ln = layer_norm_create_new(A, features);
-
-	Tensor *out = layer_norm_forward(A, ln, x); // x is out MHA output
-	printf("shape out: \n");
-	tensor_get_2d(out);
-	tensor_shape_2d(out);
-	return 0;
-}
+//int main() {
+//	Arena *A = malloc(sizeof(Arena));
+//	int SIZE = 1024 * 1024 * 1024;
+//	arena_init(A, SIZE);
+//	int ndim = 2;
+//	int shape[2] = {SEQ_LEN, EMB_DIM};
+//	Tensor *x = tensor_create_new(A, ndim, shape);
+//	tensor_randomize(x);
+//	int features = 32;
+//	LayerNorm *ln = layer_norm_create_new(A, features);
+//
+//	Tensor *out = layer_norm_forward(A, ln, x); // x is out MHA output
+//	printf("shape out: \n");
+//	tensor_get_2d(out);
+//	tensor_shape_2d(out);
+//	return 0;
+//}
 

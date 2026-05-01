@@ -74,6 +74,9 @@ int main() {
 			memcpy(target_batch->data, target_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 
 			Tensor *attn_score = mha_forward(A, batch_tensor, m_batch);
+			printf("attn score shape: \n");
+			tensor_shape_2d(attn_score);
+
 			clip_gradient(attn_score);
 
 			//tensor_get(attn_score);
@@ -84,10 +87,16 @@ int main() {
 			Tensor *ln1 = layer_norm_forward(A, L1, attn_score);
 			tensor_check("ln1_forward", ln1);
 			//printf("LayerNorm #1 ran successfully!\n");
+			printf("ln1 shape: \n");
+			tensor_shape_2d(ln1);
+			exit(1);
 
 			// Create FFN feed-forward NN and run ffn_forward pass
 			Tensor *ffn_ln = ffn_forward(A, ln1, f);
 			tensor_check("ffn_ln_forward", ffn_ln);
+
+			printf("ffn shape: \n");
+			tensor_shape_2d(ffn_ln);
 
 			// Apply layer_norm
 			Tensor *ln2 = layer_norm_forward(A, L2, ffn_ln);
