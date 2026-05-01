@@ -14,6 +14,42 @@
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 #define EPS 1e-5
 
+Tensor *tensor_relu(Arena *A, Tensor *x) {
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+	
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (x->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = x;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_relu_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	}
+
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			if (out->data[r * cols + c] > 0) {
+				out->data[r * cols + c] = out->data[r * cols + c];
+			}
+			else {
+				out->data[r * cols + c] = 0.0f;
+			}
+		}
+	}
+	return out;
+}
+
+
+
 Tensor *tensor_fill_val(Arena *A, Tensor *x, int v) {
 	int rows = x->shape[0];
 	int cols = x->shape[1];
@@ -399,20 +435,20 @@ Tensor *tensor_subtract(Arena *A, Tensor *a, Tensor *b) {
 	return out;
 }
 
-Tensor *relu_backward(Tensor *da1, Tensor *h1) {
-	Tensor *dh1 = tensor_create_weights(h1->ndim, h1->shape);
-	int size = tensor_size(h1);
-
-	for (int i = 0; i < size; i++) {
-		if (h1->data[i] > 0) {
-			dh1->data[i] = da1->data[i];
-		}
-		else {
-			dh1->data[i] = 0.0f;
-		}
-	}
-	return dh1;
-}
+//Tensor *relu_backward(Tensor *da1, Tensor *h1) {
+//	Tensor *dh1 = tensor_create_weights(h1->ndim, h1->shape);
+//	int size = tensor_size(h1);
+//
+//	for (int i = 0; i < size; i++) {
+//		if (h1->data[i] > 0) {
+//			dh1->data[i] = da1->data[i];
+//		}
+//		else {
+//			dh1->data[i] = 0.0f;
+//		}
+//	}
+//	return dh1;
+//}
 
 float loss_value(Tensor *pred, Tensor *target) {
 	float squared_err = 0.0f;
@@ -985,6 +1021,10 @@ void tensor_scalling_backward(Tensor *x) {
 }
 
 void tensor_softmax_backward(Tensor *x) {
+	// Will be implemented later. IA
+}
+
+void tensor_relu_backward(Tensor *x) {
 	// Will be implemented later. IA
 }
 

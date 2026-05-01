@@ -28,6 +28,7 @@ typedef struct Tensor {
 // prototypes definition
 
 Tensor *tensor_fill_like(Arena *A, Tensor *a, double eps);
+Tensor *tensor_relu(Arena *A, Tensor *x);
 Tensor *tensor_fill_val(Arena *A, Tensor *a, int val);
 Tensor *tensor_row_sum(Arena *A, Tensor *x);
 Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b);
@@ -46,6 +47,7 @@ Tensor *tensor_scaler_multiplication(Tensor *x, float a);
 Tensor *tensor_scaler_addition(Tensor *x, float a);
 void tensor_fill_zeros(Tensor *a);
 void tensor_add_inplace(Tensor **a, Tensor **b);
+void tensor_relu_backward( Tensor *out);
 //void tensor_free(Tensor *t);
 void tensor_get_2d(Tensor *t);
 void tensor_check(char *name, Tensor *x);
@@ -74,6 +76,7 @@ void tensor_square_backward(Tensor *x);
 void tensor_sqrt_backward(Tensor *x);
 void tensor_expand_cols_backward(Tensor *x);
 void tensor_softmax_backward(Tensor *x);
+void tensor_relu_backward(Tensor *x);
 Tensor *tensor_mean(Arena *A, Tensor *x);
 Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_shape);
 Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b);

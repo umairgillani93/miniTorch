@@ -75,9 +75,11 @@ int main() {
 
 			Tensor *attn_score = mha_forward(A, batch_tensor, m_batch);
 			printf("attn score shape: \n");
-			tensor_shape_2d(attn_score);
 
 			clip_gradient(attn_score);
+
+			tensor_shape_2d(attn_score);
+			tensor_get_2d(attn_score);
 
 			//tensor_get(attn_score);
 			tensor_check("attn_score_forward", attn_score);
@@ -89,7 +91,7 @@ int main() {
 			//printf("LayerNorm #1 ran successfully!\n");
 			printf("ln1 shape: \n");
 			tensor_shape_2d(ln1);
-			exit(1);
+			tensor_get_2d(ln1);
 
 			// Create FFN feed-forward NN and run ffn_forward pass
 			Tensor *ffn_ln = ffn_forward(A, ln1, f);
@@ -97,6 +99,9 @@ int main() {
 
 			printf("ffn shape: \n");
 			tensor_shape_2d(ffn_ln);
+			tensor_get_2d(ffn_ln);
+
+			exit(1);
 
 			// Apply layer_norm
 			Tensor *ln2 = layer_norm_forward(A, L2, ffn_ln);
