@@ -109,6 +109,36 @@ Tensor *tensor_row_max(Arena *A, Tensor *x) {
 	return out;
 }
 
+Tensor *tensor_exp(Arena *A, Tensor *x) {
+	int rows = x->shape[0];
+	int cols = x->shape[1]; // row sum shrinks cols dimention
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	// Create output tensor
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	//if (x->requires_grad) {
+	//	out->requires_grad = true;
+	//	out->num_parents = 1;
+	//	out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+	//	out->parents[0] = x;
+	//	Op *op = arena_alloc(A, sizeof(Op));
+	//	op->backward = tensor_softmax_backward;
+	//	out->operations = op;
+	//	out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	//}
+
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = expf(x->data[r * cols + c]);
+		}
+	}
+	return out;
+}
+
 Tensor *tensor_row_sum(Arena *A, Tensor *x) {
 	int rows = x->shape[0];
 	int cols = 1; // row sum shrinks cols dimention
@@ -625,42 +655,40 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 //	return r;
 //}
 
-Tensor *tensor_softmax(Arena *A, Tensor *t) {
+Tensor *tensor_softmax(Arena *A, Tensor *x) {
 	/*
 	 * Tensor *max = tensor_row_max(A, Tensor *x)
 	 * Tensor *max_exp = tensor_expand_cols(A, Tensor *x)
 	 * Tensor *shifted = tensor_sub(A, max_exp, num_cols);
 	 */
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
 
-	//Tensor *r = arena_alloc(A, sizeof(Tensor));
-	//if (!r) {return NULL;}
-	//r->shape = t->shape;
-	//r->stride = t->stride;
-	//r->ndim = t->ndim;
-	//r->data = arena_alloc(A, r->shape[0] * r->shape[1] * sizeof(float));
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
 
-	//int rows = t->shape[0];
-	//int cols = t->shape[1];
+	if (x->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, sizeof(Tensor *));
+		out->parents[0] = x;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_softmax_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	}
 
-	//for (int i = 0; i < rows; i++) {
-	//	float max = -INFINITY;
-	//	for (int j = 0; j < cols; j++) {
-	//		if (t->data[i * cols + j] > max) {
-	//			max = t->data[i * cols + j];
-	//		}
-	//	}
+	// softmax(x) = e(x[i])/sum(row); // for each row
+	
+	Tensor *exp = tensor_exp(A, x);
+	Tensor *row_sum = tensor_row_sum(A, x);
+	Tensor *row_sum_exp = tensor_expand_cols(A, row_sum, cols);
+	out = tensor_div(A, exp, row_sum_exp);
 
-	//	float sum = 0.0f;
-	//	for (int j = 0; j < cols; j++) {
-	//		sum += expf(t->data[i * cols + j] - max);
-	//	}
-
-	//	// now find division
-	//	for (int k = 0; k < cols; k++) {
-	//		r->data[i * cols + k] = expf(t->data[i * cols + k] - max) / sum;
-	//	}
-	//}
-	//return r;
+	return out;
 }
 
 //void tensor_free(Tensor *t) {
@@ -951,9 +979,9 @@ int main() {
 	Tensor *x = tensor_create_new(A, ndim, shape);
 	tensor_randomize(x);
 
-	Tensor *sum = tensor_row_max(A, x);
-	tensor_get_2d(sum);
-	tensor_shape_2d(sum);
+	Tensor *out= tensor_softmax(A, x);
+	tensor_get_2d(out);
+	tensor_shape_2d(out);
 
 	return 0;
 }
