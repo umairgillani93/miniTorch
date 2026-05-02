@@ -37,8 +37,8 @@ Tensor *tensor_relu(Arena *A, Tensor *x) {
 
 	for (int r = 0; r < rows; r++) {
 		for (int c = 0; c < cols; c++) {
-			if (out->data[r * cols + c] > 0) {
-				out->data[r * cols + c] = out->data[r * cols + c];
+			if (x->data[r * cols + c] > 0) {
+				out->data[r * cols + c] = x->data[r * cols + c];
 			}
 			else {
 				out->data[r * cols + c] = 0.0f;
