@@ -224,47 +224,52 @@ Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
 	mha->K = tensor_matmul(A, t, mha->wk);
 	mha->V = tensor_matmul(A, t, mha->wv);
 
+	// 1. tensor_slice_cols(A, tensor *x, int start_idx, int width);
+	// 2. tensor_concat(A, tensor *out, int heads)
+	
+
+
 	// extract the required parameters
-	int rows = t->shape[0];
-	int cols = t->shape[1];
-	int heads = mha->num_heads;
-	int dk = mha->dk;
+	//int rows = t->shape[0];
+	//int cols = t->shape[1];
+	//int heads = mha->num_heads;
+	//int dk = mha->dk;
 
 
-	mha->out = tensor_create_new(A, 2, t->shape);
-	int common_shape[2] = {rows, dk};
+	//mha->out = tensor_create_new(A, 2, t->shape);
+	//int common_shape[2] = {rows, dk};
 
-	for (int k = 0; k < heads; k++) {
-		// first of all I need scaled_dot_product_scores
-		// for which I need slicing Q, K and V
-		// slicing logic first
-		Tensor *Q_h = tensor_create_new(A, 2, common_shape);
-		Tensor *K_h = tensor_create_new(A, 2, common_shape);
-		Tensor *V_h = tensor_create_new(A, 2, common_shape);
+	//for (int k = 0; k < heads; k++) {
+	//	// first of all I need scaled_dot_product_scores
+	//	// for which I need slicing Q, K and V
+	//	// slicing logic first
+	//	Tensor *Q_h = tensor_create_new(A, 2, common_shape);
+	//	Tensor *K_h = tensor_create_new(A, 2, common_shape);
+	//	Tensor *V_h = tensor_create_new(A, 2, common_shape);
 
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < dk; j++) {
-				int src = i * cols + j + k * dk;
-				int dest = i * dk + j;
+	//	for (int i = 0; i < rows; i++) {
+	//		for (int j = 0; j < dk; j++) {
+	//			int src = i * cols + j + k * dk;
+	//			int dest = i * dk + j;
 
-				Q_h->data[dest] = mha->Q->data[src];
-				K_h->data[dest] = mha->K->data[src];
-				V_h->data[dest] = mha->V->data[src];
+	//			Q_h->data[dest] = mha->Q->data[src];
+	//			K_h->data[dest] = mha->K->data[src];
+	//			V_h->data[dest] = mha->V->data[src];
 
-			}
-		}
+	//		}
+	//	}
 
-		Tensor *head_out = scaled_dot_product_attention(A, Q_h, K_h, V_h, dk);
-		// Write this back to the output
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < dk; j++) {
-				int head_idx = i * dk + j;
-				int out_idx = i * cols + j + k * dk;
-				mha->out->data[out_idx] = head_out->data[head_idx];
-			}
-		}
-	}
-	return mha->out;
+	//	Tensor *head_out = scaled_dot_product_attention(A, Q_h, K_h, V_h, dk);
+	//	// Write this back to the output
+	//	for (int i = 0; i < rows; i++) {
+	//		for (int j = 0; j < dk; j++) {
+	//			int head_idx = i * dk + j;
+	//			int out_idx = i * cols + j + k * dk;
+	//			mha->out->data[out_idx] = head_out->data[head_idx];
+	//		}
+	//	}
+	//}
+	//return mha->out;
 }	
 
 

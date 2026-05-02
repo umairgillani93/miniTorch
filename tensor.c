@@ -14,6 +14,75 @@
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 #define EPS 1e-5
 
+Tensor *tensor_concat(Arena *A, Tensor **heads, int num_heads) {
+	int rows = heads[0]->shape[0];
+	int cols = heads[0]->shape[1];
+	int ndim = heads[0]->ndim;
+	int out_cols = cols * heads;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	
+	out_shape[1] = out_cols; // 8 * 4 = 32;
+	
+	// create out tensor
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	// core logic
+	for (int k = 0; k < heads; k++) {
+		Tensor *head = heads[k]; // head chunk
+	
+		for (int r= 0; r < rows; r++) {
+			for (int c = 0; c < out_cols; c++) {
+				out->data[r * out_cols + k * head->shape[1] + c] = head->data[r * cols + c];
+			}
+		}
+	}
+	return out;
+}
+
+
+Tensor *tensor_slice_cols(Arena *A, Tensor *x, int k, int dk) {
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = dk;
+	// If actual tensor 'x' has shape (16, 32)
+	// out tensor will be sliced version of it 
+	// and will have shape (16, dk);
+	
+	// create output tensor now
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	// build computational graph
+	if (x->requires_grad) {
+		out->requires_grad;
+		out->num_parents = 1;
+		out->parents[0] = x;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_slice_cols_backward;
+		out->grad = arena_alloc(A, rows * dk * sizeof(float));
+	}
+
+	// core logic here
+	// slices the main tensor 'x' and populates tensor 'out'
+	// [[1,2,3,4,5,6,7,8],
+	//	  [1,2,3,4,5,6,7,8],
+	//		 [1,2,3,4,5,6,7,8],
+	//	  [1,2,3,4,5,6,7,8]]
+	
+	// using pointer arithematic
+	//float *start = x->data + k * rows * dk;
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < dk; c++) {
+			out->data[r * dk + c] = x->data[r * cols + k * dk + c];
+		}
+	}
+	return out;
+}
+
 Tensor *tensor_relu(Arena *A, Tensor *x) {
 	int rows = x->shape[0];
 	int cols = x->shape[1];
@@ -1028,19 +1097,43 @@ void tensor_relu_backward(Tensor *x) {
 	// Will be implemented later. IA
 }
 
+void tensor_slice_cols_backward(Tensor *x) {
+	// Will be implemented later. IA
+}
 
-//int main() {
-//	Arena *A = malloc(sizeof(Arena));
-//	int SIZE = 1024 * 1024 * 1024;
-//	arena_init(A, SIZE);
-//	int ndim = 2;
-//	int shape[2] = {SEQ_LEN, EMB_DIM};
-//	Tensor *x = tensor_create_new(A, ndim, shape);
-//	tensor_randomize(x);
-//
-//	Tensor *out= tensor_softmax(A, x);
-//	tensor_get_2d(out);
-//	tensor_shape_2d(out);
-//
-//	return 0;
-//}
+
+int main() {
+	Arena *A = malloc(sizeof(Arena));
+	int SIZE = 1024 * 1024 * 1024;
+	arena_init(A, SIZE);
+	int ndim = 2;
+	int shape[2] = {SEQ_LEN, EMB_DIM};
+	Tensor *x = tensor_create_new(A, ndim, shape);
+	tensor_randomize(x);
+
+	int heads = 8;
+	int k = 0;
+	int dk = 32 / heads;
+	while (k < heads) {
+		Tensor *out = tensor_slice_cols(A, x, k, dk);
+		tensor_shape_2d(out);
+		tensor_get_2d(out);
+		k++;
+	}
+	
+	//int rows = 16;
+	//int cols = 32;
+	//int heads = 8;
+	//int dk = 32 / heads;
+
+	//for (int k = 0; k < heads; k++) {
+	//	float *data = x->data + k * rows * dk;
+	//	for (int r = 0; r < rows; r++) {
+	//		for (int c = 0; c < dk; c++) {
+	//			printf("%f ", data[r * dk + c]);;
+	//		}
+	//		printf("\n");
+	//	}
+	//}
+	return 0;
+}
