@@ -18,23 +18,23 @@ Tensor *tensor_concat(Arena *A, Tensor **heads, int num_heads) {
 	int rows = heads[0]->shape[0];
 	int cols = heads[0]->shape[1];
 	int ndim = heads[0]->ndim;
-	int out_cols = cols * heads;
+	int out_cols = cols * num_heads;
 
 	int *out_shape = arena_alloc(A, ndim * sizeof(int));
 	out_shape[0] = rows;
-	
 	out_shape[1] = out_cols; // 8 * 4 = 32;
 	
 	// create out tensor
 	Tensor *out = tensor_create_new(A, ndim, out_shape);
 
 	// core logic
-	for (int k = 0; k < heads; k++) {
+	for (int k = 0; k < num_heads; k++) {
 		Tensor *head = heads[k]; // head chunk
 	
 		for (int r= 0; r < rows; r++) {
 			for (int c = 0; c < out_cols; c++) {
-				out->data[r * out_cols + k * head->shape[1] + c] = head->data[r * cols + c];
+				out->data[r * out_cols + k * head->shape[1] + c] =
+				 	head->data[r * cols + c];
 			}
 		}
 	}
@@ -1111,29 +1111,27 @@ int main() {
 	Tensor *x = tensor_create_new(A, ndim, shape);
 	tensor_randomize(x);
 
-	int heads = 8;
+	//tensor_get_2d(x);
+	//printf("\n");
+
+	int num_heads = 8;
 	int k = 0;
-	int dk = 32 / heads;
-	while (k < heads) {
-		Tensor *out = tensor_slice_cols(A, x, k, dk);
-		tensor_shape_2d(out);
-		tensor_get_2d(out);
+	int dk = 32 / num_heads;
+
+	// Aarry of tensor pointers that are Tensor chunks
+	Tensor **heads_arr = arena_alloc(A, num_heads * sizeof(Tensor *));;
+	while (k < num_heads) {
+		Tensor *out_chunk = tensor_slice_cols(A, x, k, dk);
+		tensor_get_2d(out_chunk);
+		printf("\n");
+		heads_arr[k] = out_chunk;
 		k++;
 	}
-	
-	//int rows = 16;
-	//int cols = 32;
-	//int heads = 8;
-	//int dk = 32 / heads;
+	printf("\n");
+	printf("-----------------------------\n");
 
-	//for (int k = 0; k < heads; k++) {
-	//	float *data = x->data + k * rows * dk;
-	//	for (int r = 0; r < rows; r++) {
-	//		for (int c = 0; c < dk; c++) {
-	//			printf("%f ", data[r * dk + c]);;
-	//		}
-	//		printf("\n");
-	//	}
-	//}
+	Tensor *out = tensor_concat(A, heads_arr, num_heads);
+	tensor_get_2d(out);
+
 	return 0;
 }
