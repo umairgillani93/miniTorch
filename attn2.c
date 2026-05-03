@@ -7,12 +7,13 @@
 #include "attention2.h"
 #include "feed_forward_nn.h"
 #include "arena.h"
+#include "config.h"
 
-#define RAND_FLOAT  (float) rand() / (float) RAND_MAX
-#define EMB_DIM 32 // out model dimension, i.e Embedding size for each token
-#define SEQ_LEN 10 // assume these are 10 tokens converted into token IDs
-#define BATCH_SIZE 2
-#define EPS 1e-5
+//#define RAND_FLOAT  (float) rand() / (float) RAND_MAX
+//#define EMB_DIM 32 // out model dimension, i.e Embedding size for each token
+//#define SEQ_LEN 10 // assume these are 10 tokens converted into token IDs
+//#define BATCH_SIZE 2
+//#define EPS 1e-5
 
 // Since we already slice the heads from our LOSS matrix
 // now we have dO_i.... dO..heads-1 for i = 0 ... num_heads
@@ -220,9 +221,48 @@ Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {
 
 
 Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
+	// shape mha->Q = shape(t) * shape(wq)
+	// shape mha->Q = (16, 32) * (32, 32)
+	// shape mha->Q = (16, 32);
 	mha->Q = tensor_matmul(A, t, mha->wq);
 	mha->K = tensor_matmul(A, t, mha->wk);
 	mha->V = tensor_matmul(A, t, mha->wv);
+
+	Tensor **heads_arr = arena_alloc(A, mha->num_heads * sizeof(Tensor *));
+
+	for (int k = 0; k < mha->num_heads; k++) {
+		Tensor *Qk = tensor_slice_cols(A, mha->Q, k, mha->dk);
+		Tensor *Kk = tensor_slice_cols(A, mha->K, k, mha->dk);
+		Tensor *Vk = tensor_slice_cols(A, mha->V, k, mha->dk);
+		printf("\n");
+		tensor_get_2d(Qk);
+		printf("\n");
+		printf("\n");
+		tensor_get_2d(Kk);
+		printf("\n");
+		printf("\n");
+		tensor_get_2d(Vk);
+		printf("\n");
+		printf("\n");
+
+		Tensor *head_score = scaled_dot_product_attention(
+				A, Qk, Kk, Vk, mha->dk
+		);
+
+		
+		printf("head score: \n");
+		tensor_get_2d(head_score);
+		break;
+
+		heads_arr[k] = head_score;
+	}
+
+	mha->out = tensor_concat(A, heads_arr, mha->num_heads);
+
+	tensor_shape_2d(mha->out);
+	tensor_get_2d(mha->out);
+	return NULL;
+	
 
 	// 1. tensor_slice_cols(A, tensor *x, int start_idx, int width);
 	// 2. tensor_concat(A, tensor *out, int heads)
@@ -352,23 +392,23 @@ MHA *mha_create(int num_heads, int seq_len, int emb_dim) {
 
 	
 
-//int main() {
-//	//int seed = 32;
-//	//srand(seed);
-//	int ndim = 2;
-//
-//	int shape_tokens[2] = {SEQ_LEN, EMB_DIM};
-//	int shape_weights[2] = {EMB_DIM, EMB_DIM};
-//
-//	Tensor *tokens = tensor_create(ndim, shape_tokens);
-//	
-//	int heads = 8;
-//	int HEAD_DIM = EMB_DIM / heads;
-//	MHA *mha = mha_create(heads, SEQ_LEN, EMB_DIM);
-//	printf("MHA created\n");
-//	Tensor *multi_head = mha_forward(tokens, mha);
-//	tensor_shape(multi_head);
-//	tensor_get(multi_head);
-//
-//	return 0;
-//}
+int main() {
+	Arena *A = malloc(sizeof(Arena));
+	int SIZE = 1024 * 1024 * 1024;
+	arena_init(A, SIZE);
+	int ndim = 2;
+	int shape[2] = {SEQ_LEN, EMB_DIM};
+
+	Tensor *x = tensor_create_new(A ,ndim, shape);
+	tensor_randomize(x);
+
+
+	int num_heads = 8;
+	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
+	mha_init_params(mha);
+	Tensor *multi_head = mha_forward(A, x, mha);
+	tensor_shape_2d(multi_head);
+	tensor_get_2d(multi_head);
+
+	return 0;
+}

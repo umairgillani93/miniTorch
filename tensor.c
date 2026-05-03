@@ -265,11 +265,11 @@ Tensor *tensor_exp(Arena *A, Tensor *x) {
 
 Tensor *tensor_row_sum(Arena *A, Tensor *x) {
 	int rows = x->shape[0];
-	int cols = 1; // row sum shrinks cols dimention
+	int cols = x->shape[1]; // row sum shrinks cols dimention
 	int ndim = x->ndim;
 	int *out_shape = arena_alloc(A, rows * sizeof(int));
 	out_shape[0] = rows;
-	out_shape[1] = cols;
+	out_shape[1] = 1;
 
 	// Create output tensor
 	Tensor *out = tensor_create_new(A, ndim, out_shape);
@@ -286,10 +286,9 @@ Tensor *tensor_row_sum(Arena *A, Tensor *x) {
 	}
 
 	for (int r = 0; r < rows; r++) {
-		float *row = x->data + r * cols;
 		float sum = 0.0f;
 		for (int c = 0; c < cols; c++) {
-			sum += row[c];
+			sum += x->data[r * cols + c];
 		}
 		out->data[r] = sum;
 	}
@@ -785,35 +784,51 @@ Tensor *tensor_softmax(Arena *A, Tensor *x) {
 	 * Tensor *max_exp = tensor_expand_cols(A, Tensor *x)
 	 * Tensor *shifted = tensor_sub(A, max_exp, num_cols);
 	 */
-	int rows = x->shape[0];
-	int cols = x->shape[1];
-	int ndim = x->ndim;
-	int *out_shape = arena_alloc(A, ndim * sizeof(int));
-	out_shape[0] = rows;
-	out_shape[1] = cols;
+		int rows = x->shape[0];
+    int cols = x->shape[1];
 
-	Tensor *out = tensor_create_new(A, ndim, out_shape);
+    Tensor *row_max = tensor_row_max(A, x);
+    //Tensor *row_max_expanded = tensor_expand_cols(A, row_max, cols);
+    Tensor *shifted = tensor_subtract(A, x, row_max);
+    Tensor *exp = tensor_exp(A, shifted);
 
-	if (x->requires_grad) {
-		out->requires_grad = true;
-		out->num_parents = 1;
-		out->parents = arena_alloc(A, sizeof(Tensor *));
-		out->parents[0] = x;
-		Op *op = arena_alloc(A, sizeof(Op));
-		op->backward = tensor_softmax_backward;
-		out->operations = op;
-		out->grad = arena_alloc(A, rows * cols * sizeof(float));
-	}
+    Tensor *row_sum = tensor_row_sum(A, exp);
 
-	// softmax(x) = e(x[i])/sum(row); // for each row
-	
-	Tensor *exp = tensor_exp(A, x);
-	Tensor *row_sum = tensor_row_sum(A, x);
-	Tensor *row_sum_exp = tensor_expand_cols(A, row_sum, cols);
-	out = tensor_div(A, exp, row_sum_exp);
+    Tensor *row_sum_expanded = tensor_expand_cols(A, row_sum, cols);
+    Tensor *out = tensor_div(A, exp, row_sum_expanded);
 
-	return out;
+    return out;
 }
+
+	//int rows = x->shape[0];
+	//int cols = x->shape[1];
+	//int ndim = x->ndim;
+	//int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	//out_shape[0] = rows;
+	//out_shape[1] = cols;
+
+	//Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	//if (x->requires_grad) {
+	//	out->requires_grad = true;
+	//	out->num_parents = 1;
+	//	out->parents = arena_alloc(A, sizeof(Tensor *));
+	//	out->parents[0] = x;
+	//	Op *op = arena_alloc(A, sizeof(Op));
+	//	op->backward = tensor_softmax_backward;
+	//	out->operations = op;
+	//	out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	//}
+
+	//// softmax(x) = e(x[i])/sum(row); // for each row
+	//
+	//Tensor *exp = tensor_exp(A, x);
+	//Tensor *row_sum = tensor_row_sum(A, exp);
+	//Tensor *row_sum_exp = tensor_expand_cols(A, row_sum, cols);
+	//out = tensor_div(A, exp, row_sum_exp);
+
+	//return out;
+//}
 
 //void tensor_free(Tensor *t) {
 //	if (!t) return;
@@ -1102,36 +1117,36 @@ void tensor_slice_cols_backward(Tensor *x) {
 }
 
 
-int main() {
-	Arena *A = malloc(sizeof(Arena));
-	int SIZE = 1024 * 1024 * 1024;
-	arena_init(A, SIZE);
-	int ndim = 2;
-	int shape[2] = {SEQ_LEN, EMB_DIM};
-	Tensor *x = tensor_create_new(A, ndim, shape);
-	tensor_randomize(x);
-
-	//tensor_get_2d(x);
-	//printf("\n");
-
-	int num_heads = 8;
-	int k = 0;
-	int dk = 32 / num_heads;
-
-	// Aarry of tensor pointers that are Tensor chunks
-	Tensor **heads_arr = arena_alloc(A, num_heads * sizeof(Tensor *));;
-	while (k < num_heads) {
-		Tensor *out_chunk = tensor_slice_cols(A, x, k, dk);
-		tensor_get_2d(out_chunk);
-		printf("\n");
-		heads_arr[k] = out_chunk;
-		k++;
-	}
-	printf("\n");
-	printf("-----------------------------\n");
-
-	Tensor *out = tensor_concat(A, heads_arr, num_heads);
-	tensor_get_2d(out);
-
-	return 0;
-}
+//int main() {
+//	Arena *A = malloc(sizeof(Arena));
+//	int SIZE = 1024 * 1024 * 1024;
+//	arena_init(A, SIZE);
+//	int ndim = 2;
+//	int shape[2] = {SEQ_LEN, EMB_DIM};
+//	Tensor *x = tensor_create_new(A, ndim, shape);
+//	tensor_randomize(x);
+//
+//	//tensor_get_2d(x);
+//	//printf("\n");
+//
+//	int num_heads = 8;
+//	int k = 0;
+//	int dk = 32 / num_heads;
+//
+//	// Aarry of tensor pointers that are Tensor chunks
+//	Tensor **heads_arr = arena_alloc(A, num_heads * sizeof(Tensor *));;
+//	while (k < num_heads) {
+//		Tensor *out_chunk = tensor_slice_cols(A, x, k, dk);
+//		tensor_get_2d(out_chunk);
+//		printf("\n");
+//		heads_arr[k] = out_chunk;
+//		k++;
+//	}
+//	printf("\n");
+//	printf("-----------------------------\n");
+//
+//	Tensor *out = tensor_concat(A, heads_arr, num_heads);
+//	tensor_get_2d(out);
+//
+//	return 0;
+//}

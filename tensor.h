@@ -27,6 +27,7 @@ typedef struct Tensor {
 
 // prototypes definition
 
+Tensor *tensor_slice_cols(Arena *A, Tensor *a, int num_heads, int dk);
 Tensor *tensor_fill_like(Arena *A, Tensor *a, double eps);
 Tensor *tensor_concat(Arena *A, Tensor **heads, int k);
 Tensor *tensor_relu(Arena *A, Tensor *x);
