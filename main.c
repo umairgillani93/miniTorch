@@ -75,6 +75,8 @@ int main() {
 
 			Tensor *attn_score = mha_forward(A, batch_tensor, m_batch);
 			printf("attn score shape: \n");
+			tensor_get_2d(attn_score);
+			exit(1);
 
 			clip_gradient(attn_score);
 

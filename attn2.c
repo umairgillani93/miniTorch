@@ -221,8 +221,11 @@ Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {
 
 
 Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
-	// shape mha->Q = shape(t) * shape(wq)
-	// shape mha->Q = (16, 32) * (32, 32)
+	// 1. tensor_slice_cols(a, tensor *x, int start_idx, int width);
+	// 2. tensor_concat(A, tensor *out, int heads)
+	//
+	// shape mha->q = shape(t) * shape(wq)
+	// shape mha->q = (16, 32) * (32, 32)
 	// shape mha->Q = (16, 32);
 	mha->Q = tensor_matmul(A, t, mha->wq);
 	mha->K = tensor_matmul(A, t, mha->wk);
@@ -234,41 +237,18 @@ Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
 		Tensor *Qk = tensor_slice_cols(A, mha->Q, k, mha->dk);
 		Tensor *Kk = tensor_slice_cols(A, mha->K, k, mha->dk);
 		Tensor *Vk = tensor_slice_cols(A, mha->V, k, mha->dk);
-		printf("\n");
-		tensor_get_2d(Qk);
-		printf("\n");
-		printf("\n");
-		tensor_get_2d(Kk);
-		printf("\n");
-		printf("\n");
-		tensor_get_2d(Vk);
-		printf("\n");
-		printf("\n");
-
 		Tensor *head_score = scaled_dot_product_attention(
 				A, Qk, Kk, Vk, mha->dk
 		);
-
-		
-		printf("head score: \n");
-		tensor_get_2d(head_score);
-		break;
 
 		heads_arr[k] = head_score;
 	}
 
 	mha->out = tensor_concat(A, heads_arr, mha->num_heads);
 
-	tensor_shape_2d(mha->out);
-	tensor_get_2d(mha->out);
-	return NULL;
-	
+	return mha->out;
 
-	// 1. tensor_slice_cols(A, tensor *x, int start_idx, int width);
-	// 2. tensor_concat(A, tensor *out, int heads)
-	
-
-
+	// Previous code: will fix this in Refactor I.A
 	// extract the required parameters
 	//int rows = t->shape[0];
 	//int cols = t->shape[1];
@@ -276,31 +256,31 @@ Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
 	//int dk = mha->dk;
 
 
-	//mha->out = tensor_create_new(A, 2, t->shape);
+	//mha->out = tensor_create_new(a, 2, t->shape);
 	//int common_shape[2] = {rows, dk};
 
 	//for (int k = 0; k < heads; k++) {
-	//	// first of all I need scaled_dot_product_scores
-	//	// for which I need slicing Q, K and V
+	//	// first of all i need scaled_dot_product_scores
+	//	// for which i need slicing q, k and v
 	//	// slicing logic first
-	//	Tensor *Q_h = tensor_create_new(A, 2, common_shape);
-	//	Tensor *K_h = tensor_create_new(A, 2, common_shape);
-	//	Tensor *V_h = tensor_create_new(A, 2, common_shape);
+	//	tensor *q_h = tensor_create_new(a, 2, common_shape);
+	//	tensor *k_h = tensor_create_new(a, 2, common_shape);
+	//	tensor *v_h = tensor_create_new(a, 2, common_shape);
 
 	//	for (int i = 0; i < rows; i++) {
 	//		for (int j = 0; j < dk; j++) {
 	//			int src = i * cols + j + k * dk;
 	//			int dest = i * dk + j;
 
-	//			Q_h->data[dest] = mha->Q->data[src];
-	//			K_h->data[dest] = mha->K->data[src];
-	//			V_h->data[dest] = mha->V->data[src];
+	//			q_h->data[dest] = mha->q->data[src];
+	//			k_h->data[dest] = mha->k->data[src];
+	//			v_h->data[dest] = mha->v->data[src];
 
 	//		}
 	//	}
 
-	//	Tensor *head_out = scaled_dot_product_attention(A, Q_h, K_h, V_h, dk);
-	//	// Write this back to the output
+	//	tensor *head_out = scaled_dot_product_attention(a, q_h, k_h, v_h, dk);
+	//	// write this back to the output
 	//	for (int i = 0; i < rows; i++) {
 	//		for (int j = 0; j < dk; j++) {
 	//			int head_idx = i * dk + j;
@@ -314,9 +294,9 @@ Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
 
 
 Tensor *scaled_dot_product_attention(Arena *A, Tensor *Q, Tensor *K, Tensor *V, int dk) {
-	Tensor *kt = tensor_transpose(K); // CHECK THIS LATER FOR AUTO GRAD
+	Tensor *kt = tensor_transpose(K); // check this later for auto grad
 	Tensor *qkt = tensor_matmul(A, Q, kt);
-	//Tensor *sq = tensor_sqrt(A, 
+	//tensor *sq = tensor_sqrt(a, 
 	//for (int i = 0; i < qkt->shape[0]; i++) {
 	//	for (int j = 0; j < qkt->shape[1]; j++) {
 	//		qkt->data[i * qkt->shape[1] + j] = qkt->data[i * qkt->shape[1] +j] / sqrtf(dk);
@@ -392,23 +372,22 @@ MHA *mha_create(int num_heads, int seq_len, int emb_dim) {
 
 	
 
-int main() {
-	Arena *A = malloc(sizeof(Arena));
-	int SIZE = 1024 * 1024 * 1024;
-	arena_init(A, SIZE);
-	int ndim = 2;
-	int shape[2] = {SEQ_LEN, EMB_DIM};
-
-	Tensor *x = tensor_create_new(A ,ndim, shape);
-	tensor_randomize(x);
-
-
-	int num_heads = 8;
-	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
-	mha_init_params(mha);
-	Tensor *multi_head = mha_forward(A, x, mha);
-	tensor_shape_2d(multi_head);
-	tensor_get_2d(multi_head);
-
-	return 0;
-}
+//int main() {
+//	Arena *A = malloc(sizeof(Arena));
+//	int SIZE = 1024 * 1024 * 1024;
+//	arena_init(A, SIZE);
+//	int ndim = 2;
+//	int shape[2] = {SEQ_LEN, EMB_DIM};
+//
+//	Tensor *x = tensor_create_new(A ,ndim, shape);
+//	tensor_randomize_weights(x);
+//
+//	int num_heads = 8;
+//	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
+//	mha_init_params(mha);
+//	Tensor *multi_head = mha_forward(A, x, mha);
+//	tensor_get_2d(multi_head);
+//	tensor_shape_2d(multi_head);
+//
+//	return 0;
+//}
