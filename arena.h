@@ -9,6 +9,8 @@ typedef struct Arena {
 
 // prototype definitions
 void arena_init(Arena *A, int size);
+void arena_reset(Arena *A);
 void *arena_alloc(Arena *A, int size);
+
 
 #endif

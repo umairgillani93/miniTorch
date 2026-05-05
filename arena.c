@@ -12,6 +12,11 @@
 #include "config.h"
 
 
+void arena_reset(Arena *A) {
+	A->offset = 0;
+}
+
+
 void arena_init(Arena *A, int size) {
 	A->base = (char *)malloc(size);
 	A->size = size;
@@ -23,6 +28,8 @@ void *arena_alloc(Arena *A, int size) {
 	A->offset += size; // This should be size in bytes
 	return ptr;
 }	
+
+
 
 //int main() {
 //	srand(time(NULL));

@@ -26,7 +26,7 @@ int main() {
 	// Creating actual data tensor
 	// this should work
 	Tensor *T = tensor_create_new(A, 2, shape);
-	tensor_randomize(T); 
+	tensor_randomize_weights(T); 
 	int size = tensor_size(T);
 
 	// Create global MHA
@@ -63,6 +63,7 @@ int main() {
 	for (int e = 1; e <= EPOCHS; e++) {
 		for (int b = 0; b < num_chunks; b++) {
 
+			//arena_reset(A);
 			float *batch_ptr = T->data + b * BATCH_SIZE * EMB_DIM;
 			float *target_ptr = target->data + b * BATCH_SIZE * EMB_DIM;
 
@@ -73,19 +74,16 @@ int main() {
 			memcpy(batch_tensor->data, batch_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 			memcpy(target_batch->data, target_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 
+			printf("batch tensor_shape: \n\n");
+			tensor_shape_2d(batch_tensor);
+
 			Tensor *attn_score = mha_forward(A, batch_tensor, m_batch);
-			printf("attn score shape: \n");
+			printf("attn score: \n\n");
 			tensor_get_2d(attn_score);
-			exit(1);
 
 			clip_gradient(attn_score);
-
-			tensor_shape_2d(attn_score);
-			tensor_get_2d(attn_score);
-
-			//tensor_get(attn_score);
 			tensor_check("attn_score_forward", attn_score);
-			//tensor_get(attn_score);
+			exit(1);
 
 			// Apply layer_norm
 			Tensor *ln1 = layer_norm_forward(A, L1, attn_score);

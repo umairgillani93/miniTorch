@@ -245,51 +245,7 @@ Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
 	}
 
 	mha->out = tensor_concat(A, heads_arr, mha->num_heads);
-
 	return mha->out;
-
-	// Previous code: will fix this in Refactor I.A
-	// extract the required parameters
-	//int rows = t->shape[0];
-	//int cols = t->shape[1];
-	//int heads = mha->num_heads;
-	//int dk = mha->dk;
-
-
-	//mha->out = tensor_create_new(a, 2, t->shape);
-	//int common_shape[2] = {rows, dk};
-
-	//for (int k = 0; k < heads; k++) {
-	//	// first of all i need scaled_dot_product_scores
-	//	// for which i need slicing q, k and v
-	//	// slicing logic first
-	//	tensor *q_h = tensor_create_new(a, 2, common_shape);
-	//	tensor *k_h = tensor_create_new(a, 2, common_shape);
-	//	tensor *v_h = tensor_create_new(a, 2, common_shape);
-
-	//	for (int i = 0; i < rows; i++) {
-	//		for (int j = 0; j < dk; j++) {
-	//			int src = i * cols + j + k * dk;
-	//			int dest = i * dk + j;
-
-	//			q_h->data[dest] = mha->q->data[src];
-	//			k_h->data[dest] = mha->k->data[src];
-	//			v_h->data[dest] = mha->v->data[src];
-
-	//		}
-	//	}
-
-	//	tensor *head_out = scaled_dot_product_attention(a, q_h, k_h, v_h, dk);
-	//	// write this back to the output
-	//	for (int i = 0; i < rows; i++) {
-	//		for (int j = 0; j < dk; j++) {
-	//			int head_idx = i * dk + j;
-	//			int out_idx = i * cols + j + k * dk;
-	//			mha->out->data[out_idx] = head_out->data[head_idx];
-	//		}
-	//	}
-	//}
-	//return mha->out;
 }	
 
 
