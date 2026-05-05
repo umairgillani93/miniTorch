@@ -127,3 +127,6 @@ MIT License
 **Linkedin: https://www.linkedin.com/in/umairgillani93/**
 
 AI Engineer interested in low-level deep learning systems and building machine learning frameworks from scratch.
+
+## License
+This project is licensed under the GNU GPL v3 License.
