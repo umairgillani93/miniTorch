@@ -1,3 +1,9 @@
+// Copyright (C) 2026 Umair Gillani
+// https://www.linkedin.com/in/umairgillani93
+// https://www.github.com/umairgillani93
+// This file is part of 'miniTorch' and licensed under GPLv3.
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
