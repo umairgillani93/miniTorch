@@ -53,13 +53,6 @@ int main() {
 	FFN *f = ffn_create(A, EMB_DIM, 128);
 	ffn_init_params(f);
 
-	printf("ffn w1: \n");
-	tensor_get_2d(f->w1);
-
-	printf("ffn w2: \n");
-	tensor_get_2d(f->w2);
-
-	exit(1);
 	LayerNorm *L2 = layer_norm_create_new(A, EMB_DIM);
 	layer_norm_init_params(L2);
 
@@ -81,12 +74,8 @@ int main() {
 			memcpy(batch_tensor->data, batch_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 			memcpy(target_batch->data, target_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 
-			printf("batch tensor_shape: \n\n");
-			tensor_shape_2d(batch_tensor);
 
 			Tensor *attn_score = mha_forward(A, batch_tensor, m_batch);
-			printf("attn score: \n\n");
-			tensor_get_2d(attn_score);
 
 			clip_gradient(attn_score);
 			tensor_check("attn_score_forward", attn_score);
@@ -95,28 +84,27 @@ int main() {
 			Tensor *ln1 = layer_norm_forward(A, L1, attn_score);
 			tensor_check("ln1_forward", ln1);
 			//printf("LayerNorm #1 ran successfully!\n");
-			printf("ln1 shape: \n");
-			tensor_shape_2d(ln1);
-			tensor_get_2d(ln1);
 
 			// Create FFN feed-forward NN and run ffn_forward pass
 			Tensor *ffn_ln = ffn_forward(A, ln1, f);
 			tensor_check("ffn_ln_forward", ffn_ln);
 
-			printf("ffn shape: \n");
-			tensor_shape_2d(ffn_ln);
-			tensor_get_2d(ffn_ln);
-
-			exit(1);
+			
 
 			// Apply layer_norm
 			Tensor *ln2 = layer_norm_forward(A, L2, ffn_ln);
 			tensor_check("ln2_forward", ln2);
 			//tensor_shape(ln2);
-			//printf("LayerNorm #2 ran successfully!\n");
+
+
 		
 			Tensor *loss = tensor_mse_loss(A, ln2, target_batch);
 			float loss_to_show = loss_value(ln2, target_batch);
+
+			printf("loss tensor : \n");
+			tensor_get_2d(loss);
+			printf("Actual loss: %f\n", loss_to_show);
+			exit(1);
 
 			Tensor *dx_for_ffn = tensor_create_new(A, 2, shape_local);
 			Tensor *dx_for_mha = tensor_create_new(A, 2, shape_local);
