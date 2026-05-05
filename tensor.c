@@ -7,10 +7,70 @@
 #include "tensor.h"
 #include "attention2.h"
 #include "feed_forward_nn.h"
+#include "layer_norm.h"
 #include "arena.h"
+#include "config.h"
 
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 #define EPS 1e-5
+
+
+
+Tensor *tensor_relu(Arena *A, Tensor *x) {
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+	
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (x->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = x;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_relu_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	}
+
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			if (x->data[r * cols + c] > 0) {
+				out->data[r * cols + c] = x->data[r * cols + c];
+			}
+			else {
+				out->data[r * cols + c] = 0.0f;
+			}
+		}
+	}
+	return out;
+}
+
+
+
+Tensor *tensor_fill_val(Arena *A, Tensor *x, int v) {
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+	
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	// No computational graph for this
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = v;
+		}
+	}
+	return out;
+}
+
 
 void tensor_fill_zeros(Tensor *x) {
 	int size = tensor_size(x);
@@ -64,6 +124,132 @@ bool is_exploding(Tensor *x) {
 	return false;
 }
 
+float max_element(float *row, int cols) {
+	float mx = row[0];
+	for (int i = 1; i < cols; i++) {
+		if (row[i] > row[i - 1]) {
+			mx = row[i];
+		}
+	}
+	return mx;
+}
+
+Tensor *tensor_row_max(Arena *A, Tensor *x) {
+	int rows = x->shape[0];
+	int cols = x->shape[1]; // row sum shrinks cols dimention
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	// Create output tensor
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (x->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = x;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_softmax_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	}
+
+	for (int r = 0; r < rows; r++) {
+		float *row = x->data + r * cols;
+		float MX = max_element(row, cols);
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = MX;
+		}
+	}
+	return out;
+}
+
+Tensor *tensor_exp(Arena *A, Tensor *x) {
+	int rows = x->shape[0];
+	int cols = x->shape[1]; // row sum shrinks cols dimention
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	// Create output tensor
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	//if (x->requires_grad) {
+	//	out->requires_grad = true;
+	//	out->num_parents = 1;
+	//	out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+	//	out->parents[0] = x;
+	//	Op *op = arena_alloc(A, sizeof(Op));
+	//	op->backward = tensor_softmax_backward;
+	//	out->operations = op;
+	//	out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	//}
+
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = expf(x->data[r * cols + c]);
+		}
+	}
+	return out;
+}
+
+Tensor *tensor_row_sum(Arena *A, Tensor *x) {
+	int rows = x->shape[0];
+	int cols = x->shape[1]; // row sum shrinks cols dimention
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, rows * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = 1;
+
+	// Create output tensor
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (x->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = x;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_softmax_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * sizeof(float));
+	}
+
+	for (int r = 0; r < rows; r++) {
+		float sum = 0.0f;
+		for (int c = 0; c < cols; c++) {
+			sum += x->data[r * cols + c];
+		}
+		out->data[r] = sum;
+	}
+	return out;
+}
+
+Tensor *tensor_fill_like(Arena *A, Tensor *x, double eps) {
+	// No grad = true for this
+	// Hence this is not the part of Computational graph
+	printf("rows: %d\n", x->shape[0]);
+	printf("cols : %d\n", x->shape[1]);
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = x->shape[0]; // rows of out
+	out_shape[1] = x->shape[1]; // cols of out
+															//
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = x->data[r *cols + c] + eps;
+		}
+	}
+	return out;
+}
+
 void tensor_randomize_weights(Tensor *x) {
 	size_t size = tensor_size(x);
 	for (int i = 0; i < size; i++) {
@@ -100,6 +286,63 @@ void tensor_check(char *name, Tensor *x) {
 }
 
 
+// for rows expansion
+Tensor *tensor_expand_rows(Arena *A, Tensor *a, int out_rows) {
+	assert(a->shape[0] = 1); // has only single row
+	int cols = a->shape[1];
+	int ndim = a->ndim;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = out_rows;
+	out_shape[1] = cols;
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	// computing logic
+	for (int r = 0; r < out_rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = a->data[c];
+		}
+	}
+	return out;
+}
+
+Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b) {
+	assert(a->shape[0] == b->shape[0] && a->shape[1] == b->shape[1]);
+	int rows = a->shape[0];
+	int cols = a->shape[1];
+	int ndim = a->ndim;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (a->requires_grad || b->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 2;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = a;
+		out->parents[1] = b;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_square_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	}
+
+	// IMPORTANT!!!
+	// row_offset = r * row_stride;
+	// col_offset = c * col_strid;
+	// index = row_offset + col_offset;
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = a->data[r * cols + c] * b->data[r * cols + c];
+		}
+	}
+	return out;
+}
+
+
 Tensor *tensor_scaler_multiplication(Tensor *x, float val) {
 	int rows = x->shape[0];
 	int cols = x->shape[1];
@@ -121,37 +364,92 @@ Tensor *tensor_scaler_addition(Tensor *x, float val) {
 }
 	
 
-Tensor *tensor_add(Tensor *a, Tensor *b) {
-	assert(a->shape != b->shape);
-	int ndim = 2;
+Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b) {
+	assert(a->shape[0] == b->shape[0] && a->shape[1] == b->shape[1]);
+	int ndim = a->ndim;
 	int rows = a->shape[0];
 	int cols = a->shape[1];
-	int shape[2] = {rows, cols};
-	Tensor *res = tensor_create(ndim, shape);
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
 
-	for (int i = 0; i < rows; i++) {
-		for (int j = 0; j < cols; j++) {
-			int idx = i * res->shape[1] + j;
-			res->data[idx] = a->data[idx] + b->data[idx];
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (a->requires_grad || b->requires_grad) {
+		out->requires_grad = true;
+
+		// out parents
+		out->num_parents = 2;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+
+		// Operations
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_add_backward;
+		out->operations = op;
+
+		// gradients
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+
+	}
+
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = a->data[r * cols + c] + b->data[r * cols + c];
 		}
 	}
-	return res;
+	return out;
 }
 
-Tensor *relu_backward(Tensor *da1, Tensor *h1) {
-	Tensor *dh1 = tensor_create_weights(h1->ndim, h1->shape);
-	int size = tensor_size(h1);
+Tensor *tensor_subtract(Arena *A, Tensor *a, Tensor *b) {
+	assert((a->shape[0] == b->shape[0]) && (a->shape[1] == b->shape[1]));
+	int ndim = a->ndim;
+	int rows = a->shape[0];
+	int cols = a->shape[1];
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
 
-	for (int i = 0; i < size; i++) {
-		if (h1->data[i] > 0) {
-			dh1->data[i] = da1->data[i];
-		}
-		else {
-			dh1->data[i] = 0.0f;
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (a->requires_grad || b->requires_grad) {
+		out->requires_grad = true;
+
+		// out parents
+		out->num_parents = 2;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+
+		// Operations
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_add_backward;
+		out->operations = op;
+
+		// gradients
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+
+	}
+
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = a->data[r * cols + c] - b->data[r * cols + c];
 		}
 	}
-	return dh1;
+	return out;
 }
+
+//Tensor *relu_backward(Tensor *da1, Tensor *h1) {
+//	Tensor *dh1 = tensor_create_weights(h1->ndim, h1->shape);
+//	int size = tensor_size(h1);
+//
+//	for (int i = 0; i < size; i++) {
+//		if (h1->data[i] > 0) {
+//			dh1->data[i] = da1->data[i];
+//		}
+//		else {
+//			dh1->data[i] = 0.0f;
+//		}
+//	}
+//	return dh1;
+//}
 
 float loss_value(Tensor *pred, Tensor *target) {
 	float squared_err = 0.0f;
@@ -226,7 +524,12 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
 		t->stride[i] = total;
 		total *= shape[i];
 	}
+	// For autograd
 	t->data = arena_alloc(A, total * sizeof(float));
+	t->parents = NULL;
+	t->operations = NULL;
+	t->grad = NULL;
+	t->num_parents = 0;
 	return t;
 }
 
@@ -323,69 +626,142 @@ Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape) {
 	}
 
 	t->data = arena_alloc(A, total * sizeof(float));
+	// For autograd
+	t->data = arena_alloc(A, total * sizeof(float));
+	t->parents = NULL;
+	t->operations = NULL;
+	t->grad = NULL;
+	t->num_parents = 0;
 
 	return t;
 }
 
 Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
-	int rows_a = a->shape[0];
-	int cols_a = a->shape[1];
+	// let's say bot tensors are off same shape
+	assert(a->shape[1] == b->shape[0]);
+	int a_rows = a->shape[0];
+	int a_cols = a->shape[1];
+	int b_rows = b->shape[0];
+	int b_cols = b->shape[1];
 
-	int rows_b = b->shape[0];
-	int cols_b = b->shape[1];
+	int *out_shape = arena_alloc(A, a->ndim * sizeof(int));
+	out_shape[0] = a_rows;
+	out_shape[1] = b_cols;
 
-	// resultant tensor having shape (rows_a, cols_b);
-	int ndim_r = 2;
-	int *shape_r = arena_alloc(A, ndim_r * sizeof(int));
-	shape_r[0] = a->shape[0];
-	shape_r[1] = b->shape[1];
+	Tensor *out = tensor_create_new(A, a->ndim, out_shape);
 
-	Tensor *r = tensor_create_new(A, ndim_r, shape_r);
-	//printf("Created resultant tensor\n");
+	if (a->requires_grad || b->requires_grad) {
+		out->requires_grad = true;
+		// 1. NEED TO SAVE THE PARENTS
+		out->num_parents = 2;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = a;
+		out->parents[1] = b;
+		out->requires_grad = true;
+		
+		// 2. NEED TO POPULATE THE grad
+		int out_size = a->shape[0] * b->shape[1];
+		out->grad = arena_alloc(A, out_size * sizeof(float));
+		
+		// 3. Need to SAVE THE OPERATIONS for computation graph
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_matmul_backward;
+		out->operations = op;
 
-	for (int i = 0; i < rows_a; i++) {
-		for (int j = 0; j < cols_b; j++) {
+	}
+
+	for (int r = 0; r < a_rows; r++) {
+		for (int c = 0; c < b_cols; c++) {
 			float sum = 0.0f;
-			for (int k = 0; k < cols_a; k++) {
-				sum += (a->data[i * a->stride[0] + k * a->stride[1]]  * b->data[k * b->stride[0] + j * b->stride[1]]);
+			for (int k = 0; k < a_cols; k++) {
+				sum += (a->data[(r * a_cols + k)] *
+					 	b->data[(k * b_cols + c)]);
 			}
-			r->data[i * r->stride[0] + j * r->stride[1]] = sum;
+			out->data[r * b_cols + c] = sum;
 		}
 	}
-	return r;
+	return out;
 }
 
-Tensor *tensor_softmax(Tensor *t) {
-	Tensor *r = malloc(sizeof(Tensor));
-	if (!r) {return NULL;}
-	r->shape = t->shape;
-	r->stride = t->stride;
-	r->ndim = t->ndim;
-	r->data = malloc(r->shape[0] * r->shape[1] * sizeof(float));
+//Tensor *tensor_matmul_forward(Arena *A, Tensor *a, Tensor *b) {
+//	int rows_a = a->shape[0];
+//	int cols_a = a->shape[1];
+//
+//	int rows_b = b->shape[0];
+//	int cols_b = b->shape[1];
+//
+//	// resultant tensor having shape (rows_a, cols_b);
+//	int ndim_r = 2;
+//	int *shape_r = arena_alloc(A, ndim_r * sizeof(int));
+//	shape_r[0] = a->shape[0];
+//	shape_r[1] = b->shape[1];
+//
+//	Tensor *r = tensor_create_new(A, ndim_r, shape_r);
+//	//printf("Created resultant tensor\n");
+//
+//	for (int i = 0; i < rows_a; i++) {
+//		for (int j = 0; j < cols_b; j++) {
+//			float sum = 0.0f;
+//			for (int k = 0; k < cols_a; k++) {
+//				sum += (a->data[i * a->stride[0] + k * a->stride[1]]  * b->data[k * b->stride[0] + j * b->stride[1]]);
+//			}
+//			r->data[i * r->stride[0] + j * r->stride[1]] = sum;
+//		}
+//	}
+//	return r;
+//}
 
-	int rows = t->shape[0];
-	int cols = t->shape[1];
+Tensor *tensor_softmax(Arena *A, Tensor *x) {
+	/*
+	 * Tensor *max = tensor_row_max(A, Tensor *x)
+	 * Tensor *max_exp = tensor_expand_cols(A, Tensor *x)
+	 * Tensor *shifted = tensor_sub(A, max_exp, num_cols);
+	 */
+		int rows = x->shape[0];
+    int cols = x->shape[1];
 
-	for (int i = 0; i < rows; i++) {
-		float max = -INFINITY;
-		for (int j = 0; j < cols; j++) {
-			if (t->data[i * cols + j] > max) {
-				max = t->data[i * cols + j];
-			}
-		}
+    Tensor *row_max = tensor_row_max(A, x);
+    //Tensor *row_max_expanded = tensor_expand_cols(A, row_max, cols);
+    Tensor *shifted = tensor_subtract(A, x, row_max);
+    Tensor *exp = tensor_exp(A, shifted);
 
-		float sum = 0.0f;
-		for (int j = 0; j < cols; j++) {
-			sum += expf(t->data[i * cols + j] - max);
-		}
+    Tensor *row_sum = tensor_row_sum(A, exp);
 
-		// now find division
-		for (int k = 0; k < cols; k++) {
-			r->data[i * cols + k] = expf(t->data[i * cols + k] - max) / sum;
-		}
-	}
-	return r;
+    Tensor *row_sum_expanded = tensor_expand_cols(A, row_sum, cols);
+    Tensor *out = tensor_div(A, exp, row_sum_expanded);
+
+    return out;
 }
+
+	//int rows = x->shape[0];
+	//int cols = x->shape[1];
+	//int ndim = x->ndim;
+	//int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	//out_shape[0] = rows;
+	//out_shape[1] = cols;
+
+	//Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	//if (x->requires_grad) {
+	//	out->requires_grad = true;
+	//	out->num_parents = 1;
+	//	out->parents = arena_alloc(A, sizeof(Tensor *));
+	//	out->parents[0] = x;
+	//	Op *op = arena_alloc(A, sizeof(Op));
+	//	op->backward = tensor_softmax_backward;
+	//	out->operations = op;
+	//	out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	//}
+
+	//// softmax(x) = e(x[i])/sum(row); // for each row
+	//
+	//Tensor *exp = tensor_exp(A, x);
+	//Tensor *row_sum = tensor_row_sum(A, exp);
+	//Tensor *row_sum_exp = tensor_expand_cols(A, row_sum, cols);
+	//out = tensor_div(A, exp, row_sum_exp);
+
+	//return out;
+//}
 
 //void tensor_free(Tensor *t) {
 //	if (!t) return;
@@ -396,17 +772,17 @@ Tensor *tensor_softmax(Tensor *t) {
 //	//printf("Freed successfully!\n");
 //}
 
-void tensor_get(Tensor *t) {
+void tensor_get_2d(Tensor *t) {
 	if (!t) return;
-	int size = 1;
-	for (int i = 0; i < t->ndim; i++) {
-		size *= t->shape[i];
+	int rows = t->shape[0];
+	int cols = t->shape[1];
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			printf("%0.2f ", t->data[r * cols + c]);
+		}
+		printf("\n");
 	}
-	//printf("size: %d\n", size);
-	for (int i = 0; i < size; i++) {
-		printf("%0.2f ", t->data[i]);
-	}		
-}
+}		
 
 Tensor *tensor_transpose(Tensor *a) {
 	int ndim = 2;
@@ -435,9 +811,327 @@ int tensor_size(Tensor *t) {
 	return size;
 }	
 
-void tensor_shape(Tensor *t) {
+void tensor_shape_2d(Tensor *t) {
 	printf("(%d, %d)\n", t->shape[0], t->shape[1]);
 }
+
+// Auto-grad methods
+Tensor *tensor_mean(Arena *A, Tensor *a) {
+	// computes row-wise mean 
+	// out_shape = (rows, 1)
+	int rows = a->shape[0];
+	int cols = a->shape[1];
+	int ndim = a->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = 1;
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (a->requires_grad) {
+		// Build computation graph
+		// define requires_grad = true for out;
+		out->requires_grad = true;
+
+		// define number of parents
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, sizeof(Tensor *));;
+		out->parents[0] = a;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_mean_backward;
+		out->operations = op;
+
+		// define gradients matrix
+		out->grad = arena_alloc(A, rows * 1 * sizeof(float));
+	}
+
+	for (int r = 0; r < rows; r++) {
+		float *row = a->data + r * cols;
+		float row_sum = 0.0f;
+		float row_mean = 0.0f;
+		for (int c = 0; c < cols; c++) {
+			row_sum += row[c];
+		}
+		row_mean = row_sum / cols;
+		out->data[r] = row_mean; // cols = 1, c = 0 so r * 1 + 0 = r
+	}
+	return out;
+}
+
+Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_cols) {
+	// Takes the mean value for each row 
+	// and expands it column number of times to match the other tensor
+	// reduce_mean = [m1],
+	//               [m2],
+	//               [m3]
+	// expand_mean = [m1, m1, m1]
+	//               [m2, m2, m2]
+	//               [m3, m3, m3]
+	
+	assert(m->ndim == 2);
+	assert(m->shape[1] == 1);
+	int rows = m->shape[0];
+	int ndim = 2;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = out_cols;
+
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (m->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, sizeof(Tensor *));
+		out->parents[0] = m;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_expand_cols_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * out_cols * sizeof(float));
+	}
+
+	// IMPORTANT!!!
+	// row_offset = r * row_stride;
+	// col_offset = c * col_strid;
+	// index = row_offset + col_offset;
+	for (int r = 0; r < rows; r++) {
+		float v = m->data[r];
+		for (int c = 0; c < out_cols; c++) {
+			out->data[r * out_cols + c] = v;
+		}
+	}
+	return out;
+}
+
+Tensor *tensor_square(Arena *A, Tensor *a, Tensor *b) {
+	assert(a->shape[0] == b->shape[0] && a->shape[1] == b->shape[1]);
+	int rows = a->shape[0];
+	int cols = a->shape[1];
+	int ndim = a->ndim;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (a->requires_grad || b->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 2;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = a;
+		out->parents[1] = b;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_square_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	}
+
+	// IMPORTANT!!!
+	// row_offset = r * row_stride;
+	// col_offset = c * col_strid;
+	// index = row_offset + col_offset;
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = a->data[r * cols + c] * b->data[r * cols + c];
+		}
+	}
+	return out;
+
+}
+
+Tensor *tensor_sqrt(Arena *A, Tensor *a) {
+	int rows = a->shape[0];
+	int cols = a->shape[1];
+	int ndim = 2;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (a->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = a;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_sqrt_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	}
+
+	// IMPORTANT!!!
+	// row_offset = r * row_stride;
+	// col_offset = c * col_strid;
+	// index = row_offset + col_offset;
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = sqrt(a->data[r * cols + c] + EPS); // Need to CORRECT. Apply another tensor_add() here.
+		}
+	}
+	return out;
+}
+
+Tensor *tensor_div(Arena *A, Tensor *a, Tensor *b) {
+	assert(a->shape[0] == b->shape[0] && a->shape[1] == b->shape[1]);
+	int rows = a->shape[0];
+	int cols = a->shape[1];
+	int ndim = a->ndim;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (a->requires_grad || b->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 2;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = a;
+		out->parents[1] = b;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_square_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	}
+
+	// IMPORTANT!!!
+	// row_offset = r * row_stride;
+	// col_offset = c * col_strid;
+	// index = row_offset + col_offset;
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = a->data[r * cols + c] / b->data[r * cols + c];
+		}
+	}
+	return out;
+
+}
+
+void tensor_sqrt_backward(Tensor *x) {
+	// Will be implemented later IA
+}
+
+void tensor_square_backward(Tensor *x) {
+	// Will be implemented later IA
+}
+
+void tensor_expand_cols_backward(Tensor *x) {
+}
+
+void tensor_mean_backward(Tensor *x) {
+	// will implement later. IA
+}
+
+void tensor_matmul_backward(Tensor *x) {
+	// Will be implemented later. IA
+}
+
+void tensor_add_backward(Tensor *x) {
+	// Will be implemented later. IA
+}
+
+void tensor_scalling_backward(Tensor *x) {
+	// Will be implemented later. IA
+}
+
+void tensor_softmax_backward(Tensor *x) {
+	// Will be implemented later. IA
+}
+
+void tensor_relu_backward(Tensor *x) {
+	// Will be implemented later. IA
+}
+
+void tensor_slice_cols_backward(Tensor *x) {
+	// Will be implemented later. IA
+}
+
+bool tensor_equal(Tensor *x, Tensor *y) {
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			if (x->data[r * cols + c] != y->data[r * cols + c]) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+Tensor *tensor_concat(Arena *A, Tensor **heads, int num_heads) {
+	int rows = heads[0]->shape[0];
+	int cols = heads[0]->shape[1];
+	int ndim = heads[0]->ndim;
+	int out_cols = cols * num_heads;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = out_cols; // 8 * 4 = 32;
+	
+	// create out tensor
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	// core logic
+	for (int k = 0; k < num_heads; k++) {
+		Tensor *head = heads[k]; // head chunk
+	
+		for (int r= 0; r < rows; r++) {
+			for (int c = 0; c < cols; c++) {
+				out->data[r * out_cols + k * cols + c] =
+				 	head->data[r * cols + c];
+			}
+		}
+	}
+	return out;
+}
+
+
+Tensor *tensor_slice_cols(Arena *A, Tensor *x, int k, int dk) {
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = dk;
+	// If actual tensor 'x' has shape (16, 32)
+	// out tensor will be sliced version of it 
+	// and will have shape (16, dk);
+	
+	// create output tensor now
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	// build computational graph
+	if (x->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents[0] = x;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_slice_cols_backward;
+		out->grad = arena_alloc(A, rows * dk * sizeof(float));
+	}
+
+	// core logic here
+	// slices the main tensor 'x' and populates tensor 'out'
+	// [[1,2,3,4,5,6,7,8],
+	//	  [1,2,3,4,5,6,7,8],
+	//		 [1,2,3,4,5,6,7,8],
+	//	  [1,2,3,4,5,6,7,8]]
+	
+	// using pointer arithematic
+	//float *start = x->data + k * rows * dk;
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < dk; c++) {
+			out->data[r * dk + c] = x->data[r * cols + k * dk + c];
+		}
+	}
+	return out;
+}
+
 
 //int main() {
 //	Arena *A = malloc(sizeof(Arena));
@@ -446,8 +1140,27 @@ void tensor_shape(Tensor *t) {
 //	int ndim = 2;
 //	int shape[2] = {SEQ_LEN, EMB_DIM};
 //	Tensor *x = tensor_create_new(A, ndim, shape);
-//	int size = tensor_size(x);
-//	for (int i = 0; i < size; i++) {
-//		printf("%f\n", x->data[i]);
-//	}
+//	tensor_randomize(x);
+//
+//	tensor_get_2d(x);
+//
+//	//int num_heads = 8;
+//	//int k = 0;
+//	//int dk = 32 / num_heads;
+//
+//	//// Aarry of tensor pointers that are Tensor chunks
+//	//Tensor **heads_arr = arena_alloc(A, num_heads * sizeof(Tensor *));;
+//	//while (k < num_heads) {
+//	//	Tensor *out_chunk = tensor_slice_cols(A, x, k, dk);
+//	//	heads_arr[k] = out_chunk;
+//	//	k++;
+//	//}
+//	//printf("\n");
+//	//printf("-----------------------------\n");
+//
+//	//Tensor *concat = tensor_concat(A, heads_arr, num_heads);
+//	//bool res = tensor_equal(x, concat);
+//	//printf("%d\n", res);
+//
+//	return 0;
 //}

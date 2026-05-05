@@ -7,12 +7,13 @@
 #include "attention2.h"
 #include "feed_forward_nn.h"
 #include "arena.h"
+#include "config.h"
 
-#define RAND_FLOAT  (float) rand() / (float) RAND_MAX
-#define EMB_DIM 32 // out model dimension, i.e Embedding size for each token
-#define SEQ_LEN 10 // assume these are 10 tokens converted into token IDs
-#define BATCH_SIZE 2
-#define EPS 1e-5
+//#define RAND_FLOAT  (float) rand() / (float) RAND_MAX
+//#define EMB_DIM 32 // out model dimension, i.e Embedding size for each token
+//#define SEQ_LEN 10 // assume these are 10 tokens converted into token IDs
+//#define BATCH_SIZE 2
+//#define EPS 1e-5
 
 // Since we already slice the heads from our LOSS matrix
 // now we have dO_i.... dO..heads-1 for i = 0 ... num_heads
@@ -119,7 +120,7 @@ Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {
 				QKt->data[i * QKt->shape[1] + j] *= scale;
 			}
 		}
-		Tensor *Ak = tensor_softmax(QKt);
+		Tensor *Ak = tensor_softmax(A, QKt);
 
 		
 		int ashape[2] = {rows, rows};
@@ -211,8 +212,8 @@ Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {
 	//printf("dx3 shape: \n");
 	//tensor_shape(dx3);
 
-	Tensor *temp = tensor_add(dx1, dx2);
-	temp = tensor_add(temp, dx3);
+	Tensor *temp = tensor_add(A, dx1, dx2);
+	temp = tensor_add(A, temp, dx3);
 
 	tensor_add_inplace(&dX_total, &temp);
 	return dX_total;
@@ -220,63 +221,58 @@ Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {
 
 
 Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
+	// 1. tensor_slice_cols(a, tensor *x, int start_idx, int width);
+	// 2. tensor_concat(A, tensor *out, int heads)
+	//
+	// shape mha->q = shape(t) * shape(wq)
+	// shape mha->q = (16, 32) * (32, 32)
+	// shape mha->Q = (16, 32);
 	mha->Q = tensor_matmul(A, t, mha->wq);
 	mha->K = tensor_matmul(A, t, mha->wk);
 	mha->V = tensor_matmul(A, t, mha->wv);
 
-	// extract the required parameters
-	int rows = t->shape[0];
-	int cols = t->shape[1];
-	int heads = mha->num_heads;
-	int dk = mha->dk;
+	Tensor **heads_arr = arena_alloc(A, mha->num_heads * sizeof(Tensor *));
 
+	for (int k = 0; k < mha->num_heads; k++) {
+		Tensor *Qk = tensor_slice_cols(A, mha->Q, k, mha->dk);
+		Tensor *Kk = tensor_slice_cols(A, mha->K, k, mha->dk);
+		Tensor *Vk = tensor_slice_cols(A, mha->V, k, mha->dk);
+		Tensor *head_score = scaled_dot_product_attention(
+				A, Qk, Kk, Vk, mha->dk
+		);
 
-	mha->out = tensor_create_new(A, 2, t->shape);
-	int common_shape[2] = {rows, dk};
-
-	for (int k = 0; k < heads; k++) {
-		// first of all I need scaled_dot_product_scores
-		// for which I need slicing Q, K and V
-		// slicing logic first
-		Tensor *Q_h = tensor_create_new(A, 2, common_shape);
-		Tensor *K_h = tensor_create_new(A, 2, common_shape);
-		Tensor *V_h = tensor_create_new(A, 2, common_shape);
-
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < dk; j++) {
-				int src = i * cols + j + k * dk;
-				int dest = i * dk + j;
-
-				Q_h->data[dest] = mha->Q->data[src];
-				K_h->data[dest] = mha->K->data[src];
-				V_h->data[dest] = mha->V->data[src];
-
-			}
-		}
-
-		Tensor *head_out = scaled_dot_product_attention(A, Q_h, K_h, V_h, dk);
-		// Write this back to the output
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < dk; j++) {
-				int head_idx = i * dk + j;
-				int out_idx = i * cols + j + k * dk;
-				mha->out->data[out_idx] = head_out->data[head_idx];
-			}
-		}
+		heads_arr[k] = head_score;
 	}
+
+	mha->out = tensor_concat(A, heads_arr, mha->num_heads);
 	return mha->out;
 }	
 
 
 Tensor *scaled_dot_product_attention(Arena *A, Tensor *Q, Tensor *K, Tensor *V, int dk) {
-	Tensor *kt = tensor_transpose(K);
+	Tensor *kt = tensor_transpose(K); // check this later for auto grad
 	Tensor *qkt = tensor_matmul(A, Q, kt);
-	for (int i = 0; i < qkt->shape[0]; i++) {
-		for (int j = 0; j < qkt->shape[1]; j++) {
-			qkt->data[i * qkt->shape[1] + j] = qkt->data[i * qkt->shape[1] +j] / sqrtf(dk);;
-		}
-	}
-	Tensor *qkt_soft = tensor_softmax(qkt); // RAND_FLOAT is random we'll calculate this later
+	//tensor *sq = tensor_sqrt(a, 
+	//for (int i = 0; i < qkt->shape[0]; i++) {
+	//	for (int j = 0; j < qkt->shape[1]; j++) {
+	//		qkt->data[i * qkt->shape[1] + j] = qkt->data[i * qkt->shape[1] +j] / sqrtf(dk);
+	//	}
+	//}
+	int dkk_rows = qkt->shape[0];
+	int dkk_cols = qkt->shape[1];
+	int dkk_ndim = qkt->ndim;
+	int *dkk_shape = arena_alloc(A, dkk_ndim * sizeof(int));
+	dkk_shape[0] = dkk_rows;
+	dkk_shape[1] = dkk_cols;
+	
+	Tensor *dkk_tensor = tensor_create_new(A, dkk_ndim, dkk_shape);
+	dkk_tensor = tensor_fill_val(A, dkk_tensor, (float) dk);
+	
+	Tensor *dkk_sqrt = tensor_sqrt(A, dkk_tensor);
+
+	Tensor *dkk_div = tensor_div(A, qkt, dkk_sqrt);
+
+	Tensor *qkt_soft = tensor_softmax(A, dkk_div); // RAND_FLOAT is random we'll calculate this later CHECK FOR AUTOGRAD
 	Tensor *ret = tensor_matmul(A, qkt_soft, V);
 	return ret;
 }
@@ -333,22 +329,21 @@ MHA *mha_create(int num_heads, int seq_len, int emb_dim) {
 	
 
 //int main() {
-//	//int seed = 32;
-//	//srand(seed);
+//	Arena *A = malloc(sizeof(Arena));
+//	int SIZE = 1024 * 1024 * 1024;
+//	arena_init(A, SIZE);
 //	int ndim = 2;
+//	int shape[2] = {SEQ_LEN, EMB_DIM};
 //
-//	int shape_tokens[2] = {SEQ_LEN, EMB_DIM};
-//	int shape_weights[2] = {EMB_DIM, EMB_DIM};
+//	Tensor *x = tensor_create_new(A ,ndim, shape);
+//	tensor_randomize_weights(x);
 //
-//	Tensor *tokens = tensor_create(ndim, shape_tokens);
-//	
-//	int heads = 8;
-//	int HEAD_DIM = EMB_DIM / heads;
-//	MHA *mha = mha_create(heads, SEQ_LEN, EMB_DIM);
-//	printf("MHA created\n");
-//	Tensor *multi_head = mha_forward(tokens, mha);
-//	tensor_shape(multi_head);
-//	tensor_get(multi_head);
+//	int num_heads = 8;
+//	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
+//	mha_init_params(mha);
+//	Tensor *multi_head = mha_forward(A, x, mha);
+//	tensor_get_2d(multi_head);
+//	tensor_shape_2d(multi_head);
 //
 //	return 0;
 //}

@@ -27,11 +27,10 @@ int main() {
 	arena_init(A, SIZE);
 	printf("Arean created!\n");
 
-	int arr_size = 4;
-	int *arr = (int *)arena_alloc(A, arr_size);
-	for (int i = 0; i < arr_size; i++) {
-		printf("%d\n", arr[i]);
-	}
+
+	char *op = arena_alloc(A, sizeof(char));
+	op = "MATMUL";
+	printf("%s\n", op);
 
 	return 0;
 
