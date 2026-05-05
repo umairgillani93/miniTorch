@@ -1142,23 +1142,25 @@ Tensor *tensor_slice_cols(Arena *A, Tensor *x, int k, int dk) {
 //	Tensor *x = tensor_create_new(A, ndim, shape);
 //	tensor_randomize(x);
 //
-//	int num_heads = 8;
-//	int k = 0;
-//	int dk = 32 / num_heads;
+//	tensor_get_2d(x);
 //
-//	// Aarry of tensor pointers that are Tensor chunks
-//	Tensor **heads_arr = arena_alloc(A, num_heads * sizeof(Tensor *));;
-//	while (k < num_heads) {
-//		Tensor *out_chunk = tensor_slice_cols(A, x, k, dk);
-//		heads_arr[k] = out_chunk;
-//		k++;
-//	}
-//	printf("\n");
-//	printf("-----------------------------\n");
+//	//int num_heads = 8;
+//	//int k = 0;
+//	//int dk = 32 / num_heads;
 //
-//	Tensor *concat = tensor_concat(A, heads_arr, num_heads);
-//	bool res = tensor_equal(x, concat);
-//	printf("%d\n", res);
+//	//// Aarry of tensor pointers that are Tensor chunks
+//	//Tensor **heads_arr = arena_alloc(A, num_heads * sizeof(Tensor *));;
+//	//while (k < num_heads) {
+//	//	Tensor *out_chunk = tensor_slice_cols(A, x, k, dk);
+//	//	heads_arr[k] = out_chunk;
+//	//	k++;
+//	//}
+//	//printf("\n");
+//	//printf("-----------------------------\n");
+//
+//	//Tensor *concat = tensor_concat(A, heads_arr, num_heads);
+//	//bool res = tensor_equal(x, concat);
+//	//printf("%d\n", res);
 //
 //	return 0;
 //}

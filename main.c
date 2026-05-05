@@ -53,6 +53,13 @@ int main() {
 	FFN *f = ffn_create(A, EMB_DIM, 128);
 	ffn_init_params(f);
 
+	printf("ffn w1: \n");
+	tensor_get_2d(f->w1);
+
+	printf("ffn w2: \n");
+	tensor_get_2d(f->w2);
+
+	exit(1);
 	LayerNorm *L2 = layer_norm_create_new(A, EMB_DIM);
 	layer_norm_init_params(L2);
 
@@ -83,7 +90,6 @@ int main() {
 
 			clip_gradient(attn_score);
 			tensor_check("attn_score_forward", attn_score);
-			exit(1);
 
 			// Apply layer_norm
 			Tensor *ln1 = layer_norm_forward(A, L1, attn_score);

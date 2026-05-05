@@ -72,7 +72,7 @@ void sgd_optimizer(Tensor *w, Tensor *dw, float lr) {
 	
 void ffn_init_params(FFN *F) {
 	tensor_randomize_weights(F->w1);
-	tensor_randomize_weights(F->w1);
+	tensor_randomize_weights(F->w2);
 }
 
 Tensor *ffn_backward(Arena *A, FFN *f, Tensor *x, Tensor *dout) {
@@ -114,6 +114,8 @@ Tensor *ffn_forward(Arena *A, Tensor *x, FFN *f) {
 		f->inputs = x;
 	}
 	Tensor *h1 = tensor_matmul(A, x, f->w1);
+
+
 	f->h1 = h1;
 	f->a1 = tensor_relu(A, f->h1);
 	assert(f->a1->shape[1] == f->w2->shape[0]);
