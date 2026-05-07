@@ -173,9 +173,9 @@ void *_add_backward(Tensor *x, Tensor *y, Tensor *loss) {
 	// Q = 3 * x ^ 3 - y ^ 2
 	// w.r.t. x -> 9 * x ^ 2
 	// w.r.t. y -> -2 * y
-	Tensor *x_sqrd = tensor_sqaured(x);
+	Tensor *x_sqrd = tensor_square(x);
 	x->grad = tensor_scaler_multiplication(x_sqrd, (float) 9);
-	Tensor *y_sqrd = tensor_sqaured(y);
+	Tensor *y_sqrd = tensor_square(y);
 	y->grad = tensor_scaler_multiplication(y_sqrd, (float) -2);
 }
 
@@ -190,9 +190,12 @@ int main() {
 	shape[1] = 32;
 	Tensor *x = tensor_create_new(A, ndim, shape);
 	Tensor *y = tensor_create_new(A, ndim, shape);
+	Tensor *loss  = tensor_create_new(A, ndim, shape);
+
 
 
 	Tensor *grad = backward(x, y, loss);
+	tensor_get_2d(grad);
 
 	return 0;
 }

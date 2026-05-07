@@ -381,6 +381,8 @@ Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b) {
 		// out parents
 		out->num_parents = 2;
 		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = a;
+		out->parents[0] = b;
 
 		// Operations
 		Op *op = arena_alloc(A, sizeof(Op));
