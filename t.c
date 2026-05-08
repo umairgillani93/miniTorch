@@ -211,19 +211,18 @@ int main() {
 	float h = 0.1f;
 	Tensor *hx = tensor_scaler_addition(A, x, h);
 	bool check = tensor_equal(x, hx);
-	printf("%d\n", check);
-	exit(1);
 	printf("hx\n");
 	tensor_get_2d(hx);
 	Tensor *diff = tensor_subtract(A, hx, x);
 	printf("diff\n");
 	tensor_get_2d(diff);
-	exit(1);
 	Tensor *grad_x = tensor_scaler_div(diff, h);
+	x->grad = tensor_create_new(A, 2, x->shape);
+	x->grad = grad_x;
+
 	tensor_get_2d(grad_x);
 			
 
-	tensor_get_2d(grad_x);
 
 	return 0;
 }
