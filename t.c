@@ -168,16 +168,16 @@
 //}
 
 
-void *_add_backward(Tensor *x, Tensor *y, Tensor *loss) {
-	// partial derivatives of loss w.r.t parameters
-	// Q = 3 * x ^ 3 - y ^ 2
-	// w.r.t. x -> 9 * x ^ 2
-	// w.r.t. y -> -2 * y
-	Tensor *x_sqrd = tensor_square(x);
-	x->grad = tensor_scaler_multiplication(x_sqrd, (float) 9);
-	Tensor *y_sqrd = tensor_square(y);
-	y->grad = tensor_scaler_multiplication(y_sqrd, (float) -2);
-}
+//void *_add_backward(Tensor *x, Tensor *y, Tensor *loss) {
+//	// partial derivatives of loss w.r.t parameters
+//	// Q = 3 * x ^ 3 - y ^ 2
+//	// w.r.t. x -> 9 * x ^ 2
+//	// w.r.t. y -> -2 * y
+//	Tensor *x_sqrd = tensor_square(x);
+//	x->grad = tensor_scaler_multiplication(x_sqrd, (float) 9);
+//	Tensor *y_sqrd = tensor_square(y);
+//	y->grad = tensor_scaler_multiplication(y_sqrd, (float) -2);
+//}
 
 int main() {
 	Arena *A = malloc(sizeof(Arena));
@@ -186,16 +186,44 @@ int main() {
 	printf("Arena allocated\n");
 	int ndim = 2;
 	int *shape = arena_alloc(A, ndim * sizeof(int));
-	shape[0] = 32;
+	shape[0] = 16;
 	shape[1] = 32;
+
 	Tensor *x = tensor_create_new(A, ndim, shape);
 	Tensor *y = tensor_create_new(A, ndim, shape);
-	Tensor *loss  = tensor_create_new(A, ndim, shape);
+	Tensor *f = tensor_create_new(A, ndim, shape);
 
+	tensor_randomize_weights(x);
+	tensor_randomize_weights(y);
+	tensor_randomize_weights(f);
+	//tensor_get_2d(x);
+	//tensor_get_2d(y);
+	//tensor_get_2d(f);
 
+	Tensor *z = tensor_add(A, x, y);
+	Tensor *zt = tensor_transpose(z);
+	Tensor *loss  = tensor_matmul(A, zt, f);
+	tensor_get_2d(loss);
 
-	Tensor *grad = backward(x, y, loss);
-	tensor_get_2d(grad);
+	// Calculating gradient of loss w.r.t x
+	// let's first define samll number 'h'
+
+	float h = 0.001f;
+	Tensor *hx = tensor_scaler_addition(x, h);
+	bool check = tensor_equal(x, hs);
+	printf(check);
+	exit(1);
+	printf("hx\n");
+	tensor_get_2d(hx);
+	Tensor *diff = tensor_subtract(A, hx, x);
+	printf("diff\n");
+	tensor_get_2d(diff);
+	exit(1);
+	Tensor *grad_x = tensor_scaler_div(diff, h);
+	tensor_get_2d(grad_x);
+			
+
+	tensor_get_2d(grad_x);
 
 	return 0;
 }

@@ -27,6 +27,7 @@ typedef struct Tensor {
 
 // prototypes definition
 
+Tensor *tensor_scaler_div(Tensor *x, float val);
 Tensor *tensor_slice_cols(Arena *A, Tensor *a, int num_heads, int dk);
 Tensor *tensor_fill_like(Arena *A, Tensor *a, double eps);
 Tensor *tensor_concat(Arena *A, Tensor **heads, int k);
@@ -55,6 +56,7 @@ void tensor_get_2d(Tensor *t);
 void tensor_check(char *name, Tensor *x);
 int tensor_size(Tensor *t);
 float loss_value(Tensor *a, Tensor *b);
+bool tensor_equal(Tensor *x, Tensor *y);
 void tensor_shape_2d(Tensor *t);
 bool is_exploding(Tensor *x);
 void clip_gradient(Tensor *x);

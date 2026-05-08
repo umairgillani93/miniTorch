@@ -342,6 +342,15 @@ Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b) {
 	return out;
 }
 
+Tensor *tensor_scaler_div(Tensor *x, float val) {
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int size = tensor_size(x);
+	for (int i = 0; i < size; i++) {
+		x->data[i * cols + rows] = val / x->data[i * cols + rows];
+	}
+	return x;
+}
 
 Tensor *tensor_scaler_multiplication(Tensor *x, float val) {
 	int rows = x->shape[0];
