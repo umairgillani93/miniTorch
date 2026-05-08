@@ -215,18 +215,16 @@ int main() {
 	Tensor *loss_diff = tensor_subtract(A, loss1, loss);
 	tensor_get_2d(loss_diff);
 
-	
 
-
-
-	// Calculating gradient of loss w.r.t x
-	// let's first define samll number 'h'
-
-	//Tensor *hx = tensor_scaler_addition(A, x, h);
-	//Tensor *diff = tensor_subtract(A, hx, x);
-	//Tensor *grad_x = tensor_scaler_div(diff, h);
-	//x->grad = tensor_create_new(A, 2, x->shape);
-	//x->grad = grad_x;
+	// so can we say like
+	// if we have x @ y = z
+	// and z + f = c 
+	// f(c) = L (loss)
+	// now dL/dc = grad_c
+	// dL/df = dL/dc * dc/df = grad_c * dc/df => dL/df = grad_f
+	// dL/dz = dL/dc * dc/dz = grad_c * dc/dz => dL/dz = grad_z
+	// dL/dx = dL/dc * dc/dz * dz/dx => grad_z * dz/dx
+	// dL/dy = dL/dc * dc/dz * dz/dy => grad_z * dz/dy
 
 
 	return 0;
