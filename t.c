@@ -181,6 +181,19 @@
 //	y->grad = tensor_scaler_multiplication(y_sqrd, (float) -2);
 //}
 
+
+void tensor_matmul_backward(Tensor *x, Tensor *y,  Tensor *grad_prev) {
+	// dL/dx = grad_prev @ y.T using python convention in C :p
+	Tensor *yt = tensor_transpose(y);
+	Tensor *dx = tensor_matmul(grad_prev, yt);
+	tensor_add_inplace(x->grad, dx);
+
+	// dL/dy = x.T @ grad_prev 
+	Tensor *xt = tensor_transpose(x);
+	Tensor *dy = tensor_matmul(xt, grad_prev);
+	tensor_add_inplace(y->grad, dy);
+}
+
 int main() {
 	srand(time(NULL));
 	Arena *A = malloc(sizeof(Arena));
