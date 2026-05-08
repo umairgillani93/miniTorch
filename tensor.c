@@ -362,14 +362,21 @@ Tensor *tensor_scaler_multiplication(Tensor *x, float val) {
 	return x;
 }
 
-Tensor *tensor_scaler_addition(Tensor *x, float val) {
+Tensor *tensor_scaler_addition(Arena *A, Tensor *x, float val) {
 	int rows = x->shape[0];
 	int cols = x->shape[1];
-	int size = tensor_size(x);
-	for (int i = 0; i < size; i++) {
-		x->data[i * cols + rows] = val + x->data[i * cols + rows];
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = x->data[r * cols + c] + val;
+		}
 	}
-	return x;
+	return out;
 }
 	
 

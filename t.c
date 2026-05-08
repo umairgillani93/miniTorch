@@ -208,10 +208,10 @@ int main() {
 	// Calculating gradient of loss w.r.t x
 	// let's first define samll number 'h'
 
-	float h = 0.001f;
-	Tensor *hx = tensor_scaler_addition(x, h);
-	bool check = tensor_equal(x, hs);
-	printf(check);
+	float h = 0.1f;
+	Tensor *hx = tensor_scaler_addition(A, x, h);
+	bool check = tensor_equal(x, hx);
+	printf("%d\n", check);
 	exit(1);
 	printf("hx\n");
 	tensor_get_2d(hx);

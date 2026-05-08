@@ -47,7 +47,7 @@ Tensor *tensor_transpose(Tensor *t);
 Tensor *relu_backward(Tensor *x, Tensor *y);
 Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target);
 Tensor *tensor_scaler_multiplication(Tensor *x, float a);
-Tensor *tensor_scaler_addition(Tensor *x, float a);
+Tensor *tensor_scaler_addition(Arena *A, Tensor *x, float a);
 void tensor_fill_zeros(Tensor *a);
 void tensor_add_inplace(Tensor **a, Tensor **b);
 void tensor_relu_backward( Tensor *out);
