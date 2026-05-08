@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <time.h>
 #include <assert.h>
 #include "arena.h"
 #include "config.h"
 #include "tensor.h"
+
 
 //typedef struct Tensor Tensor;
 //Tensor *tensor_create(Arena *A, int ndim, int *shape);
@@ -180,6 +182,7 @@
 //}
 
 int main() {
+	srand(time(NULL));
 	Arena *A = malloc(sizeof(Arena));
 	size_t SIZE = 1024 * 1024;
 	arena_init(A, ARENA_SIZE);
@@ -192,36 +195,38 @@ int main() {
 	Tensor *x = tensor_create_new(A, ndim, shape);
 	Tensor *y = tensor_create_new(A, ndim, shape);
 	Tensor *f = tensor_create_new(A, ndim, shape);
-
 	tensor_randomize_weights(x);
 	tensor_randomize_weights(y);
 	tensor_randomize_weights(f);
-	//tensor_get_2d(x);
-	//tensor_get_2d(y);
-	//tensor_get_2d(f);
 
 	Tensor *z = tensor_add(A, x, y);
 	Tensor *zt = tensor_transpose(z);
 	Tensor *loss  = tensor_matmul(A, zt, f);
-	tensor_get_2d(loss);
+	
+
+	float h = 0.5f;
+	Tensor *hx = tensor_scaler_addition(A, x, h);
+
+	Tensor *z1 = tensor_add(A, hx, y);
+	Tensor *zt1 = tensor_transpose(z1);
+	Tensor *loss1  = tensor_matmul(A, zt1, f);
+	bool check = tensor_equal(loss, loss1);
+
+	Tensor *loss_diff = tensor_subtract(A, loss1, loss);
+	tensor_get_2d(loss_diff);
+
+	
+
+
 
 	// Calculating gradient of loss w.r.t x
 	// let's first define samll number 'h'
 
-	float h = 0.1f;
-	Tensor *hx = tensor_scaler_addition(A, x, h);
-	bool check = tensor_equal(x, hx);
-	printf("hx\n");
-	tensor_get_2d(hx);
-	Tensor *diff = tensor_subtract(A, hx, x);
-	printf("diff\n");
-	tensor_get_2d(diff);
-	Tensor *grad_x = tensor_scaler_div(diff, h);
-	x->grad = tensor_create_new(A, 2, x->shape);
-	x->grad = grad_x;
-
-	tensor_get_2d(grad_x);
-			
+	//Tensor *hx = tensor_scaler_addition(A, x, h);
+	//Tensor *diff = tensor_subtract(A, hx, x);
+	//Tensor *grad_x = tensor_scaler_div(diff, h);
+	//x->grad = tensor_create_new(A, 2, x->shape);
+	//x->grad = grad_x;
 
 
 	return 0;
