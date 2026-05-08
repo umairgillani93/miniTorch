@@ -182,17 +182,17 @@
 //}
 
 
-void tensor_matmul_backward(Tensor *x, Tensor *y,  Tensor *grad_prev) {
-	// dL/dx = grad_prev @ y.T using python convention in C :p
-	Tensor *yt = tensor_transpose(y);
-	Tensor *dx = tensor_matmul(grad_prev, yt);
-	tensor_add_inplace(x->grad, dx);
-
-	// dL/dy = x.T @ grad_prev 
-	Tensor *xt = tensor_transpose(x);
-	Tensor *dy = tensor_matmul(xt, grad_prev);
-	tensor_add_inplace(y->grad, dy);
-}
+//void tensor_matmul_backward(Tensor *x, Tensor *y,  Tensor *grad_prev) {
+//	// dL/dx = grad_prev @ y.T using python convention in C :p
+//	Tensor *yt = tensor_transpose(y);
+//	Tensor *dx = tensor_matmul(grad_prev, yt);
+//	tensor_add_inplace(x->grad, dx);
+//
+//	// dL/dy = x.T @ grad_prev 
+//	Tensor *xt = tensor_transpose(x);
+//	Tensor *dy = tensor_matmul(xt, grad_prev);
+//	tensor_add_inplace(y->grad, dy);
+//}
 
 int main() {
 	srand(time(NULL));
@@ -212,21 +212,17 @@ int main() {
 	tensor_randomize_weights(y);
 	tensor_randomize_weights(f);
 
-	Tensor *z = tensor_add(A, x, y);
-	Tensor *zt = tensor_transpose(z);
-	Tensor *loss  = tensor_matmul(A, zt, f);
+	Tensor *z = tensor_matmul(A, x, y);
+	Tensor *c = tensor_add(A, z, f);
+	Tensor *L = tensor_sqrt(A, c);
+
+	float h = 0.001;
+	Tensor *ch = tensor_scaler_addition(A, c, h);
+	tensor_get_2d(ch);
+
 	
 
-	float h = 0.5f;
-	Tensor *hx = tensor_scaler_addition(A, x, h);
-
-	Tensor *z1 = tensor_add(A, hx, y);
-	Tensor *zt1 = tensor_transpose(z1);
-	Tensor *loss1  = tensor_matmul(A, zt1, f);
-	bool check = tensor_equal(loss, loss1);
-
-	Tensor *loss_diff = tensor_subtract(A, loss1, loss);
-	tensor_get_2d(loss_diff);
+	// dL/dc 
 
 
 	// so can we say like

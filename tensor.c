@@ -28,18 +28,18 @@
 	//
 	
 
-void tensor_matmul_backward(Tensor *x, Tensor *y,  Tensor *grad_prev) {
-	// dL/dx = grad_prev @ y.T
-	Tensor *yt = tensor_transpose(y);
-	Tensor *dx = tensor_matmul(grad_prev, yt);
-	tensor_add_inplace(x->grad, dx);
-
-	// dL/dy = x.T @ grad_prev 
-	Tensor *xt = tensor_transpose(x);
-	Tensor *dy = tensor_matmul(xt, grad_prev);
-	tensor_add_inplace(y->grad, dy);
-}
-
+//void tensor_matmul_backward(Tensor *x, Tensor *y,  Tensor *grad_prev) {
+//	// dL/dx = grad_prev @ y.T
+//	Tensor *yt = tensor_transpose(y);
+//	Tensor *dx = tensor_matmul(grad_prev, yt);
+//	tensor_add_inplace(x->grad, dx);
+//
+//	// dL/dy = x.T @ grad_prev 
+//	Tensor *xt = tensor_transpose(x);
+//	Tensor *dy = tensor_matmul(xt, grad_prev);
+//	tensor_add_inplace(y->grad, dy);
+//}
+//
 
 Tensor *tensor_relu(Arena *A, Tensor *x) {
 	int rows = x->shape[0];
