@@ -28,18 +28,47 @@
 	//
 	
 
-//void tensor_matmul_backward(Tensor *x, Tensor *y,  Tensor *grad_prev) {
-//	// dL/dx = grad_prev @ y.T
-//	Tensor *yt = tensor_transpose(y);
-//	Tensor *dx = tensor_matmul(grad_prev, yt);
-//	tensor_add_inplace(x->grad, dx);
-//
-//	// dL/dy = x.T @ grad_prev 
-//	Tensor *xt = tensor_transpose(x);
-//	Tensor *dy = tensor_matmul(xt, grad_prev);
-//	tensor_add_inplace(y->grad, dy);
-//}
-//
+void tensor_matmul_backward(Arena *A, Tensor *currNode) {
+	Tensor *x = currNode->parents[0];
+	Tensor *y = currNode->parents[1];
+
+	// dL/dx = grad_prev @ y.T
+	Tensor *yt = tensor_transpose(y);
+
+	Tensor *dx = tensor_matmul(A, y, currNode->grad);
+	//Tensor *dxt = tensor_transpose(dx);
+	Tensor *dxt = tensor_transpose(dx);
+
+	// Accumulate x now and first initilize 'x->grad'
+	x->grad = tensor_create_new(A, x->ndim, x->shape); 
+	tensor_randomize(x->grad);
+
+	size_t size_x = x->grad->shape[0] * x->grad->shape[1];
+	for (int i = 0; i < size_x; i++) {
+		x->grad->data[i] += dxt->data[i];
+	}
+
+	// dL/dy = x.T @ grad_prev 
+	Tensor *xt = tensor_transpose(x);
+	Tensor *dy = tensor_matmul(A, currNode->grad, x);
+
+	printf("dy shape: \n");
+	tensor_shape_2d(dy);
+
+	// Accumulate y now and first initilize 'y->grad'
+	y->grad = tensor_create_new(A, y->ndim, y->shape); 
+	tensor_randomize(y->grad);
+	size_t size_y = y->grad->shape[0] * y->grad->shape[1];
+	for (int i = 0; i < size_y; i++) {
+		y->grad->data[i] += dy->data[i];
+	}
+	printf("y shape: \n");
+	tensor_shape_2d(y);
+
+	printf("y->grad shape: \n");
+	tensor_shape_2d(y->grad);
+}
+
 
 Tensor *tensor_relu(Arena *A, Tensor *x) {
 	int rows = x->shape[0];
@@ -289,17 +318,30 @@ void tensor_randomize(Tensor *x) {
 	}
 }
 
-void tensor_add_inplace(Tensor **a, Tensor **b) {
-	assert((*a)->shape != (*b)->shape);
-	int rows = (*a)->shape[0];
-	int cols = (*a)->shape[1];
-	for (int i = 0; i < rows; i++) {
-		for (int j = 0; j < cols; j++) {
-			int idx = i * cols + j;
-			(*a)->data[idx] = (*b)->data[i];
+void tensor_accumulate(Tensor *x, Tensor *grad) {
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int ndim = x->ndim;
+	
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			x->grad->data[r * cols + c] += grad->data[r * cols + c];
 		}
 	}
 }
+		
+
+//void tensor_add_inplace(Tensor **a, Tensor **b) {
+//	assert((*a)->shape != (*b)->shape);
+//	int rows = (*a)->shape[0];
+//	int cols = (*a)->shape[1];
+//	for (int i = 0; i < rows; i++) {
+//		for (int j = 0; j < cols; j++) {
+//			int idx = i * cols + j;
+//			(*a)->data[idx] = (*b)->data[i];
+//		}
+//	}
+//}
 
 
 
@@ -1075,9 +1117,9 @@ void tensor_mean_backward(Tensor *x) {
 	// will implement later. IA
 }
 
-void tensor_matmul_backward(Tensor *x) {
-	// Will be implemented later. IA
-}
+//void tensor_matmul_backward(Arena *A, Tensor *x) {
+//	// Will be implemented later. IA
+//}
 
 void tensor_add_backward(Tensor *x) {
 	// Will be implemented later. IA

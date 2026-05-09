@@ -182,15 +182,15 @@
 //}
 
 
-//void tensor_matmul_backward(Tensor *x, Tensor *y,  Tensor *grad_prev) {
-//	// dL/dx = grad_prev @ y.T using python convention in C :p
+//void tensor_matmul_backward(Tensor *x, Tensor *y,  Tensor *currNode) {
+//	// dL/dx = currNode->grad @ y.T using python convention in C :p
 //	Tensor *yt = tensor_transpose(y);
-//	Tensor *dx = tensor_matmul(grad_prev, yt);
+//	Tensor *dx = tensor_matmul(currNode-grad, yt);
 //	tensor_add_inplace(x->grad, dx);
 //
-//	// dL/dy = x.T @ grad_prev 
+//	// dL/dy = x.T @ currNode->grad 
 //	Tensor *xt = tensor_transpose(x);
-//	Tensor *dy = tensor_matmul(xt, grad_prev);
+//	Tensor *dy = tensor_matmul(xt, currNode->grad);
 //	tensor_add_inplace(y->grad, dy);
 //}
 
@@ -207,20 +207,33 @@ int main() {
 
 	Tensor *x = tensor_create_new(A, ndim, shape);
 	Tensor *y = tensor_create_new(A, ndim, shape);
-	Tensor *f = tensor_create_new(A, ndim, shape);
 	tensor_randomize_weights(x);
 	tensor_randomize_weights(y);
-	tensor_randomize_weights(f);
+	tensor_shape_2d(x);
+	tensor_shape_2d(y);
 
-	Tensor *z = tensor_matmul(A, x, y);
-	Tensor *c = tensor_add(A, z, f);
-	Tensor *L = tensor_sqrt(A, c);
+	// Forward pass matmul
+	Tensor *yt = tensor_transpose(y);
+	x->requires_grad = true;
+	yt->requires_grad = true;
+	Tensor *z = tensor_matmul(A, x, yt);
+	printf("z shape: \n");
+	tensor_shape_2d(z);
+	int rows = z->shape[0];
+	int cols = z->shape[1];
 
-	float h = 0.001;
-	Tensor *ch = tensor_scaler_addition(A, c, h);
-	tensor_get_2d(ch);
+	int z_grad_shape[2] = {rows, cols};
 
-	
+	z->grad = tensor_create_new(A, x->ndim, z_grad_shape);
+	tensor_randomize(z->grad);
+	//for (int r = 0; r < rows; r++) {
+	//	for (int c = 0; c < cols; c++) {
+	//		z->grad->data[r * cols + c] = 1.0f;
+	//	}
+	//}
+
+	// backward pass
+	tensor_matmul_backward(A, z);
 
 	// dL/dc 
 

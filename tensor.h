@@ -7,7 +7,7 @@ typedef struct Arena Arena;
 typedef struct Tensor Tensor;
 
 typedef struct Op {
-	void(*backward)(struct Tensor *self);
+	void(*backward)(Arena *A, struct Tensor *self);
 } Op;
 
 typedef struct Tensor {
@@ -49,7 +49,8 @@ Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target);
 Tensor *tensor_scaler_multiplication(Tensor *x, float a);
 Tensor *tensor_scaler_addition(Arena *A, Tensor *x, float a);
 void tensor_fill_zeros(Tensor *a);
-void tensor_add_inplace(Tensor **a, Tensor **b);
+void tensor_add_inplace(Tensor *a, Tensor *b);
+void tensor_accumulate(Tensor *a, Tensor *b);
 void tensor_relu_backward( Tensor *out);
 //void tensor_free(Tensor *t);
 void tensor_get_2d(Tensor *t);
@@ -73,7 +74,7 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape);
 
 
 // Autograd tensor methods
-void tensor_matmul_backward(Tensor *x);
+void tensor_matmul_backward(Arena *A, Tensor *currNode);
 void tensor_mean_backward(Tensor *x);
 void tensor_add_backward(Tensor *x);
 void tensor_square_backward(Tensor *x);
