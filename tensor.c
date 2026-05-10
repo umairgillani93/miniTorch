@@ -26,7 +26,46 @@
 	// dL/dx = dL/dc * dc/dz * dz/dx => grad_z * dz/dx
 	// dL/dy = dL/dc * dc/dz * dz/dy => grad_z * dz/dy
 	//
+	//
 	
+void tensor_add_backward(Arena *A, Tensor *currNode) {
+	Tensor *x = currNode->parents[0];
+	Tensor *y = currNode->parents[1];
+
+	// by adding up the Tensors, whatever change happens in 
+	// the Tensor will have linear impact on the currNode;
+	// i.e if we raise Tensor (a) or Tensor (b) by samll about
+	// that same change will be reflacted in currNode
+	// dz/da = 1;
+	// dz/db = 1;
+
+	int x_ndim = x->ndim;
+	int y_ndim = y->ndim;
+
+	x->grad = tensor_create_new(A, x_ndim, x->shape);
+	y->grad = tensor_create_new(A, y_ndim, y->shape);
+	tensor_randomize_weights(x->grad);
+	tensor_randomize_weights(y->grad);
+
+	// For addition operads derivate, we accumulate the 
+	// derivate of whatever comes like currNode -> grad
+
+	int rows = currNode->shape[0];
+	int cols = currNode->shape[1];
+	int ndim = currNode->ndim;
+
+
+	assert((x->grad->shape[0] == currNode->grad->shape[0]) && (x->grad->shape[1] == currNode->grad->shape[1]));
+	assert((y->grad->shape[0] == currNode->grad->shape[0]) && (y->grad->shape[1] == currNode->grad->shape[1]));
+
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			x->grad->data[r * cols + c] += currNode->grad->data[r * cols + c];
+			y->grad->data[r * cols + c] += currNode->grad->data[r * cols + c];
+		}
+	}
+}
+
 
 void tensor_matmul_backward(Arena *A, Tensor *currNode) {
 	Tensor *x = currNode->parents[0];
@@ -472,7 +511,7 @@ Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b) {
 		out->num_parents = 2;
 		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
 		out->parents[0] = a;
-		out->parents[0] = b;
+		out->parents[1] = b;
 
 		// Operations
 		Op *op = arena_alloc(A, sizeof(Op));
@@ -1121,9 +1160,9 @@ void tensor_mean_backward(Tensor *x) {
 //	// Will be implemented later. IA
 //}
 
-void tensor_add_backward(Tensor *x) {
-	// Will be implemented later. IA
-}
+//void tensor_add_backward(tensor *x) {
+//	// will be implemented later. ia
+//}
 
 void tensor_scalling_backward(Tensor *x) {
 	// Will be implemented later. IA

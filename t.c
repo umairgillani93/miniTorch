@@ -209,14 +209,12 @@ int main() {
 	Tensor *y = tensor_create_new(A, ndim, shape);
 	tensor_randomize_weights(x);
 	tensor_randomize_weights(y);
-	tensor_shape_2d(x);
-	tensor_shape_2d(y);
 
 	// Forward pass matmul
 	Tensor *yt = tensor_transpose(y);
 	x->requires_grad = true;
 	yt->requires_grad = true;
-	Tensor *z = tensor_matmul(A, x, yt);
+	Tensor *z = tensor_add(A, x, y);
 	printf("z shape: \n");
 	tensor_shape_2d(z);
 	int rows = z->shape[0];
@@ -226,6 +224,10 @@ int main() {
 
 	z->grad = tensor_create_new(A, x->ndim, z_grad_shape);
 	tensor_randomize(z->grad);
+	printf("z grad shape :\n");
+	tensor_shape_2d(z->grad);
+	printf("z parents: %d \n", z->num_parents);
+	
 	//for (int r = 0; r < rows; r++) {
 	//	for (int c = 0; c < cols; c++) {
 	//		z->grad->data[r * cols + c] = 1.0f;
@@ -233,7 +235,8 @@ int main() {
 	//}
 
 	// backward pass
-	tensor_matmul_backward(A, z);
+	//tensor_matmul_backward(A, z);
+	tensor_add_backward(A, z);
 
 	// dL/dc 
 

@@ -76,7 +76,7 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape);
 // Autograd tensor methods
 void tensor_matmul_backward(Arena *A, Tensor *currNode);
 void tensor_mean_backward(Tensor *x);
-void tensor_add_backward(Tensor *x);
+void tensor_add_backward(Arena *A, Tensor *x);
 void tensor_square_backward(Tensor *x);
 void tensor_sqrt_backward(Tensor *x);
 void tensor_expand_cols_backward(Tensor *x);
