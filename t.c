@@ -389,10 +389,10 @@ int main() {
 
 	// Computational graph
 	Tensor *a = tensor_add(A, x, y);
-	Tensor *zt = tensor_transpose(z);
+	Tensor *zt = tensor_transpose(A, z);
 	Tensor *b = tensor_matmul(A, a, zt);
 
-	tensor_metadata(z);
+	tensor_metadata(zt);
 
 		
 	//Tensor *zt = tensor_transpose(z);
