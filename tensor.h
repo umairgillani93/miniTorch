@@ -41,6 +41,7 @@ typedef struct Tensor {
 
 // prototypes definition
 
+void tensor_metadata(Tensor *x);
 Tensor *tensor_scaler_div(Arena *A, Tensor *x, float val);
 Tensor *tensor_slice_cols(Arena *A, Tensor *a, int num_heads, int dk);
 Tensor *tensor_fill_like(Arena *A, Tensor *a, double eps);

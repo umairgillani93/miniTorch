@@ -27,6 +27,28 @@
 	// dL/dy = dL/dc * dc/dz * dz/dy => grad_z * dz/dy
 	//
 	//
+
+void tensor_metadata(Tensor *x) {
+	// prints tensor shape
+	printf("shape: \n");
+	tensor_shape_2d(x);
+
+	printf("stride: \n");
+	tensor_stride_2d(x);
+	printf("tensor dimension: %d\n", x->ndim);
+	printf("Requires gradient: %d\n", x->requires_grad);
+
+	if (x->requires_grad) {
+		printf("Created by: %s\n", x->operations->name);
+		printf("Backward Function: %d\n", x->operations->type);
+		printf("Num Parents: %d\n", x->num_parents);
+	}
+	
+	else {
+		fprintf(stderr, "Requires grad = false, so no operations to show");
+	}
+
+}
 	
 void tensor_add_backward(Arena *A, Tensor *currNode) {
 	Tensor *x = currNode->parents[0];
@@ -1045,6 +1067,10 @@ int tensor_size(Tensor *t) {
 
 void tensor_shape_2d(Tensor *t) {
 	printf("(%d, %d)\n", t->shape[0], t->shape[1]);
+}
+
+void tensor_stride_2d(Tensor *t) {
+	printf("(%d, %d)\n", t->stride[0], t->stride[1]);
 }
 
 // Auto-grad methods
