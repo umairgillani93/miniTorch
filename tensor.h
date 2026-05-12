@@ -2,15 +2,29 @@
 #ifndef TENSOR_H
 #define TENSOR_H
 
-
 typedef struct Arena Arena;
 typedef struct Tensor Tensor;
 
+typedef enum {
+	ADD, 
+	MUL,
+	MATMUL,
+	RELU,
+	SUB,
+	DIV,
+	EXP,
+	LOG
+} OpType;
+
+
 typedef struct Op {
+	OpType type;
+	const char *name;
 	void(*backward)(Arena *A, struct Tensor *self);
 } Op;
 
 typedef struct Tensor {
+	int id;
 	int *shape;
 	int *stride;
 	int ndim;
@@ -19,7 +33,7 @@ typedef struct Tensor {
 	// New parameters
 	Tensor *grad;
 	bool requires_grad;
-	Op *operations;
+	Op *operations; // Added name, and type as well!
 	Tensor **parents;
 	int num_parents;
 } Tensor;
@@ -50,6 +64,7 @@ Tensor *tensor_scaler_multiplication(Tensor *x, float a);
 Tensor *tensor_scaler_addition(Arena *A, Tensor *x, float a);
 void tensor_fill_zeros(Tensor *a);
 void tensor_add_inplace(Tensor *a, Tensor *b);
+void tensor_fill_ones(Tensor *x);
 void tensor_accumulate(Tensor *a, Tensor *b);
 void tensor_relu_backward( Tensor *out);
 //void tensor_free(Tensor *t);

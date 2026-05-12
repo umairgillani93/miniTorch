@@ -1,37 +1,67 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct {
-	char *base;
-	int size;
-	int offset;
-} Arena;
+typedef enum {
+	ADD = 10,
+	MUL,
+	MATMUL,
+	RELU,
+	SUB,
+	DIV,
+	EXP,
+	LOG
+} OpName;
 
-void arena_init(Arena *A, int size) {
-	A->base = (char *)malloc(size);
-	A->size = size;
-	A->offset = 0;
+typedef struct Op {
+	OpType type;
+	const *char name;
+	void(*backward)(Arena *A, struct Tensor *self);
+} Op;
+
+typedef struct Tensor {
+	int id;
+	int *shape;
+	int *stride;
+	int ndim;
+	float *data;
+	
+	// New parameters
+	Tensor *grad;
+	bool requires_grad;
+	Op *operations; // Added name, and type as well!
+	Tensor **parents;
+	int num_parents;
+} Tensor;
+
+
+
+Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
+	Tensor *t = arena_alloc(A, sizeof(Tensor));
+	t->ndim = ndim;
+	t->shape = arena_alloc(A, ndim * sizeof(int));
+	t->stride = arena_alloc(A, ndim * sizeof(int));
+
+	// define the shape of Tensor
+	int total = 1;
+	for (int i = ndim - 1; i >= 0; i--) {
+		t->shape[i] = shape[i];
+		t->stride[i] = total;
+		total *= shape[i];
+	}
+	// For autograd
+	t->data = arena_alloc(A, total * sizeof(float));
+	t->parents = NULL;
+	t->operations = NULL;
+	t->grad = NULL;
+	t->num_parents = 0;
+	return t;
 }
 
-void* arena_alloc(Arena *A, int size) {
-	void *ptr = A->base + A->offset;
-	A->offset += size * sizeof(int);
-	return ptr;
-}	
+
 
 
 int main() {
-	int SIZE = 1024 * 1024;
-
-	Arena *A = malloc(sizeof(Arena));;
-	arena_init(A, SIZE);
-	printf("Arean created!\n");
-
-
-	char *op = arena_alloc(A, sizeof(char));
-	op = "MATMUL";
-	printf("%s\n", op);
-
+	
+	Tensor *x = tensor_create_new(
 	return 0;
-
 }
