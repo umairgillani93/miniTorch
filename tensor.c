@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
 #include <math.h>
 #include <stdbool.h>
@@ -13,6 +12,8 @@
 
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 #define EPS 1e-5
+
+static size_t GLOBAL_TENSOR_ID = 0;
 
 
 // Backpropagation Intuition:
@@ -30,6 +31,7 @@
 
 void tensor_metadata(Tensor *x) {
 	// prints tensor shape
+	printf("Tensor Id: %d\n", x->id);
 	printf("shape: \n");
 	tensor_shape_2d(x);
 
@@ -1039,11 +1041,27 @@ void tensor_get_2d(Tensor *t) {
 }		
 
 Tensor *tensor_transpose(Tensor *a) {
+	int rows = a->shape[0];
+	int cols = a->shape[1];
 	int ndim = 2;
 	int *shape = malloc(ndim * sizeof(int));
-	shape[0] = a->shape[1];
-	shape[1] = a->shape[0];
-	Tensor *t = tensor_create(ndim, shape);
+	shape[0] = rows;
+	shape[1] = cols;
+	Tensor *t = tensor_create_new(A, ndim, shape);
+
+	if (a->requires_grad) {
+		t->requies_grad = true;
+		t->num_parents = 1;
+		t->parents[0] = a;
+		t->grad = arena_alloc(A, cols * rows * sizeof(float));
+		Op *op = arena_alloc(sizeof(Op));
+		op->backward = tensor_transpose_backward;
+		op->
+		op->type = TRANSPOSE;
+		op->name = "Transpose";
+		t->operations = op;
+
+	}
 	
 	int rows_a = a->shape[0];
 	int cols_a = a->shape[1];
@@ -1072,6 +1090,8 @@ void tensor_shape_2d(Tensor *t) {
 void tensor_stride_2d(Tensor *t) {
 	printf("(%d, %d)\n", t->stride[0], t->stride[1]);
 }
+
+
 
 // Auto-grad methods
 Tensor *tensor_mean(Arena *A, Tensor *a) {

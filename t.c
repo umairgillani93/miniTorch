@@ -7,6 +7,8 @@
 #include "config.h"
 #include "tensor.h"
 
+static size_t GLOBAL_TENSOR_ID = 0;
+
 
 //typedef enum {
 //	ADD,
@@ -155,6 +157,7 @@
 
 Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
 	Tensor *t = arena_alloc(A, sizeof(Tensor));
+	t->id = GLOBAL_TENSOR_ID++;
 	t->ndim = ndim;
 	t->shape = arena_alloc(A, ndim * sizeof(int));
 	t->stride = arena_alloc(A, ndim * sizeof(int));
@@ -389,7 +392,7 @@ int main() {
 	Tensor *zt = tensor_transpose(z);
 	Tensor *b = tensor_matmul(A, a, zt);
 
-	tensor_metadata(b);
+	tensor_metadata(z);
 
 		
 	//Tensor *zt = tensor_transpose(z);
@@ -408,4 +411,3 @@ int main() {
 
 	return 0;
 }
-

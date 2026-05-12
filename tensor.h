@@ -13,7 +13,8 @@ typedef enum {
 	SUB,
 	DIV,
 	EXP,
-	LOG
+	LOG,
+	TRANSPOSE
 } OpType;
 
 
@@ -58,7 +59,7 @@ Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape);
 Tensor *tensor_create_weights(int ndim, int *shape);
 Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b);
 Tensor *tensor_softmax(Arena *A, Tensor *a);
-Tensor *tensor_transpose(Tensor *t);
+Tensor *tensor_transpose(Arena *A, Tensor *t);
 Tensor *relu_backward(Tensor *x, Tensor *y);
 Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target);
 Tensor *tensor_scaler_multiplication(Tensor *x, float a);
