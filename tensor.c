@@ -30,6 +30,22 @@ static size_t GLOBAL_TENSOR_ID = 0;
 	//
 	//
 
+
+void dfs(Tensor *root, bool *visited) {
+	if (visited[root->id]) {
+		return;
+	}
+	else {
+		tensor_metadata(root);
+		if (root->num_parents) {
+			int p = root->num_parents;
+			for (int i = 0; i < p; i++) {
+				dfs(root->parents[i], visited);
+			}
+		}
+	}
+}
+
 void tensor_metadata(Tensor *x) {
 	// prints tensor shape
 	printf("Tensor Id: %d\n", x->id);
@@ -44,6 +60,7 @@ void tensor_metadata(Tensor *x) {
 	if (x->requires_grad) {
 		printf("Created by: %s\n", x->operations->name);
 		printf("Backward Function: %d\n", x->operations->type);
+		printf("Back Pointer: %p\n", *x->operations->backward);
 		printf("Num Parents: %d\n", x->num_parents);
 	}
 	
@@ -1049,16 +1066,17 @@ Tensor *tensor_transpose(Arena *A, Tensor *a) {
 	int cols = a->shape[1];
 	int ndim = 2;
 	int *out_shape = arena_alloc(A, ndim * sizeof(int));
-	out_shape[0] = rows;
-	out_shape[1] = cols;
+	out_shape[0] = cols;
+	out_shape[1] = rows;
 	Tensor *t = tensor_create_new(A, ndim, out_shape);
+	t->id = GLOBAL_TENSOR_ID++;
 
 	if (a->requires_grad) {
 		t->requires_grad = true;
 		t->num_parents = 1;
 		t->parents = arena_alloc(A, t->num_parents * sizeof(Tensor *));
 		t->parents[0] = a;
-		t->grad = arena_alloc(A, cols * rows * sizeof(float));
+		t->grad = arena_alloc(A, rows * cols * sizeof(float));
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_transpose_backward;
 		op->type = TRANSPOSE;
@@ -1432,27 +1450,38 @@ int main() {
 	Tensor *y = tensor_create_new(A, ndim, shape);
 	Tensor *z = tensor_create_new(A, ndim, shape);
 
+	tensor_randomize(x);
+	tensor_randomize(y);
+	tensor_randomize(z);
+
 	x->requires_grad = true;
 	y->requires_grad = true;
 	z->requires_grad = true;
 
 	Tensor *zt = tensor_transpose(A, z);
 
-	tensor_randomize(x);
-	tensor_randomize(y);
-	tensor_randomize(z);
-
 	// Computational graph
 	Tensor *a = tensor_add(A, x, y);
-	printf("a data: \n");
-	tensor_metadata(a);
-	printf("zt data: \n");
-	tensor_metadata(zt);
+	Tensor *b = tensor_matmul(A, a, zt);
 
-	printf("z data: \n");
-	tensor_metadata(z);
-	//Tensor *b = tensor_matmul(A, a, zt);
+	int S = 10;
+	bool visited[S];
 
+	for (int i = 0; i < S; i++) {
+		visited[i] = false;
+	}
+
+	dfs(b, visited);
+
+	//printf("z data: \n");
+	//tensor_metadata(z);
+
+	/*
+	 * Tensor as nodes
+	 * Tensor operations as Nodes
+	 * X(Node)----|some opeartion| (NOde)----> Y(Node)
+	 * shape, stride, id, operations, name, backward function...
+	 */
 	
 	
 
