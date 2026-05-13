@@ -29,19 +29,20 @@ static size_t GLOBAL_TENSOR_ID = 0;
 	// dL/dy = dL/dc * dc/dz * dz/dy => grad_z * dz/dy
 	//
 	//
-
+	//
 
 void dfs(Tensor *root, bool *visited) {
-	if (visited[root->id]) {
-		return;
-	}
-	else {
-		tensor_metadata(root);
-		if (root->num_parents) {
-			int p = root->num_parents;
-			for (int i = 0; i < p; i++) {
-				dfs(root->parents[i], visited);
-			}
+	if (root == NULL) return;
+	if (visited[root->id]) return;
+
+	visited[root->id] = true;  
+	tensor_metadata(root);
+	printf("\n");
+	printf("----------------------\n");
+	if (root->parents) {
+		int p = root->num_parents;
+		for (int i = 0; i < p; i++) {
+			dfs(root->parents[i], visited);
 		}
 	}
 }
@@ -57,16 +58,20 @@ void tensor_metadata(Tensor *x) {
 	printf("tensor dimension: %d\n", x->ndim);
 	printf("Requires gradient: %d\n", x->requires_grad);
 
-	if (x->requires_grad) {
+	if (x->operations != NULL) {
 		printf("Created by: %s\n", x->operations->name);
 		printf("Backward Function: %d\n", x->operations->type);
-		printf("Back Pointer: %p\n", *x->operations->backward);
+		//printf("Back Pointer: %p\n", x->operations->backward);
 		printf("Num Parents: %d\n", x->num_parents);
 	}
-	
+
 	else {
-		fprintf(stderr, "<tensor_metadata> Error: Requires grad = false, so no operations to show\n");
+		printf("Leaf Node\n");
 	}
+	
+	//else {
+	//	fprintf(stderr, "<tensor_metadata> Error: Requires grad = false, so no operations to show\n");
+	//}
 
 }
 	
@@ -1464,10 +1469,11 @@ int main() {
 	Tensor *a = tensor_add(A, x, y);
 	Tensor *b = tensor_matmul(A, a, zt);
 
-	int S = 10;
-	bool visited[S];
+	
+	size_t depth = GLOBAL_TENSOR_ID;
 
-	for (int i = 0; i < S; i++) {
+	bool visited[depth];
+	for (int i = 0; i < depth; i++) {
 		visited[i] = false;
 	}
 
