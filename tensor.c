@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <string.h>
 #include "tensor.h"
 #include "attention2.h"
 #include "feed_forward_nn.h"
@@ -36,15 +37,37 @@ void dfs(Tensor *root, bool *visited) {
 	if (visited[root->id]) return;
 
 	visited[root->id] = true;  
-	tensor_metadata(root);
-	printf("\n");
-	printf("----------------------\n");
 	if (root->parents) {
+		const char *name = root->operations->name;
+		int type = root->operations->type;
+		if (type == MATMUL)  {
+		//if (strcmp(name, "OP_TIMES") == 0) {
+			printf("Times operation\n");
+			// run the gradient calculation pipeline for *
+		}	
+		else if (type == ADD) {
+		//else if (strcmp(name, "OP_ADD") == 0) {
+			printf("Add opeartions: \n");
+		}
+
+		else if (type == TRANSPOSE) {
+		//else if (strcmp(name, "OP_TRANSPOSE") == 0) {
+			printf("Transpose opeartions: \n");
+		}
+
+		else {
+			printf("None\n");
+		}
+	
+		tensor_metadata(root);
+		printf("\n");
+		printf("----------------------\n");
 		int p = root->num_parents;
 		for (int i = 0; i < p; i++) {
 			dfs(root->parents[i], visited);
 		}
 	}
+	tensor_metadata(root);
 }
 
 void tensor_metadata(Tensor *x) {
@@ -900,7 +923,7 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_matmul_backward;
 		op->type = MATMUL;
-		op->name = "OP_Times";
+		op->name = "OP_TIMES";
 		out->operations = op;
 
 	}
@@ -1478,9 +1501,41 @@ int main() {
 	}
 
 	dfs(b, visited);
+	printf("done traversing\n");
+	exit(1);
 
-	//printf("z data: \n");
-	//tensor_metadata(z);
+
+	// Last tensor, consider this a Loss tensor for now
+	int *grad_b_shape = arena_alloc(A, b->ndim * sizeof(int));
+	grad_b_shape[0] = b->shape[0];
+	grad_b_shape[1] = b->shape[1];
+
+	Tensor *grad_b = tensor_create_new(A, b->ndim, grad_b_shape); 
+	tensor_fill_ones(grad_b);
+
+	b->grad = grad_b; // loss derivative
+	//da/db = partial(db / db * zt.T)
+	int *grad_a_shape = arena_alloc(A, a->ndim * sizeof(int));
+	grad_a_shape[0] = a->shape[0];
+	grad_a_shape[1] = a->shape[1];
+
+	Tensor *grad_a = tensor_create_new(A, a->ndim, grad_a_shape); 
+	grad_a = tensor_matmul(A, b->grad, z);
+	a->grad = grad_a;
+	
+	//da/db = partial(db / db * zt.T)
+	int *grad_z_shape = arena_alloc(A, z->ndim * sizeof(int));
+	grad_z_shape[0] = z->shape[0];
+	grad_z_shape[1] = z->shape[1];
+	
+	Tensor *grad_z = tensor_create_new(A, z->ndim, grad_z_shape); 
+	tensor_shape_2d(a);
+	tensor_shape_2d(z);
+	Tensor *at = tensor_transpose(A, a);
+	grad_z = tensor_matmul(A, at, b->grad);
+
+	tensor_get_2d(grad_z);
+
 
 	/*
 	 * Tensor as nodes
