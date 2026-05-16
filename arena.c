@@ -26,6 +26,11 @@ void arena_init(Arena *A, int size) {
 void *arena_alloc(Arena *A, int size) {
 	void *ptr = A->base + A->offset;
 	A->offset += size; // This should be size in bytes
+										 //
+	if (A->offset + size > A->size) {
+		printf("ARENA OUT OF MEMORY!\n");
+	}	
+										 
 	return ptr;
 }	
 

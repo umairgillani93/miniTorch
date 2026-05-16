@@ -77,11 +77,11 @@ void ffn_init_params(FFN *F) {
 
 Tensor *ffn_backward(Arena *A, FFN *f, Tensor *x, Tensor *dout) {
 
-	f->dw2 = tensor_matmul(A, tensor_transpose(f->a1), dout);
-	f->da1 = tensor_matmul(A, dout, tensor_transpose(f->w2));
+	f->dw2 = tensor_matmul(A, tensor_transpose(A, f->a1), dout);
+	f->da1 = tensor_matmul(A, dout, tensor_transpose(A, f->w2));
 	f->dh1 = tensor_relu(A, f->da1); 
-	f->dw1 = tensor_matmul(A, tensor_transpose(x), f->dh1);
-	Tensor *dx = tensor_matmul(A, f->dh1, tensor_transpose(f->w1));
+	f->dw1 = tensor_matmul(A, tensor_transpose(A, x), f->dh1);
+	Tensor *dx = tensor_matmul(A, f->dh1, tensor_transpose(A, f->w1));
 
 	return dx;
 }

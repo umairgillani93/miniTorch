@@ -9,6 +9,8 @@
 #include "arena.h"
 #include "config.h"
 
+static size_t GLOBAL_TENSOR_ID = 0;
+
 //#define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 //#define EMB_DIM 32 // out model dimension, i.e Embedding size for each token
 //#define SEQ_LEN 10 // assume these are 10 tokens converted into token IDs
@@ -60,8 +62,8 @@ void mha_init_params(MHA *m) {
 }
 
 void mha_backward_temp_weights(Arena *AA, Tensor *dO, Tensor *A, Tensor *B, Tensor **dA, Tensor **dV) {
-	*dA = tensor_matmul(AA, dO, tensor_transpose(B));
-	*dV = tensor_matmul(AA, tensor_transpose(A), dO);
+	*dA = tensor_matmul(AA, dO, tensor_transpose(AA, B));
+	*dV = tensor_matmul(AA, tensor_transpose(AA, A), dO);
 	//tensor_shape(*(dA));
 	//tensor_shape(*(dV));
 }
@@ -113,7 +115,7 @@ Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {
 			}
 		}
 		float scale = 1.0f / sqrtf(dk);
-		Tensor *Kt = tensor_transpose(Kk);
+		Tensor *Kt = tensor_transpose(A, Kk);
 		Tensor *QKt = tensor_matmul(A, Qk, Kt);
 		for (int i = 0; i < QKt->shape[0]; i++) {
 			for (int j = 0; j < QKt->shape[1]; j++) {
@@ -136,7 +138,7 @@ Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {
 		//m->dwv = tensor_matmul(A, tensor_transpose(tokens), dVk);
 		Tensor *dSk = softmax_gradient(dAk, Ak);
 
-		Tensor *dKk = tensor_matmul(A, tensor_transpose(dSk), Qk);
+		Tensor *dKk = tensor_matmul(A, tensor_transpose(A, dSk), Qk);
 		Tensor *dQk = tensor_matmul(A, dSk, Kk);
 		
 		// Scaling dQk and dKk
@@ -153,9 +155,9 @@ Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {
 		}
 		//
 		// finding gradients for input 'X' weights
-	  Tensor *dwq = tensor_matmul(A, tensor_transpose(tokens), dQk);
-		Tensor *dwk = tensor_matmul(A, tensor_transpose(tokens), dKk);
-		Tensor *dwv = tensor_matmul(A, tensor_transpose(tokens), dVk);
+	  Tensor *dwq = tensor_matmul(A, tensor_transpose(A, tokens), dQk);
+		Tensor *dwk = tensor_matmul(A, tensor_transpose(A, tokens), dKk);
+		Tensor *dwv = tensor_matmul(A, tensor_transpose(A, tokens), dVk);
 
 
 		// TODO: Accumulation step tensor_inplace_gradients
@@ -201,9 +203,9 @@ Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {
 	//printf("dV shape: \n");
 	//tensor_shape(m->dV);
 	
-	Tensor *dx1 = tensor_matmul(A, m->dQ, tensor_transpose(m->wq));
-	Tensor *dx2 = tensor_matmul(A, m->dK, tensor_transpose(m->wk));
-	Tensor *dx3 = tensor_matmul(A, m->dV, tensor_transpose(m->wv));
+	Tensor *dx1 = tensor_matmul(A, m->dQ, tensor_transpose(A, m->wq));
+	Tensor *dx2 = tensor_matmul(A, m->dK, tensor_transpose(A, m->wk));
+	Tensor *dx3 = tensor_matmul(A, m->dV, tensor_transpose(A, m->wv));
 
 	//printf("dx1 shape: \n");
 	//tensor_shape(dx1);
@@ -250,7 +252,7 @@ Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
 
 
 Tensor *scaled_dot_product_attention(Arena *A, Tensor *Q, Tensor *K, Tensor *V, int dk) {
-	Tensor *kt = tensor_transpose(K); // check this later for auto grad
+	Tensor *kt = tensor_transpose(A, K); // check this later for auto grad
 	Tensor *qkt = tensor_matmul(A, Q, kt);
 	//tensor *sq = tensor_sqrt(a, 
 	//for (int i = 0; i < qkt->shape[0]; i++) {
@@ -328,22 +330,25 @@ MHA *mha_create(int num_heads, int seq_len, int emb_dim) {
 
 	
 
-//int main() {
-//	Arena *A = malloc(sizeof(Arena));
-//	int SIZE = 1024 * 1024 * 1024;
-//	arena_init(A, SIZE);
-//	int ndim = 2;
-//	int shape[2] = {SEQ_LEN, EMB_DIM};
-//
-//	Tensor *x = tensor_create_new(A ,ndim, shape);
-//	tensor_randomize_weights(x);
-//
-//	int num_heads = 8;
-//	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
-//	mha_init_params(mha);
-//	Tensor *multi_head = mha_forward(A, x, mha);
-//	tensor_get_2d(multi_head);
-//	tensor_shape_2d(multi_head);
-//
-//	return 0;
-//}
+int main() {
+	Arena *A = malloc(sizeof(Arena));
+	int SIZE = 1024 * 1024 * 1024;
+	arena_init(A, SIZE);
+	int ndim = 2;
+	int shape[2] = {SEQ_LEN, EMB_DIM};
+
+	Tensor *x = tensor_create_new(A ,ndim, shape);
+	tensor_randomize_weights(x);
+	x->requires_grad = true;
+
+	bool visited[MAX_NODES] = {0};
+	int num_heads = 8;
+	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
+	mha_init_params(mha);
+	Tensor *multi_head = mha_forward(A, x, mha);
+	tensor_get_2d(multi_head);
+	tensor_metadata(multi_head);
+	//traverse_graph(multi_head, visited);
+
+	return 0;
+}

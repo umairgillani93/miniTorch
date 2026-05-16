@@ -14,7 +14,8 @@ typedef enum {
 	DIV,
 	EXP,
 	LOG,
-	TRANSPOSE
+	TRANSPOSE,
+	SLICE
 } OpType;
 
 
@@ -42,7 +43,11 @@ typedef struct Tensor {
 
 // prototypes definition
 
+
+void traverse_graph(Tensor *root, bool *visited);
 void tensor_metadata(Tensor *x);
+void backward(Arena *A, Tensor *loss, size_t MAX_NODES);
+void dfs(Arena *A, Tensor *root, bool *visited, Tensor **topo, int *size);
 Tensor *tensor_scaler_div(Arena *A, Tensor *x, float val);
 Tensor *tensor_slice_cols(Arena *A, Tensor *a, int num_heads, int dk);
 Tensor *tensor_fill_like(Arena *A, Tensor *a, double eps);
@@ -65,7 +70,7 @@ Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target);
 Tensor *tensor_scaler_multiplication(Tensor *x, float a);
 Tensor *tensor_scaler_addition(Arena *A, Tensor *x, float a);
 void tensor_fill_zeros(Tensor *a);
-void tensor_add_inplace(Tensor *a, Tensor *b);
+void tensor_add_inplace(Tensor **a, Tensor **b);
 void tensor_fill_ones(Tensor *x);
 void tensor_accumulate(Tensor *a, Tensor *b);
 void tensor_relu_backward( Tensor *out);

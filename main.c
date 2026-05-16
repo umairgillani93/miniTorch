@@ -17,6 +17,7 @@
 #include "arena.h"
 #include "model.c"
 
+
 //int main() {
 //
 //	srand(time(NULL));
@@ -110,6 +111,7 @@
 //			printf("loss tensor : \n");
 //			tensor_get_2d(loss);
 //			printf("Actual loss: %f\n", loss_to_show);
+//			backward(A, loss, MAX_NODES);
 //			exit(1);
 //
 //			Tensor *dx_for_ffn = tensor_create_new(A, 2, shape_local);
