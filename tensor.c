@@ -14,6 +14,7 @@
 
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 #define EPS 1e-5
+#define MAX_NODES 10000
 
 static size_t GLOBAL_TENSOR_ID = 0;
 
@@ -32,72 +33,9 @@ static size_t GLOBAL_TENSOR_ID = 0;
 	//
 	//
 
-void dfs(Tensor *root, bool *visited) {
-	if (root == NULL) return;
-	if (visited[root->id]) return;
+// Some backward functions
+// We want to take local gradiens depending upons the operations for this backward funntion (PyTorch style)
 
-	visited[root->id] = true;  
-	if (root->parents) {
-		const char *name = root->operations->name;
-		int type = root->operations->type;
-		if (type == MATMUL)  {
-		//if (strcmp(name, "OP_TIMES") == 0) {
-			printf("Times operation\n");
-			// run the gradient calculation pipeline for *
-		}	
-		else if (type == ADD) {
-		//else if (strcmp(name, "OP_ADD") == 0) {
-			printf("Add opeartions: \n");
-		}
-
-		else if (type == TRANSPOSE) {
-		//else if (strcmp(name, "OP_TRANSPOSE") == 0) {
-			printf("Transpose opeartions: \n");
-		}
-
-		else {
-			printf("None\n");
-		}
-	
-		tensor_metadata(root);
-		printf("\n");
-		printf("----------------------\n");
-		int p = root->num_parents;
-		for (int i = 0; i < p; i++) {
-			dfs(root->parents[i], visited);
-		}
-	}
-	tensor_metadata(root);
-}
-
-void tensor_metadata(Tensor *x) {
-	// prints tensor shape
-	printf("Tensor Id: %d\n", x->id);
-	printf("shape: \n");
-	tensor_shape_2d(x);
-
-	printf("stride: \n");
-	tensor_stride_2d(x);
-	printf("tensor dimension: %d\n", x->ndim);
-	printf("Requires gradient: %d\n", x->requires_grad);
-
-	if (x->operations != NULL) {
-		printf("Created by: %s\n", x->operations->name);
-		printf("Backward Function: %d\n", x->operations->type);
-		//printf("Back Pointer: %p\n", x->operations->backward);
-		printf("Num Parents: %d\n", x->num_parents);
-	}
-
-	else {
-		printf("Leaf Node\n");
-	}
-	
-	//else {
-	//	fprintf(stderr, "<tensor_metadata> Error: Requires grad = false, so no operations to show\n");
-	//}
-
-}
-	
 void tensor_add_backward(Arena *A, Tensor *currNode) {
 	Tensor *x = currNode->parents[0];
 	Tensor *y = currNode->parents[1];
@@ -141,6 +79,98 @@ void tensor_add_backward(Arena *A, Tensor *currNode) {
 	printf("y grad shape: \n");
 	tensor_shape_2d(y->grad);
 }
+
+
+void backward(Arena *A, Tensor *loss, size_t max_nodes) {
+	bool visited[MAX_NODES] = {0};
+	Tensor *topo[MAX_NODES];
+	int size = 0;
+
+	dfs(A, loss, visited, topo, &size);
+
+	// backward pass
+	for (int i = size - 1; i > 0; i--) {
+		Tensor *node = topo[i];
+
+		switch (node->operations->type) {
+			case ADD:
+				if (node->operations) {
+					tensor_add_backward(A, node);
+					break;
+				}
+		}
+	}
+}
+
+void dfs(Arena *A, Tensor *root, bool *visited, Tensor **topo, int *size) {
+	// Rather than 'dfs' I need 'topological search' over here
+	// which strictly keeps track to parents first rather than
+	// visiting all the depth first
+
+	Tensor arr[MAX_NODES];
+	if (root == NULL) return;
+	if (visited[root->id]) return;
+
+	// make the Node visited, if it's not already
+	visited[root->id] = true;
+
+	if (root->parents) {
+		int p = root->num_parents;
+		for (int i = 0; i < p; i++) {
+			dfs(A, root->parents[i], visited, topo, size);
+		}
+	}
+
+	topo[*(size)++] = root;
+
+	//printf("------------------------\n");
+	//printf("\n");
+	////tensor_metadata(root);
+	//// check operation: root->operations->type:
+	//// calculate the gradients of tensor parents using that operation type
+	//if (root->operations != NULL) {
+	//	switch (root->operations->type) {
+	//		case ADD: 
+	//			tensor_add_backward(A, root); 
+	//			tensor_metadata(root);
+	//			tensor_shape_2d(root->grad);
+
+	//			break;
+
+
+	//		//case MATMUL: tensor_matmul_backward(A, root); break;
+	//	}
+	//}
+}
+
+void tensor_metadata(Tensor *x) {
+	// prints tensor shape
+	printf("Tensor Id: %d\n", x->id);
+	printf("shape: \n");
+	tensor_shape_2d(x);
+
+	printf("stride: \n");
+	tensor_stride_2d(x);
+	printf("tensor dimension: %d\n", x->ndim);
+	printf("Requires gradient: %d\n", x->requires_grad);
+
+	if (x->operations != NULL) {
+		printf("Created by: %s\n", x->operations->name);
+		printf("Backward Function: %d\n", x->operations->type);
+		//printf("Back Pointer: %p\n", x->operations->backward);
+		printf("Num Parents: %d\n", x->num_parents);
+	}
+
+	else {
+		printf("Leaf Node\n");
+	}
+	
+	//else {
+	//	fprintf(stderr, "<tensor_metadata> Error: Requires grad = false, so no operations to show\n");
+	//}
+
+}
+	
 
 
 void tensor_matmul_backward(Arena *A, Tensor *currNode) {
@@ -1352,8 +1382,27 @@ void tensor_mean_backward(Tensor *x) {
 	// will implement later. IA
 }
 
-//void tensor_matmul_backward(Arena *A, Tensor *x) {
-//	// Will be implemented later. IA
+//void tensor_matmul_backward(Arena *A, Tensor *x, Tensor *y, Tensor *grad_prev) {
+//	// Take the gradients of tensor X and tensor Y, w.r.t. Loss using chain rule
+//	// assusming that Node output is obtained using x @ y. It calculates local gradients
+//	// dx/dL = grad_prev * y; 
+//	// dy/dL = grad_prev * x; 
+//	int x_rows = x->shape[0];
+//	int x_cols = x->shape[1];
+//	int y_rows = y->shape[0];
+//	int y_cols = y->shape[1];
+//
+//	int ndim = 2;
+//	x_shape = arena_alloc(A, ndim * sizeof(int));
+//	y_shape = arena_alloc(A, ndim * sizeof(int));
+//	
+//	// create x and y gradients
+//	x->grad = tensor_create_new(A, ndim, x_shape);
+//	y->grad = tensor_create_new(A, ndim, y_shape);
+//
+//	x->grad = tensor_matmul(A, grad_prev, y);
+//	y->grad = tensor_matmul(A, x, grad_prev);
+//
 //}
 
 //void tensor_add_backward(tensor *x) {
@@ -1464,6 +1513,26 @@ Tensor *tensor_slice_cols(Arena *A, Tensor *x, int k, int dk) {
 }
 
 int main() {
+
+	/*
+	 * Tensor as nodes
+	 * Tensor operations as Nodes
+	 * X(Node)----|some opeartion| (NOde)----> Y(Node)
+	 * shape, stride, id, operations, name, backward function...
+	 */
+
+	//Tensor *zt = tensor_transpose(z);
+	//Tensor *b = tensor_matmul(A, a, zt);
+
+	// so can we say like
+	// if we have x @ y = z
+	// and z + f = c 
+	// f(c) = L (loss)
+	// now dL/dc = grad_c
+	// dL/df = dL/dc * dc/df = grad_c * dc/df => dL/df = grad_f
+	// dL/dz = dL/dc * dc/dz = grad_c * dc/dz => dL/dz = grad_z
+	// dL/dx = dL/dc * dc/dz * dz/dx => grad_z * dz/dx
+	// dL/dy = dL/dc * dc/dz * dz/dy => grad_z * dz/dy
 	srand(time(NULL));
 	Arena *A = malloc(sizeof(Arena));
 	size_t SIZE = 1024 * 1024;
@@ -1500,65 +1569,46 @@ int main() {
 		visited[i] = false;
 	}
 
-	dfs(b, visited);
-	printf("done traversing\n");
-	exit(1);
+	//dfs(A, b, visited, );
+	//printf("done traversing\n");
+	//printf("Running Back pass.. \n");
+	backward(A, b, MAX_NODES);
+	printf("------------------------------------------\n");
 
-
-	// Last tensor, consider this a Loss tensor for now
-	int *grad_b_shape = arena_alloc(A, b->ndim * sizeof(int));
-	grad_b_shape[0] = b->shape[0];
-	grad_b_shape[1] = b->shape[1];
-
-	Tensor *grad_b = tensor_create_new(A, b->ndim, grad_b_shape); 
-	tensor_fill_ones(grad_b);
-
-	b->grad = grad_b; // loss derivative
-	//da/db = partial(db / db * zt.T)
-	int *grad_a_shape = arena_alloc(A, a->ndim * sizeof(int));
-	grad_a_shape[0] = a->shape[0];
-	grad_a_shape[1] = a->shape[1];
-
-	Tensor *grad_a = tensor_create_new(A, a->ndim, grad_a_shape); 
-	grad_a = tensor_matmul(A, b->grad, z);
-	a->grad = grad_a;
-	
-	//da/db = partial(db / db * zt.T)
-	int *grad_z_shape = arena_alloc(A, z->ndim * sizeof(int));
-	grad_z_shape[0] = z->shape[0];
-	grad_z_shape[1] = z->shape[1];
-	
-	Tensor *grad_z = tensor_create_new(A, z->ndim, grad_z_shape); 
-	tensor_shape_2d(a);
-	tensor_shape_2d(z);
-	Tensor *at = tensor_transpose(A, a);
-	grad_z = tensor_matmul(A, at, b->grad);
-
-	tensor_get_2d(grad_z);
-
-
-	/*
-	 * Tensor as nodes
-	 * Tensor operations as Nodes
-	 * X(Node)----|some opeartion| (NOde)----> Y(Node)
-	 * shape, stride, id, operations, name, backward function...
-	 */
-	
-	
 
 	return 0;
 
-	//Tensor *zt = tensor_transpose(z);
-	//Tensor *b = tensor_matmul(A, a, zt);
+	// Last tensor, consider this a Loss tensor for now
+	//int *grad_b_shape = arena_alloc(A, b->ndim * sizeof(int));
+	//grad_b_shape[0] = b->shape[0];
+	//grad_b_shape[1] = b->shape[1];
 
-	// so can we say like
-	// if we have x @ y = z
-	// and z + f = c 
-	// f(c) = L (loss)
-	// now dL/dc = grad_c
-	// dL/df = dL/dc * dc/df = grad_c * dc/df => dL/df = grad_f
-	// dL/dz = dL/dc * dc/dz = grad_c * dc/dz => dL/dz = grad_z
-	// dL/dx = dL/dc * dc/dz * dz/dx => grad_z * dz/dx
-	// dL/dy = dL/dc * dc/dz * dz/dy => grad_z * dz/dy
+	//Tensor *grad_b = tensor_create_new(A, b->ndim, grad_b_shape); 
+	//tensor_fill_ones(grad_b);
+
+	//b->grad = grad_b; // loss derivative
+	////da/db = partial(db / db * zt.T)
+	//int *grad_a_shape = arena_alloc(A, a->ndim * sizeof(int));
+	//grad_a_shape[0] = a->shape[0];
+	//grad_a_shape[1] = a->shape[1];
+
+	//Tensor *grad_a = tensor_create_new(A, a->ndim, grad_a_shape); 
+	//grad_a = tensor_matmul(A, b->grad, z);
+	//a->grad = grad_a;
+	//
+	////da/db = partial(db / db * zt.T)
+	//int *grad_z_shape = arena_alloc(A, z->ndim * sizeof(int));
+	//grad_z_shape[0] = z->shape[0];
+	//grad_z_shape[1] = z->shape[1];
+	//
+	//Tensor *grad_z = tensor_create_new(A, z->ndim, grad_z_shape); 
+	//tensor_shape_2d(a);
+	//tensor_shape_2d(z);
+	//Tensor *at = tensor_transpose(A, a);
+	//grad_z = tensor_matmul(A, at, b->grad);
+
+	//tensor_get_2d(grad_z);
+
+
 }
 
