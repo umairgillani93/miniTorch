@@ -37,8 +37,6 @@ static size_t GLOBAL_TENSOR_ID = 0;
 // We want to take local gradiens depending upons the operations for this backward funntion (PyTorch style)
 
 void tensor_add_backward(Arena *A, Tensor *currNode) {
-	Tensor *x = currNode->parents[0];
-	Tensor *y = currNode->parents[1];
 
 	// by adding up the Tensors, whatever change happens in 
 	// the Tensor will have linear impact on the currNode;
@@ -46,59 +44,32 @@ void tensor_add_backward(Arena *A, Tensor *currNode) {
 	// that same change will be reflacted in currNode
 	// dz/da = 1;
 	// dz/db = 1;
-
-	int x_ndim = x->ndim;
-	int y_ndim = y->ndim;
-
-	x->grad = tensor_create_new(A, x_ndim, x->shape);
-	y->grad = tensor_create_new(A, y_ndim, y->shape);
-	tensor_randomize_weights(x->grad);
-	tensor_randomize_weights(y->grad);
-
-	// For addition operads derivate, we accumulate the 
-	// derivate of whatever comes like currNode -> grad
-
-	int rows = currNode->shape[0];
-	int cols = currNode->shape[1];
+	
+	if (currNode == NULL || currNode->operations == NULL) return;
 	int ndim = currNode->ndim;
+	
+	Tensor *a = currNode->parents[0];
+	Tensor *b = currNode->parents[1];
 
 
-	assert((x->grad->shape[0] == currNode->grad->shape[0]) && (x->grad->shape[1] == currNode->grad->shape[1]));
-	assert((y->grad->shape[0] == currNode->grad->shape[0]) && (y->grad->shape[1] == currNode->grad->shape[1]));
-
-	for (int r = 0; r < rows; r++) {
-		for (int c = 0; c < cols; c++) {
-			x->grad->data[r * cols + c] += currNode->grad->data[r * cols + c];
-			y->grad->data[r * cols + c] += currNode->grad->data[r * cols + c];
-		}
+	if (a->grad == NULL) {
+		Tensor *a_grad = tensor_create_new(A, ndim, currNode->shape);
+		tensor_randomize_weights(a_grad);
+		a->grad = a_grad;
 	}
 
-	printf("x grad shape: \n");
-	tensor_shape_2d(x->grad);
+	if (b->grad == NULL) {
+		Tensor *b_grad = tensor_create_new(A, ndim, currNode->shape);
+		tensor_randomize_weights(b_grad);
+		b->grad = b_grad;
+	}
 
-	printf("y grad shape: \n");
-	tensor_shape_2d(y->grad);
-}
+	// da/dL
+	int size = tensor_size(currNode);
 
-
-void backward(Arena *A, Tensor *loss, size_t max_nodes) {
-	bool visited[MAX_NODES] = {0};
-	Tensor *topo[MAX_NODES];
-	int size = 0;
-
-	dfs(A, loss, visited, topo, &size);
-
-	// backward pass
-	for (int i = size - 1; i > 0; i--) {
-		Tensor *node = topo[i];
-
-		switch (node->operations->type) {
-			case ADD:
-				if (node->operations) {
-					tensor_add_backward(A, node);
-					break;
-				}
-		}
+	for (int i = 0; i < size; i++) {
+		a->grad->data[i] = currNode->grad->data[i];
+		b->grad->data[i] = currNode->grad->data[i];
 	}
 }
 
@@ -121,7 +92,7 @@ void dfs(Arena *A, Tensor *root, bool *visited, Tensor **topo, int *size) {
 		}
 	}
 
-	topo[*(size)++] = root;
+	topo[(*size)++] = root;
 
 	//printf("------------------------\n");
 	//printf("\n");
@@ -143,6 +114,32 @@ void dfs(Arena *A, Tensor *root, bool *visited, Tensor **topo, int *size) {
 	//}
 }
 
+
+void backward(Arena *A, Tensor *loss, size_t max_nodes) {
+	bool visited[MAX_NODES] = {0};
+	Tensor *topo[MAX_NODES];
+	int size = 0;
+
+	dfs(A, loss, visited, topo, &size);
+
+	// backward pass
+	for (int i = size - 1; i > 0; i--) {
+		Tensor *node = topo[i];
+		printf("got the Node from topo list: \n");
+		tensor_metadata(node);
+
+		if (node->operations) {
+			switch (node->operations->type) {
+				case ADD:
+						printf("Type :%d\n", node->operations->type);
+						tensor_add_backward(A, node);
+						break;
+			}
+		}
+	}
+}
+
+
 void tensor_metadata(Tensor *x) {
 	// prints tensor shape
 	printf("Tensor Id: %d\n", x->id);
@@ -150,7 +147,7 @@ void tensor_metadata(Tensor *x) {
 	tensor_shape_2d(x);
 
 	printf("stride: \n");
-	tensor_stride_2d(x);
+	//tensor_stride_2d(x);
 	printf("tensor dimension: %d\n", x->ndim);
 	printf("Requires gradient: %d\n", x->requires_grad);
 
@@ -1558,22 +1555,25 @@ int main() {
 	Tensor *zt = tensor_transpose(A, z);
 
 	// Computational graph
-	Tensor *a = tensor_add(A, x, y);
-	Tensor *b = tensor_matmul(A, a, zt);
+	Tensor *aa = tensor_add(A, x, y);
 
-	
-	size_t depth = GLOBAL_TENSOR_ID;
+	Tensor *aa_grad = tensor_create_new(A, ndim, aa->shape);
+	tensor_fill_ones(aa_grad);
+	aa->grad = aa_grad;
 
-	bool visited[depth];
-	for (int i = 0; i < depth; i++) {
-		visited[i] = false;
-	}
+	//Tensor *b = tensor_matmul(A, a, zt);
 
-	//dfs(A, b, visited, );
-	//printf("done traversing\n");
-	//printf("Running Back pass.. \n");
-	backward(A, b, MAX_NODES);
+	tensor_add_backward(A, aa);
+
 	printf("------------------------------------------\n");
+	tensor_get_2d(x->grad);
+	tensor_get_2d(y->grad);
+	
+	///backward(A, a, MAX_NODES);
+
+
+
+
 
 
 	return 0;
