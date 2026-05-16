@@ -125,14 +125,21 @@ void backward(Arena *A, Tensor *loss, size_t max_nodes) {
 	// backward pass
 	for (int i = size - 1; i > 0; i--) {
 		Tensor *node = topo[i];
-		printf("got the Node from topo list: \n");
-		tensor_metadata(node);
+		//printf("got the Node from topo list: \n");
+		//tensor_metadata(node);
 
 		if (node->operations) {
-			switch (node->operations->type) {
+			int type = node->operations-type;
+			printf("Operation Type: %d\n", type);
+			switch (type) {
 				case ADD:
-						printf("Type :%d\n", node->operations->type);
+						printf("Type :%d\n", type);
 						tensor_add_backward(A, node);
+						break;
+
+				case MATMUL:
+						printf("Type :%d\n", type);
+						tensor_matmul_backward(A, node);
 						break;
 			}
 		}
@@ -1556,12 +1563,18 @@ int main() {
 
 	// Computational graph
 	Tensor *aa = tensor_add(A, x, y);
+	Tensor *b = tensor_matmul(A, aa, zt);
+			
 
-	Tensor *aa_grad = tensor_create_new(A, ndim, aa->shape);
-	tensor_fill_ones(aa_grad);
-	aa->grad = aa_grad;
+	//Tensor *aa_grad = tensor_create_new(A, ndim, aa->shape);
+	//tensor_fill_ones(aa_grad);
+	//aa->grad = aa_grad;
 
-	//Tensor *b = tensor_matmul(A, a, zt);
+	Tensor *b_grad= tensor_create_new(A, ndim, b->shape);
+	tensor_fill_ones(b_grad);
+	b->grad = b_grad;
+	printf("before: \n");
+	tensor_get_2d(b->grad);
 
 	//tensor_add_backward(A, aa);
 
@@ -1569,48 +1582,16 @@ int main() {
 	//tensor_get_2d(x->grad);
 	//tensor_get_2d(y->grad);
 	
-	backward(A, aa, MAX_NODES);
-	tensor_get_2d(x->grad);
-	tensor_get_2d(y->grad);
-
-
-
-
+	backward(A, b, MAX_NODES);
+	//tensor_get_2d(x->grad);
+	//tensor_get_2d(y->grad);
+	printf("z grad: \n");
+	tensor_get_2d(z->grad);
+	printf("aa grad: \n");
+	tensor_get_2d(aa->grad);
 
 
 	return 0;
-
-	// Last tensor, consider this a Loss tensor for now
-	//int *grad_b_shape = arena_alloc(A, b->ndim * sizeof(int));
-	//grad_b_shape[0] = b->shape[0];
-	//grad_b_shape[1] = b->shape[1];
-
-	//Tensor *grad_b = tensor_create_new(A, b->ndim, grad_b_shape); 
-	//tensor_fill_ones(grad_b);
-
-	//b->grad = grad_b; // loss derivative
-	////da/db = partial(db / db * zt.T)
-	//int *grad_a_shape = arena_alloc(A, a->ndim * sizeof(int));
-	//grad_a_shape[0] = a->shape[0];
-	//grad_a_shape[1] = a->shape[1];
-
-	//Tensor *grad_a = tensor_create_new(A, a->ndim, grad_a_shape); 
-	//grad_a = tensor_matmul(A, b->grad, z);
-	//a->grad = grad_a;
-	//
-	////da/db = partial(db / db * zt.T)
-	//int *grad_z_shape = arena_alloc(A, z->ndim * sizeof(int));
-	//grad_z_shape[0] = z->shape[0];
-	//grad_z_shape[1] = z->shape[1];
-	//
-	//Tensor *grad_z = tensor_create_new(A, z->ndim, grad_z_shape); 
-	//tensor_shape_2d(a);
-	//tensor_shape_2d(z);
-	//Tensor *at = tensor_transpose(A, a);
-	//grad_z = tensor_matmul(A, at, b->grad);
-
-	//tensor_get_2d(grad_z);
-
 
 }
 
