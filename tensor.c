@@ -38,6 +38,77 @@ static size_t GLOBAL_TENSOR_ID = 0;
 // We want to take local gradiens depending upons the operations for this backward funntion (PyTorch style)
 
 
+void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *rep) {
+    if (!root) {
+        rep->missing_links++;
+        return;
+    }
+
+    if (visited[root->id]) return;
+    visited[root->id] = true;
+
+    rep->visited_nodes++;
+
+    // ---- BASIC VALIDATION ----
+    if (root->parents == NULL && root->num_parents > 0) {
+        printf("[ERROR] Tensor %d: num_parents=%d but parents=NULL\n",
+               root->id, root->num_parents);
+        rep->null_parents++;
+    }
+
+    if (root->requires_grad && root->operations == NULL) {
+        printf("[WARNING] Tensor %d requires_grad=1 but operations=NULL\n",
+               root->id);
+        rep->null_ops++;
+    }
+
+    if (root->requires_grad && root->grad == NULL) {
+        printf("[ERROR] Tensor %d requires_grad=1 but grad=NULL\n",
+               root->id);
+        rep->null_grad++;
+    }
+
+    // ---- PRINT DEBUG INFO ----
+    printf("[NODE] id=%d | req=%d | parents=%d | ops=%p | grad=%p\n",
+           root->id,
+           root->requires_grad,
+           root->num_parents,
+           (void*)root->operations,
+           (void*)root->grad);
+
+    // ---- DFS TRAVERSAL ----
+    for (int i = 0; i < root->num_parents; i++) {
+        if (!root->parents || !root->parents[i]) {
+            printf("[ERROR] Tensor %d has invalid parent at index %d\n",
+                   root->id, i);
+            rep->missing_links++;
+            continue;
+        }
+
+        validate_tensor_graph(A, root->parents[i], visited, rep);
+    }
+}
+
+void run_graph_validation(Arena *A, Tensor *output, int max_nodes) {
+    bool *visited = arena_alloc(A, max_nodes * sizeof(bool));
+    memset(visited, 0, max_nodes * sizeof(bool));
+
+    GraphReport rep = {0};
+
+    printf("\n========== GRAPH VALIDATION START ==========\n");
+
+    validate_tensor_graph(A, output, visited, &rep);
+
+    printf("\n========== GRAPH REPORT ==========\n");
+    printf("Visited nodes     : %d\n", rep.visited_nodes);
+    printf("Null parents      : %d\n", rep.null_parents);
+    printf("Null ops          : %d\n", rep.null_ops);
+    printf("Null grad         : %d\n", rep.null_grad);
+    printf("Missing links     : %d\n", rep.missing_links);
+}
+
+
+
 void traverse_graph(Tensor *root, bool *visited) {
 	if (root == NULL) return;
 	if (visited[root->id]) return;
@@ -834,7 +905,7 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
 	t->operations = NULL;
 	t->grad = NULL;
 	t->num_parents = 0;
-	t->requires_grad = true;
+	t->requires_grad = false;
 	return t;
 }
 
@@ -966,7 +1037,6 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
 		out->parents[0] = a;
 		out->parents[1] = b;
-		out->requires_grad = true;
 		
 		// 2. NEED TO POPULATE THE grad
 		int out_size = a->shape[0] * b->shape[1];

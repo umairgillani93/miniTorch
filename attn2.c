@@ -59,6 +59,10 @@ void mha_init_params(MHA *m) {
 	tensor_randomize_weights(m->wk);
 	tensor_randomize_weights(m->wv);
 	tensor_randomize_weights(m->wo);
+	m->wq->requires_grad = true;
+	m->wk->requires_grad = true;
+	m->wv->requires_grad = true;
+	m->wo->requires_grad = true;
 }
 
 void mha_backward_temp_weights(Arena *AA, Tensor *dO, Tensor *A, Tensor *B, Tensor **dA, Tensor **dV) {
@@ -280,6 +284,7 @@ Tensor *scaled_dot_product_attention(Arena *A, Tensor *Q, Tensor *K, Tensor *V, 
 }
 
 MHA *mha_create_new(Arena *A, int num_heads, int seq_len, int emb_dim) {
+
 	MHA *mha = arena_alloc(A, sizeof(MHA));
 	int ndim = 2;
 	int *shape_weights = arena_alloc(A, ndim * sizeof(int));
@@ -345,10 +350,12 @@ int main() {
 	int num_heads = 8;
 	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
 	mha_init_params(mha);
-	Tensor *multi_head = mha_forward(A, x, mha);
-	tensor_get_2d(multi_head);
-	tensor_metadata(multi_head);
-	//traverse_graph(multi_head, visited);
+	Tensor *out = mha_forward(A, x, mha);
+	tensor_get_2d(out);
+	//run_graph_validation(A, out, GLOBAL_TENSOR_ID);
+	//tensor_get_2d(multi_head);
+	//tensor_metadata(multi_head);
+	////traverse_graph(multi_head, visited);
 
 	return 0;
 }

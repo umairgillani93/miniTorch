@@ -5,6 +5,14 @@
 typedef struct Arena Arena;
 typedef struct Tensor Tensor;
 
+typedef struct {
+    int visited_nodes;
+    int null_parents;
+    int null_ops;
+    int null_grad;
+    int missing_links;
+} GraphReport;
+
 typedef enum {
 	ADD, 
 	MUL,
@@ -44,6 +52,8 @@ typedef struct Tensor {
 // prototypes definition
 
 
+void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *rep);
+void run_graph_validation(Arena *A, Tensor *o, int max_nodes);
 void traverse_graph(Tensor *root, bool *visited);
 void tensor_metadata(Tensor *x);
 void backward(Arena *A, Tensor *loss, size_t MAX_NODES);
