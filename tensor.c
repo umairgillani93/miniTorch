@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <string.h>
 #include "tensor.h"
 #include "attention2.h"
 #include "feed_forward_nn.h"
@@ -13,7 +14,209 @@
 
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 #define EPS 1e-5
+#define MAX_NODES 10000
 
+static size_t GLOBAL_TENSOR_ID = 0;
+
+
+// Backpropagation Intuition:
+ 	// so can we say like
+	// if we have x @ y = z
+	// and z + f = c
+	// f(c) = L (loss)
+	// now dL/dc = grad_c
+	// dL/df = dL/dc * dc/df = grad_c * dc/df => dL/df = grad_f
+	// dL/dz = dL/dc * dc/dz = grad_c * dc/dz => dL/dz = grad_z
+	// dL/dx = dL/dc * dc/dz * dz/dx => grad_z * dz/dx
+	// dL/dy = dL/dc * dc/dz * dz/dy => grad_z * dz/dy
+	//
+	//
+	//
+
+// Some backward functions
+// We want to take local gradiens depending upons the operations for this backward funntion (PyTorch style)
+
+void tensor_add_backward(Arena *A, Tensor *currNode) {
+
+	// by adding up the Tensors, whatever change happens in 
+	// the Tensor will have linear impact on the currNode;
+	// i.e if we raise Tensor (a) or Tensor (b) by samll about
+	// that same change will be reflacted in currNode
+	// dz/da = 1;
+	// dz/db = 1;
+	
+	if (currNode == NULL || currNode->operations == NULL) return;
+	int ndim = currNode->ndim;
+	
+	Tensor *a = currNode->parents[0];
+	Tensor *b = currNode->parents[1];
+
+
+	if (a->grad == NULL) {
+		Tensor *a_grad = tensor_create_new(A, ndim, currNode->shape);
+		tensor_randomize_weights(a_grad);
+		a->grad = a_grad;
+	}
+
+	if (b->grad == NULL) {
+		Tensor *b_grad = tensor_create_new(A, ndim, currNode->shape);
+		tensor_randomize_weights(b_grad);
+		b->grad = b_grad;
+	}
+
+	// da/dL
+	int size = tensor_size(currNode);
+
+	for (int i = 0; i < size; i++) {
+		a->grad->data[i] = currNode->grad->data[i];
+		b->grad->data[i] = currNode->grad->data[i];
+	}
+}
+
+void dfs(Arena *A, Tensor *root, bool *visited, Tensor **topo, int *size) {
+	// Rather than 'dfs' I need 'topological search' over here
+	// which strictly keeps track to parents first rather than
+	// visiting all the depth first
+
+	Tensor arr[MAX_NODES];
+	if (root == NULL) return;
+	if (visited[root->id]) return;
+
+	// make the Node visited, if it's not already
+	visited[root->id] = true;
+
+	if (root->parents) {
+		int p = root->num_parents;
+		for (int i = 0; i < p; i++) {
+			dfs(A, root->parents[i], visited, topo, size);
+		}
+	}
+
+	topo[(*size)++] = root;
+
+	//printf("------------------------\n");
+	//printf("\n");
+	////tensor_metadata(root);
+	//// check operation: root->operations->type:
+	//// calculate the gradients of tensor parents using that operation type
+	//if (root->operations != NULL) {
+	//	switch (root->operations->type) {
+	//		case ADD: 
+	//			tensor_add_backward(A, root); 
+	//			tensor_metadata(root);
+	//			tensor_shape_2d(root->grad);
+
+	//			break;
+
+
+	//		//case MATMUL: tensor_matmul_backward(A, root); break;
+	//	}
+	//}
+}
+
+
+void backward(Arena *A, Tensor *loss, size_t max_nodes) {
+	bool visited[MAX_NODES] = {0};
+	Tensor *topo[MAX_NODES];
+	int size = 0;
+
+	dfs(A, loss, visited, topo, &size);
+
+	// backward pass
+	for (int i = size - 1; i > 0; i--) {
+		Tensor *node = topo[i];
+		//printf("got the Node from topo list: \n");
+		//tensor_metadata(node);
+
+		if (node->operations) {
+			int type = node->operations-type;
+			printf("Operation Type: %d\n", type);
+			switch (type) {
+				case ADD:
+						printf("Type :%d\n", type);
+						tensor_add_backward(A, node);
+						break;
+
+				case MATMUL:
+						printf("Type :%d\n", type);
+						tensor_matmul_backward(A, node);
+						break;
+			}
+		}
+	}
+}
+
+
+void tensor_metadata(Tensor *x) {
+	// prints tensor shape
+	printf("Tensor Id: %d\n", x->id);
+	printf("shape: \n");
+	tensor_shape_2d(x);
+
+	printf("stride: \n");
+	//tensor_stride_2d(x);
+	printf("tensor dimension: %d\n", x->ndim);
+	printf("Requires gradient: %d\n", x->requires_grad);
+
+	if (x->operations != NULL) {
+		printf("Created by: %s\n", x->operations->name);
+		printf("Backward Function: %d\n", x->operations->type);
+		//printf("Back Pointer: %p\n", x->operations->backward);
+		printf("Num Parents: %d\n", x->num_parents);
+	}
+
+	else {
+		printf("Leaf Node\n");
+	}
+	
+	//else {
+	//	fprintf(stderr, "<tensor_metadata> Error: Requires grad = false, so no operations to show\n");
+	//}
+
+}
+	
+
+
+void tensor_matmul_backward(Arena *A, Tensor *currNode) {
+	Tensor *x = currNode->parents[0];
+	Tensor *y = currNode->parents[1];
+
+	// dL/dx = grad_prev @ y.T
+	Tensor *yt = tensor_transpose(A, y);
+
+	Tensor *dx = tensor_matmul(A, y, currNode->grad);
+	//Tensor *dxt = tensor_transpose(dx);
+	Tensor *dxt = tensor_transpose(A, dx);
+
+	// Accumulate x now and first initilize 'x->grad'
+	x->grad = tensor_create_new(A, x->ndim, x->shape); 
+	tensor_randomize(x->grad);
+
+	size_t size_x = x->grad->shape[0] * x->grad->shape[1];
+	for (int i = 0; i < size_x; i++) {
+		x->grad->data[i] += dxt->data[i];
+	}
+
+	// dL/dy = x.T @ grad_prev 
+	Tensor *xt = tensor_transpose(A, x);
+	Tensor *dy = tensor_matmul(A, currNode->grad, x);
+
+	printf("dy shape: \n");
+	tensor_shape_2d(dy);
+
+	// Accumulate y now and first initilize 'y->grad'
+	y->grad = tensor_create_new(A, y->ndim, y->shape); 
+	tensor_randomize(y->grad);
+	size_t size_y = y->grad->shape[0] * y->grad->shape[1];
+	for (int i = 0; i < size_y; i++) {
+		y->grad->data[i] += dy->data[i];
+	}
+	printf("y shape: \n");
+	tensor_shape_2d(y);
+
+	printf("y->grad shape: \n");
+	tensor_shape_2d(y->grad);
+}
 
 
 Tensor *tensor_relu(Arena *A, Tensor *x) {
@@ -71,6 +274,12 @@ Tensor *tensor_fill_val(Arena *A, Tensor *x, int v) {
 	return out;
 }
 
+void tensor_fill_ones(Tensor *x) {
+	int size = tensor_size(x);
+	for (int i = 0; i < size; i++) {
+		x->data[i] = 1.0f;
+	}
+}
 
 void tensor_fill_zeros(Tensor *x) {
 	int size = tensor_size(x);
@@ -264,17 +473,30 @@ void tensor_randomize(Tensor *x) {
 	}
 }
 
-void tensor_add_inplace(Tensor **a, Tensor **b) {
-	assert((*a)->shape != (*b)->shape);
-	int rows = (*a)->shape[0];
-	int cols = (*a)->shape[1];
-	for (int i = 0; i < rows; i++) {
-		for (int j = 0; j < cols; j++) {
-			int idx = i * cols + j;
-			(*a)->data[idx] = (*b)->data[i];
+void tensor_accumulate(Tensor *x, Tensor *grad) {
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int ndim = x->ndim;
+	
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			x->grad->data[r * cols + c] += grad->data[r * cols + c];
 		}
 	}
 }
+		
+
+//void tensor_add_inplace(Tensor **a, Tensor **b) {
+//	assert((*a)->shape != (*b)->shape);
+//	int rows = (*a)->shape[0];
+//	int cols = (*a)->shape[1];
+//	for (int i = 0; i < rows; i++) {
+//		for (int j = 0; j < cols; j++) {
+//			int idx = i * cols + j;
+//			(*a)->data[idx] = (*b)->data[i];
+//		}
+//	}
+//}
 
 
 
@@ -342,6 +564,22 @@ Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b) {
 	return out;
 }
 
+Tensor *tensor_scaler_div(Arena *A, Tensor *x, float val) {
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = x->data[r * cols + c] / val;
+		}
+	}
+	return out;
+}
 
 Tensor *tensor_scaler_multiplication(Tensor *x, float val) {
 	int rows = x->shape[0];
@@ -353,16 +591,22 @@ Tensor *tensor_scaler_multiplication(Tensor *x, float val) {
 	return x;
 }
 
-Tensor *tensor_scaler_addition(Tensor *x, float val) {
+Tensor *tensor_scaler_addition(Arena *A, Tensor *x, float val) {
 	int rows = x->shape[0];
 	int cols = x->shape[1];
-	int size = tensor_size(x);
-	for (int i = 0; i < size; i++) {
-		x->data[i * cols + rows] = val + x->data[i * cols + rows];
+	int ndim = x->ndim;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = x->data[r * cols + c] + val;
+		}
 	}
-	return x;
+	return out;
 }
-	
 
 Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b) {
 	assert(a->shape[0] == b->shape[0] && a->shape[1] == b->shape[1]);
@@ -374,6 +618,7 @@ Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b) {
 	out_shape[1] = cols;
 
 	Tensor *out = tensor_create_new(A, ndim, out_shape);
+	out->id = GLOBAL_TENSOR_ID++;
 
 	if (a->requires_grad || b->requires_grad) {
 		out->requires_grad = true;
@@ -381,10 +626,14 @@ Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b) {
 		// out parents
 		out->num_parents = 2;
 		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = a;
+		out->parents[1] = b;
 
 		// Operations
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_add_backward;
+		op->type = ADD; // helps visualizing the computational graph
+		op->name = "OP_ADD"; // helps with logs and monitoring
 		out->operations = op;
 
 		// gradients
@@ -399,6 +648,45 @@ Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b) {
 	}
 	return out;
 }
+	
+
+//Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b) {
+//	assert(a->shape[0] == b->shape[0] && a->shape[1] == b->shape[1]);
+//	int ndim = a->ndim;
+//	int rows = a->shape[0];
+//	int cols = a->shape[1];
+//	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+//	out_shape[0] = rows;
+//	out_shape[1] = cols;
+//
+//	Tensor *out = tensor_create_new(A, ndim, out_shape);
+//
+//	if (a->requires_grad || b->requires_grad) {
+//		out->requires_grad = true;
+//
+//		// out parents
+//		out->num_parents = 2;
+//		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+//		out->parents[0] = a;
+//		out->parents[1] = b;
+//
+//		// Operations
+//		Op *op = arena_alloc(A, sizeof(Op));
+//		op->backward = tensor_add_backward;
+//		out->operations = op;
+//
+//		// gradients
+//		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+//
+//	}
+//
+//	for (int r = 0; r < rows; r++) {
+//		for (int c = 0; c < cols; c++) {
+//			out->data[r * cols + c] = a->data[r * cols + c] + b->data[r * cols + c];
+//		}
+//	}
+//	return out;
+//}
 
 Tensor *tensor_subtract(Arena *A, Tensor *a, Tensor *b) {
 	assert((a->shape[0] == b->shape[0]) && (a->shape[1] == b->shape[1]));
@@ -513,6 +801,7 @@ Tensor *tensor_create(int ndim, int *shape) {
 
 Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
 	Tensor *t = arena_alloc(A, sizeof(Tensor));
+	t->id = GLOBAL_TENSOR_ID++;
 	t->ndim = ndim;
 	t->shape = arena_alloc(A, ndim * sizeof(int));
 	t->stride = arena_alloc(A, ndim * sizeof(int));
@@ -649,6 +938,7 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 	out_shape[1] = b_cols;
 
 	Tensor *out = tensor_create_new(A, a->ndim, out_shape);
+	out->id = GLOBAL_TENSOR_ID++;
 
 	if (a->requires_grad || b->requires_grad) {
 		out->requires_grad = true;
@@ -666,6 +956,8 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 		// 3. Need to SAVE THE OPERATIONS for computation graph
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_matmul_backward;
+		op->type = MATMUL;
+		op->name = "OP_TIMES";
 		out->operations = op;
 
 	}
@@ -682,6 +974,53 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 	}
 	return out;
 }
+
+//Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
+//	// let's say bot tensors are off same shape
+//	assert(a->shape[1] == b->shape[0]);
+//	int a_rows = a->shape[0];
+//	int a_cols = a->shape[1];
+//	int b_rows = b->shape[0];
+//	int b_cols = b->shape[1];
+//
+//	int *out_shape = arena_alloc(A, a->ndim * sizeof(int));
+//	out_shape[0] = a_rows;
+//	out_shape[1] = b_cols;
+//
+//	Tensor *out = tensor_create_new(A, a->ndim, out_shape);
+//
+//	if (a->requires_grad || b->requires_grad) {
+//		out->requires_grad = true;
+//		// 1. NEED TO SAVE THE PARENTS
+//		out->num_parents = 2;
+//		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+//		out->parents[0] = a;
+//		out->parents[1] = b;
+//		out->requires_grad = true;
+//		
+//		// 2. NEED TO POPULATE THE grad
+//		int out_size = a->shape[0] * b->shape[1];
+//		out->grad = arena_alloc(A, out_size * sizeof(float));
+//		
+//		// 3. Need to SAVE THE OPERATIONS for computation graph
+//		Op *op = arena_alloc(A, sizeof(Op));
+//		op->backward = tensor_matmul_backward;
+//		out->operations = op;
+//
+//	}
+//
+//	for (int r = 0; r < a_rows; r++) {
+//		for (int c = 0; c < b_cols; c++) {
+//			float sum = 0.0f;
+//			for (int k = 0; k < a_cols; k++) {
+//				sum += (a->data[(r * a_cols + k)] *
+//					 	b->data[(k * b_cols + c)]);
+//			}
+//			out->data[r * b_cols + c] = sum;
+//		}
+//	}
+//	return out;
+//}
 
 //Tensor *tensor_matmul_forward(Arena *A, Tensor *a, Tensor *b) {
 //	int rows_a = a->shape[0];
@@ -784,12 +1123,28 @@ void tensor_get_2d(Tensor *t) {
 	}
 }		
 
-Tensor *tensor_transpose(Tensor *a) {
+Tensor *tensor_transpose(Arena *A, Tensor *a) {
+	int rows = a->shape[0];
+	int cols = a->shape[1];
 	int ndim = 2;
-	int *shape = malloc(ndim * sizeof(int));
-	shape[0] = a->shape[1];
-	shape[1] = a->shape[0];
-	Tensor *t = tensor_create(ndim, shape);
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = cols;
+	out_shape[1] = rows;
+	Tensor *t = tensor_create_new(A, ndim, out_shape);
+	t->id = GLOBAL_TENSOR_ID++;
+
+	if (a->requires_grad) {
+		t->requires_grad = true;
+		t->num_parents = 1;
+		t->parents = arena_alloc(A, t->num_parents * sizeof(Tensor *));
+		t->parents[0] = a;
+		t->grad = arena_alloc(A, rows * cols * sizeof(float));
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_transpose_backward;
+		op->type = TRANSPOSE;
+		op->name = "OP_Transpose";
+		t->operations = op;
+	}
 	
 	int rows_a = a->shape[0];
 	int cols_a = a->shape[1];
@@ -814,6 +1169,12 @@ int tensor_size(Tensor *t) {
 void tensor_shape_2d(Tensor *t) {
 	printf("(%d, %d)\n", t->shape[0], t->shape[1]);
 }
+
+void tensor_stride_2d(Tensor *t) {
+	printf("(%d, %d)\n", t->stride[0], t->stride[1]);
+}
+
+
 
 // Auto-grad methods
 Tensor *tensor_mean(Arena *A, Tensor *a) {
@@ -1025,13 +1386,32 @@ void tensor_mean_backward(Tensor *x) {
 	// will implement later. IA
 }
 
-void tensor_matmul_backward(Tensor *x) {
-	// Will be implemented later. IA
-}
+//void tensor_matmul_backward(Arena *A, Tensor *x, Tensor *y, Tensor *grad_prev) {
+//	// Take the gradients of tensor X and tensor Y, w.r.t. Loss using chain rule
+//	// assusming that Node output is obtained using x @ y. It calculates local gradients
+//	// dx/dL = grad_prev * y; 
+//	// dy/dL = grad_prev * x; 
+//	int x_rows = x->shape[0];
+//	int x_cols = x->shape[1];
+//	int y_rows = y->shape[0];
+//	int y_cols = y->shape[1];
+//
+//	int ndim = 2;
+//	x_shape = arena_alloc(A, ndim * sizeof(int));
+//	y_shape = arena_alloc(A, ndim * sizeof(int));
+//	
+//	// create x and y gradients
+//	x->grad = tensor_create_new(A, ndim, x_shape);
+//	y->grad = tensor_create_new(A, ndim, y_shape);
+//
+//	x->grad = tensor_matmul(A, grad_prev, y);
+//	y->grad = tensor_matmul(A, x, grad_prev);
+//
+//}
 
-void tensor_add_backward(Tensor *x) {
-	// Will be implemented later. IA
-}
+//void tensor_add_backward(tensor *x) {
+//	// will be implemented later. ia
+//}
 
 void tensor_scalling_backward(Tensor *x) {
 	// Will be implemented later. IA
@@ -1046,6 +1426,10 @@ void tensor_relu_backward(Tensor *x) {
 }
 
 void tensor_slice_cols_backward(Tensor *x) {
+	// Will be implemented later. IA
+}
+
+void tensor_transpose_backward(Tensor *x) {
 	// Will be implemented later. IA
 }
 
@@ -1132,35 +1516,82 @@ Tensor *tensor_slice_cols(Arena *A, Tensor *x, int k, int dk) {
 	return out;
 }
 
+int main() {
 
-//int main() {
-//	Arena *A = malloc(sizeof(Arena));
-//	int SIZE = 1024 * 1024 * 1024;
-//	arena_init(A, SIZE);
-//	int ndim = 2;
-//	int shape[2] = {SEQ_LEN, EMB_DIM};
-//	Tensor *x = tensor_create_new(A, ndim, shape);
-//	tensor_randomize(x);
-//
-//	tensor_get_2d(x);
-//
-//	//int num_heads = 8;
-//	//int k = 0;
-//	//int dk = 32 / num_heads;
-//
-//	//// Aarry of tensor pointers that are Tensor chunks
-//	//Tensor **heads_arr = arena_alloc(A, num_heads * sizeof(Tensor *));;
-//	//while (k < num_heads) {
-//	//	Tensor *out_chunk = tensor_slice_cols(A, x, k, dk);
-//	//	heads_arr[k] = out_chunk;
-//	//	k++;
-//	//}
-//	//printf("\n");
-//	//printf("-----------------------------\n");
-//
-//	//Tensor *concat = tensor_concat(A, heads_arr, num_heads);
-//	//bool res = tensor_equal(x, concat);
-//	//printf("%d\n", res);
-//
-//	return 0;
-//}
+	/*
+	 * Tensor as nodes
+	 * Tensor operations as Nodes
+	 * X(Node)----|some opeartion| (NOde)----> Y(Node)
+	 * shape, stride, id, operations, name, backward function...
+	 */
+
+	//Tensor *zt = tensor_transpose(z);
+	//Tensor *b = tensor_matmul(A, a, zt);
+
+	// so can we say like
+	// if we have x @ y = z
+	// and z + f = c 
+	// f(c) = L (loss)
+	// now dL/dc = grad_c
+	// dL/df = dL/dc * dc/df = grad_c * dc/df => dL/df = grad_f
+	// dL/dz = dL/dc * dc/dz = grad_c * dc/dz => dL/dz = grad_z
+	// dL/dx = dL/dc * dc/dz * dz/dx => grad_z * dz/dx
+	// dL/dy = dL/dc * dc/dz * dz/dy => grad_z * dz/dy
+	srand(time(NULL));
+	Arena *A = malloc(sizeof(Arena));
+	size_t SIZE = 1024 * 1024;
+	arena_init(A, ARENA_SIZE);
+	printf("Arena allocated\n");
+	int ndim = 2;
+	int *shape = arena_alloc(A, ndim * sizeof(int));
+	shape[0] = 16;
+	shape[1] = 32;
+
+	Tensor *x = tensor_create_new(A, ndim, shape);
+	Tensor *y = tensor_create_new(A, ndim, shape);
+	Tensor *z = tensor_create_new(A, ndim, shape);
+
+	tensor_randomize(x);
+	tensor_randomize(y);
+	tensor_randomize(z);
+
+	x->requires_grad = true;
+	y->requires_grad = true;
+	z->requires_grad = true;
+
+	Tensor *zt = tensor_transpose(A, z);
+
+	// Computational graph
+	Tensor *aa = tensor_add(A, x, y);
+	Tensor *b = tensor_matmul(A, aa, zt);
+			
+
+	//Tensor *aa_grad = tensor_create_new(A, ndim, aa->shape);
+	//tensor_fill_ones(aa_grad);
+	//aa->grad = aa_grad;
+
+	Tensor *b_grad= tensor_create_new(A, ndim, b->shape);
+	tensor_fill_ones(b_grad);
+	b->grad = b_grad;
+	printf("before: \n");
+	tensor_get_2d(b->grad);
+
+	//tensor_add_backward(A, aa);
+
+	printf("------------------------------------------\n");
+	//tensor_get_2d(x->grad);
+	//tensor_get_2d(y->grad);
+	
+	backward(A, b, MAX_NODES);
+	//tensor_get_2d(x->grad);
+	//tensor_get_2d(y->grad);
+	printf("z grad: \n");
+	tensor_get_2d(z->grad);
+	printf("aa grad: \n");
+	tensor_get_2d(aa->grad);
+
+
+	return 0;
+
+}
+

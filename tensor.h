@@ -2,15 +2,30 @@
 #ifndef TENSOR_H
 #define TENSOR_H
 
-
 typedef struct Arena Arena;
 typedef struct Tensor Tensor;
 
+typedef enum {
+	ADD, 
+	MUL,
+	MATMUL,
+	RELU,
+	SUB,
+	DIV,
+	EXP,
+	LOG,
+	TRANSPOSE
+} OpType;
+
+
 typedef struct Op {
-	void(*backward)(struct Tensor *self);
+	OpType type;
+	const char *name;
+	void(*backward)(Arena *A, struct Tensor *self);
 } Op;
 
 typedef struct Tensor {
+	int id;
 	int *shape;
 	int *stride;
 	int ndim;
@@ -19,7 +34,7 @@ typedef struct Tensor {
 	// New parameters
 	Tensor *grad;
 	bool requires_grad;
-	Op *operations;
+	Op *operations; // Added name, and type as well!
 	Tensor **parents;
 	int num_parents;
 } Tensor;
@@ -27,6 +42,8 @@ typedef struct Tensor {
 
 // prototypes definition
 
+void tensor_metadata(Tensor *x);
+Tensor *tensor_scaler_div(Arena *A, Tensor *x, float val);
 Tensor *tensor_slice_cols(Arena *A, Tensor *a, int num_heads, int dk);
 Tensor *tensor_fill_like(Arena *A, Tensor *a, double eps);
 Tensor *tensor_concat(Arena *A, Tensor **heads, int k);
@@ -42,19 +59,22 @@ Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape);
 Tensor *tensor_create_weights(int ndim, int *shape);
 Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b);
 Tensor *tensor_softmax(Arena *A, Tensor *a);
-Tensor *tensor_transpose(Tensor *t);
+Tensor *tensor_transpose(Arena *A, Tensor *t);
 Tensor *relu_backward(Tensor *x, Tensor *y);
 Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target);
 Tensor *tensor_scaler_multiplication(Tensor *x, float a);
-Tensor *tensor_scaler_addition(Tensor *x, float a);
+Tensor *tensor_scaler_addition(Arena *A, Tensor *x, float a);
 void tensor_fill_zeros(Tensor *a);
-void tensor_add_inplace(Tensor **a, Tensor **b);
+void tensor_add_inplace(Tensor *a, Tensor *b);
+void tensor_fill_ones(Tensor *x);
+void tensor_accumulate(Tensor *a, Tensor *b);
 void tensor_relu_backward( Tensor *out);
 //void tensor_free(Tensor *t);
 void tensor_get_2d(Tensor *t);
 void tensor_check(char *name, Tensor *x);
 int tensor_size(Tensor *t);
 float loss_value(Tensor *a, Tensor *b);
+bool tensor_equal(Tensor *x, Tensor *y);
 void tensor_shape_2d(Tensor *t);
 bool is_exploding(Tensor *x);
 void clip_gradient(Tensor *x);
@@ -71,9 +91,10 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape);
 
 
 // Autograd tensor methods
-void tensor_matmul_backward(Tensor *x);
+void tensor_transpose_backward(Tensor *x);
+void tensor_matmul_backward(Arena *A, Tensor *currNode);
 void tensor_mean_backward(Tensor *x);
-void tensor_add_backward(Tensor *x);
+void tensor_add_backward(Arena *A, Tensor *x);
 void tensor_square_backward(Tensor *x);
 void tensor_sqrt_backward(Tensor *x);
 void tensor_expand_cols_backward(Tensor *x);
