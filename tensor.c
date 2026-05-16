@@ -1563,13 +1563,15 @@ int main() {
 
 	//Tensor *b = tensor_matmul(A, a, zt);
 
-	tensor_add_backward(A, aa);
+	//tensor_add_backward(A, aa);
 
 	printf("------------------------------------------\n");
+	//tensor_get_2d(x->grad);
+	//tensor_get_2d(y->grad);
+	
+	backward(A, aa, MAX_NODES);
 	tensor_get_2d(x->grad);
 	tensor_get_2d(y->grad);
-	
-	///backward(A, a, MAX_NODES);
 
 
 
