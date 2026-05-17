@@ -2,6 +2,9 @@
 #ifndef TENSOR_H
 #define TENSOR_H
 
+
+extern size_t GLOBAL_TENSOR_ID;
+
 typedef struct Arena Arena;
 typedef struct Tensor Tensor;
 
@@ -23,7 +26,9 @@ typedef enum {
 	EXP,
 	LOG,
 	TRANSPOSE,
-	SLICE
+	SLICE,
+	CONCAT
+
 } OpType;
 
 
@@ -46,12 +51,17 @@ typedef struct Tensor {
 	Op *operations; // Added name, and type as well!
 	Tensor **parents;
 	int num_parents;
+	
+
+	// For concat columns
+	int cols;
 } Tensor;
 
 
 // prototypes definition
 
 
+bool *vislist();
 void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *rep);
 void run_graph_validation(Arena *A, Tensor *o, int max_nodes);
 void traverse_graph(Tensor *root, bool *visited);
@@ -84,6 +94,7 @@ void tensor_add_inplace(Tensor **a, Tensor **b);
 void tensor_fill_ones(Tensor *x);
 void tensor_accumulate(Tensor *a, Tensor *b);
 void tensor_relu_backward( Tensor *out);
+void tensor_concat_backward(Tensor *out);
 //void tensor_free(Tensor *t);
 void tensor_get_2d(Tensor *t);
 void tensor_check(char *name, Tensor *x);

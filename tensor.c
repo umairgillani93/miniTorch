@@ -16,8 +16,7 @@
 #define EPS 1e-5
 #define MAX_NODES 10000
 
-static size_t GLOBAL_TENSOR_ID = 0;
-
+size_t GLOBAL_TENSOR_ID = 0;
 
 
 // Backpropagation Intuition:
@@ -37,6 +36,14 @@ static size_t GLOBAL_TENSOR_ID = 0;
 // Some backward functions
 // We want to take local gradiens depending upons the operations for this backward funntion (PyTorch style)
 
+
+bool *vislist() {
+	bool *visited = (bool *)malloc(MAX_NODES *sizeof(bool));
+	for (int i = 0; i < MAX_NODES; i++) {
+		visited[i] = false;
+	}
+	return visited;
+}
 
 void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *rep) {
     if (!root) {
@@ -116,8 +123,11 @@ void traverse_graph(Tensor *root, bool *visited) {
 
 	printf("----------------------------------------\n");
 	tensor_metadata(root);
-	for (int i = 0; i < root->num_parents; i++) {
-		traverse_graph(root->parents[i], visited);
+	if (root->num_parents > 0) {
+		int parents = root->num_parents;
+		for (int i = 0; i < root->num_parents; i++) {
+			traverse_graph(root->parents[i], visited);
+		}
 	}
 }
 
@@ -704,7 +714,6 @@ Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b) {
 	out_shape[1] = cols;
 
 	Tensor *out = tensor_create_new(A, ndim, out_shape);
-	out->id = GLOBAL_TENSOR_ID++;
 
 	if (a->requires_grad || b->requires_grad) {
 		out->requires_grad = true;
@@ -888,6 +897,7 @@ Tensor *tensor_create(int ndim, int *shape) {
 Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
 	Tensor *t = arena_alloc(A, sizeof(Tensor));
 	t->id = GLOBAL_TENSOR_ID++;
+	//printf("GLOABL TENSOR ID: %ld\n", GLOBAL_TENSOR_ID);
 	t->ndim = ndim;
 	t->shape = arena_alloc(A, ndim * sizeof(int));
 	t->stride = arena_alloc(A, ndim * sizeof(int));
@@ -1027,7 +1037,6 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 	out_shape[1] = b_cols;
 
 	Tensor *out = tensor_create_new(A, a->ndim, out_shape);
-	out->id = GLOBAL_TENSOR_ID++;
 
 	int ndim = a->ndim;
 	if (a->requires_grad || b->requires_grad) {
@@ -1039,7 +1048,7 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 		out->parents[1] = b;
 		
 		// 2. NEED TO POPULATE THE grad
-		int out_size = a->shape[0] * b->shape[1];
+		//int out_size = a->shape[0] * b->shape[1];
 		
 		out->grad = tensor_create_new(A, ndim, out_shape);
 		
@@ -1049,7 +1058,6 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 		op->type = MATMUL;
 		op->name = "OP_TIMES";
 		out->operations = op;
-
 	}
 
 	for (int r = 0; r < a_rows; r++) {
@@ -1221,14 +1229,14 @@ Tensor *tensor_transpose(Arena *A, Tensor *a) {
 	out_shape[0] = cols;
 	out_shape[1] = rows;
 	Tensor *t = tensor_create_new(A, ndim, out_shape);
-	t->id = GLOBAL_TENSOR_ID++;
+	//t->id = GLOBAL_TENSOR_ID++;
 
 	if (a->requires_grad) {
 		t->requires_grad = true;
 		t->num_parents = 1;
 		t->parents = arena_alloc(A, t->num_parents * sizeof(Tensor *));
 		t->parents[0] = a;
-		t->grad = arena_alloc(A, rows * cols * sizeof(float));
+		t->grad = tensor_create_new(A, ndim, out_shape);
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_transpose_backward;
 		op->type = TRANSPOSE;
@@ -1524,6 +1532,10 @@ void tensor_transpose_backward(Tensor *x) {
 	// Will be implemented later. IA
 }
 
+void tensor_concat_backward(Tensor *x) {
+	// Will be implemented later. IA
+}
+
 bool tensor_equal(Tensor *x, Tensor *y) {
 	int rows = x->shape[0];
 	int cols = x->shape[1];
@@ -1551,6 +1563,26 @@ Tensor *tensor_concat(Arena *A, Tensor **heads, int num_heads) {
 	// create out tensor
 	Tensor *out = tensor_create_new(A, ndim, out_shape);
 
+	if (heads[0]->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents= HEADS;
+		out->parents = arena_alloc(A, HEADS * sizeof(Tensor *));
+		for (int i = 0; i < HEADS; i++) {
+			out->parents[i] = heads[i];
+		}
+
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->type = CONCAT;
+		op->name = "OP_CONCAT";
+		op->backward = tensor_concat_backward;
+		out->operations = op;
+
+		out->grad = tensor_create_new(A, ndim, out_shape);
+		
+		// Extra parameter, which we are setting only for concat method
+		out->cols = out_cols;
+
+	}
 	// core logic
 	for (int k = 0; k < num_heads; k++) {
 		Tensor *head = heads[k]; // head chunk
