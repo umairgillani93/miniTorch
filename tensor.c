@@ -332,6 +332,8 @@ Tensor *tensor_relu(Arena *A, Tensor *x) {
 		out->parents[0] = x;
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_relu_backward;
+		op->type = RELU;
+		op->name = "OP_RELU";
 		out->operations = op;
 		out->grad = tensor_create_new(A, ndim, out_shape);
 	}
@@ -457,7 +459,10 @@ Tensor *tensor_row_max(Arena *A, Tensor *x) {
 		out->parents[0] = x;
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_softmax_backward;
+		op->type = ROW_MAX;
+		op->name = "OP_ROW_MAX";
 		out->operations = op;
+		
 		out->grad = tensor_create_new(A, ndim, out_shape);
 	}
 
@@ -482,16 +487,18 @@ Tensor *tensor_exp(Arena *A, Tensor *x) {
 	// Create output tensor
 	Tensor *out = tensor_create_new(A, ndim, out_shape);
 
-	//if (x->requires_grad) {
-	//	out->requires_grad = true;
-	//	out->num_parents = 1;
-	//	out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
-	//	out->parents[0] = x;
-	//	Op *op = arena_alloc(A, sizeof(Op));
-	//	op->backward = tensor_softmax_backward;
-	//	out->operations = op;
-	//	out->grad = arena_alloc(A, rows * cols * sizeof(float));
-	//}
+	if (x->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = x;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->type = EXP;
+		op->name = "OP_EXPONENT";
+		op->backward = tensor_softmax_backward;
+		out->operations = op;
+		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+	}
 
 	for (int r = 0; r < rows; r++) {
 		for (int c = 0; c < cols; c++) {
@@ -518,6 +525,8 @@ Tensor *tensor_row_sum(Arena *A, Tensor *x) {
 		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
 		out->parents[0] = x;
 		Op *op = arena_alloc(A, sizeof(Op));
+		op->type = ROW_SUM;
+		op->name = "OP_ROW_SUM";
 		op->backward = tensor_softmax_backward;
 		out->operations = op;
 		out->grad = tensor_create_new(A, ndim, out_shape);
@@ -643,6 +652,8 @@ Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b) {
 		out->parents[0] = a;
 		out->parents[1] = b;
 		Op *op = arena_alloc(A, sizeof(Op));
+		op->type= SCALLED;
+		op->name = "OP_SCALED";
 		op->backward = tensor_square_backward;
 		out->operations = op;
 		out->grad = tensor_create_new(A, ndim, out_shape);
@@ -674,7 +685,21 @@ Tensor *tensor_scaler_div(Arena *A, Tensor *x, float val) {
 			out->data[r * cols + c] = x->data[r * cols + c] / val;
 		}
 	}
+
+	if (x->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = x;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->type= SCALER_DIV;
+		op->name = "OP_SCALER_DIV";
+		op->backward = tensor_softmax_backward;
+		out->operations = op;
+		out->grad = tensor_create_new(A, ndim, out_shape);
+	}
 	return out;
+
 }
 
 Tensor *tensor_scaler_multiplication(Tensor *x, float val) {
@@ -803,8 +828,13 @@ Tensor *tensor_subtract(Arena *A, Tensor *a, Tensor *b) {
 
 		// Operations
 		Op *op = arena_alloc(A, sizeof(Op));
+		
 		op->backward = tensor_add_backward;
+		op->type = SUB;
+		op->name = "OP_SUBTRACT";
+		
 		out->operations = op;
+		
 
 		// gradients
 		out->grad = tensor_create_new(A, ndim, out_shape);
@@ -1156,6 +1186,7 @@ Tensor *tensor_softmax(Arena *A, Tensor *x) {
 	 */
 		int rows = x->shape[0];
     int cols = x->shape[1];
+		int ndim = x->ndim;
 
     Tensor *row_max = tensor_row_max(A, x);
     //Tensor *row_max_expanded = tensor_expand_cols(A, row_max, cols);
@@ -1166,6 +1197,19 @@ Tensor *tensor_softmax(Arena *A, Tensor *x) {
 
     Tensor *row_sum_expanded = tensor_expand_cols(A, row_sum, cols);
     Tensor *out = tensor_div(A, exp, row_sum_expanded);
+
+		if (x->requires_grad) {
+			out->requires_grad;
+			out->num_parents = 1;
+			out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+			out->parents[0] = x;
+			Op *op = arena_alloc(A, sizeof(Op));
+			op->backward = tensor_softmax_backward;
+			op->type = SOFTMAX;
+			op->name = "OP_SOFTMAX";
+			out->operations = op;
+			out->grad = tensor_create_new(A, ndim, x->shape);
+		}
 
     return out;
 }
@@ -1297,7 +1341,11 @@ Tensor *tensor_mean(Arena *A, Tensor *a) {
 		out->parents[0] = a;
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_mean_backward;
+		op->type = MEAN;
+		op->name = "OP_MEAN";
 		out->operations = op;
+		
+
 
 		// define gradients matrix
 		out->grad = tensor_create_new(A, ndim, out_shape);
@@ -1345,8 +1393,10 @@ Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_cols) {
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_expand_cols_backward;
 		out->operations = op;
+		op->type = EXPAND;
+		op->name = "OP_EXPAND_COLS";
 		out->grad = tensor_create_new(A, ndim, out_shape);
-		
+		out->cols = out_cols;
 	}
 
 	// IMPORTANT!!!
@@ -1383,6 +1433,8 @@ Tensor *tensor_square(Arena *A, Tensor *a, Tensor *b) {
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_square_backward;
 		out->operations = op;
+		op->type = SQUARE;
+		op->name = "OP_SQUARE";
 		out->grad = tensor_create_new(A, ndim, out_shape);
 	}
 
@@ -1418,6 +1470,8 @@ Tensor *tensor_sqrt(Arena *A, Tensor *a) {
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_sqrt_backward;
 		out->operations = op;
+		op->type = SQRT;
+		op->name = "OP_SQRT";
 		out->grad = tensor_create_new(A, ndim, out_shape);
 	}
 
@@ -1453,7 +1507,10 @@ Tensor *tensor_div(Arena *A, Tensor *a, Tensor *b) {
 		out->parents[1] = b;
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_square_backward;
+		op->type = DIVISION;
+		op->name = "OP_DIVISION";
 		out->operations = op;
+		
 		out->grad = tensor_create_new(A, ndim, out_shape);
 	}
 
@@ -1466,6 +1523,7 @@ Tensor *tensor_div(Arena *A, Tensor *a, Tensor *b) {
 			out->data[r * cols + c] = a->data[r * cols + c] / b->data[r * cols + c];
 		}
 	}
+
 	return out;
 
 }

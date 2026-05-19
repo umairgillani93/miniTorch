@@ -23,11 +23,21 @@ typedef enum {
 	RELU,
 	SUB,
 	DIV,
-	EXP,
 	LOG,
 	TRANSPOSE,
 	SLICE,
-	CONCAT
+	CONCAT,
+	EXPAND,
+	ROW_MAX,
+	EXP,
+	ROW_SUM,
+	SCALLED,
+	SOFTMAX,
+	MEAN,
+	SQUARE,
+	SQRT,
+	DIVISION,
+	SCALER_DIV
 
 } OpType;
 
