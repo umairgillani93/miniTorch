@@ -72,7 +72,7 @@ typedef struct Tensor {
 
 
 bool *vislist();
-void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *rep);
+void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *rep, int max_tensors);
 void run_graph_validation(Arena *A, Tensor *o, int max_nodes);
 void traverse_graph(Tensor *root, bool *visited);
 void tensor_metadata(Tensor *x);

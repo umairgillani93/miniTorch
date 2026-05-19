@@ -45,9 +45,19 @@ bool *vislist() {
 	return visited;
 }
 
-void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *rep) {
+void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *rep, int max_tensors)
+{
     if (!root) {
         rep->missing_links++;
+        return;
+    }
+
+    // --------------------------------------------------
+    // 1. SAFE ID CHECK (CRITICAL FIX)
+    // --------------------------------------------------
+    if (root->id < 0 || root->id >= max_tensors) {
+        printf("[FATAL] Invalid tensor id=%d\n", root->id);
+        rep->corrupt_nodes++;
         return;
     }
 
@@ -56,15 +66,28 @@ void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *r
 
     rep->visited_nodes++;
 
-    // ---- BASIC VALIDATION ----
-    if (root->parents == NULL && root->num_parents > 0) {
+    // --------------------------------------------------
+    // 2. SAFE PARENTS COUNT CHECK (CRITICAL FIX)
+    // --------------------------------------------------
+    if (root->num_parents < 0 || root->num_parents > MAX_PARENTS) {
+        printf("[FATAL] Tensor %d has invalid num_parents=%d\n",
+               root->id, root->num_parents);
+        rep->corrupt_nodes++;
+        return;
+    }
+
+    // --------------------------------------------------
+    // 3. SAFE NULL / STRUCT VALIDATION
+    // --------------------------------------------------
+
+    if (root->num_parents > 0 && root->parents == NULL) {
         printf("[ERROR] Tensor %d: num_parents=%d but parents=NULL\n",
                root->id, root->num_parents);
         rep->null_parents++;
     }
 
-    if (root->requires_grad && root->operations == NULL) {
-        printf("[WARNING] Tensor %d requires_grad=1 but operations=NULL\n",
+    if (root->requires_grad && root->num_parents > 0 && root->operations == NULL) {
+        printf("[WARNING] Tensor %d missing operations (non-leaf requires_grad tensor)\n",
                root->id);
         rep->null_ops++;
     }
@@ -75,7 +98,9 @@ void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *r
         rep->null_grad++;
     }
 
-    // ---- PRINT DEBUG INFO ----
+    // --------------------------------------------------
+    // 4. DEBUG PRINT
+    // --------------------------------------------------
     printf("[NODE] id=%d | req=%d | parents=%d | ops=%p | grad=%p\n",
            root->id,
            root->requires_grad,
@@ -83,18 +108,76 @@ void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *r
            (void*)root->operations,
            (void*)root->grad);
 
-    // ---- DFS TRAVERSAL ----
+    // --------------------------------------------------
+    // 5. SAFE DFS TRAVERSAL (CRITICAL FIX)
+    // --------------------------------------------------
+    if (!root->parents) return;
+
     for (int i = 0; i < root->num_parents; i++) {
-        if (!root->parents || !root->parents[i]) {
-            printf("[ERROR] Tensor %d has invalid parent at index %d\n",
+
+        Tensor *p = root->parents[i];
+
+        if (!p) {
+            printf("[ERROR] Tensor %d has NULL parent at index %d\n",
                    root->id, i);
             rep->missing_links++;
             continue;
         }
 
-        validate_tensor_graph(A, root->parents[i], visited, rep);
+        validate_tensor_graph(A, p, visited, rep, max_tensors);
     }
 }
+
+//void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *rep) {
+//    if (!root) {
+//        rep->missing_links++;
+//        return;
+//    }
+//
+//    if (visited[root->id]) return;
+//    visited[root->id] = true;
+//
+//    rep->visited_nodes++;
+//
+//    // ---- BASIC VALIDATION ----
+//    if (root->parents == NULL && root->num_parents > 0) {
+//        printf("[ERROR] Tensor %d: num_parents=%d but parents=NULL\n",
+//               root->id, root->num_parents);
+//        rep->null_parents++;
+//    }
+//
+//    if (root->requires_grad && root->operations == NULL) {
+//        printf("[WARNING] Tensor %d requires_grad=1 but operations=NULL\n",
+//               root->id);
+//        rep->null_ops++;
+//    }
+//
+//    if (root->requires_grad && root->grad == NULL) {
+//        printf("[ERROR] Tensor %d requires_grad=1 but grad=NULL\n",
+//               root->id);
+//        rep->null_grad++;
+//    }
+//
+//    // ---- PRINT DEBUG INFO ----
+//    printf("[NODE] id=%d | req=%d | parents=%d | ops=%p | grad=%p\n",
+//           root->id,
+//           root->requires_grad,
+//           root->num_parents,
+//           (void*)root->operations,
+//           (void*)root->grad);
+//
+//    // ---- DFS TRAVERSAL ----
+//    for (int i = 0; i < root->num_parents; i++) {
+//        if (!root->parents || !root->parents[i]) {
+//            printf("[ERROR] Tensor %d has invalid parent at index %d\n",
+//                   root->id, i);
+//            rep->missing_links++;
+//            continue;
+//        }
+//
+//        validate_tensor_graph(A, root->parents[i], visited, rep);
+//    }
+//}
 
 void run_graph_validation(Arena *A, Tensor *output, int max_nodes) {
     bool *visited = arena_alloc(A, max_nodes * sizeof(bool));
