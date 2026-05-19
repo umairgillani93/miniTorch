@@ -213,30 +213,36 @@ LayerNorm *layer_norm_create_new(Arena *A, int features) {
 	return ln;
 }
 
-int main() {
-	Arena *A = malloc(sizeof(Arena));
-	int SIZE = 1024 * 1024 * 1024;
-	arena_init(A, SIZE);
-	int ndim = 2;
-	int shape[2] = {SEQ_LEN, EMB_DIM};
-	Tensor *x = tensor_create_new(A, ndim, shape);
-	tensor_randomize(x);
-	x->requires_grad = true;
-	int features = 32;
-	
-	LayerNorm *ln = layer_norm_create_new(A, features);
-	printf("Iniitiazing parameters for Layer Norm:\n");
-	layer_norm_init_params(ln);
-
-	Tensor *out = layer_norm_forward(A, ln, x); // x is out MHA output
-	printf("shape out: \n");
-	tensor_get_2d(out);
-	tensor_shape_2d(out);
-	bool *visited = vislist();
-
-	printf("Traversing graph: \n");
-
-	traverse_graph(out, visited);
-	return 0;
-}
+//int main() {
+//	Arena *A = malloc(sizeof(Arena));
+//	int SIZE = 1024 * 1024 * 1024;
+//	arena_init(A, SIZE);
+//	int ndim = 2;
+//	int shape[2] = {SEQ_LEN, EMB_DIM};
+//	Tensor *x = tensor_create_new(A, ndim, shape);
+//	tensor_randomize(x);
+//	x->requires_grad = true;
+//	int features = 32;
+//
+//	int num_heads = 8;
+//	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
+//	mha_init_params(mha);
+//	Tensor *out = mha_forward(A, x, mha);
+//	
+//	LayerNorm *ln = layer_norm_create_new(A, features);
+//	printf("Iniitiazing parameters for Layer Norm:\n");
+//	layer_norm_init_params(ln);
+//
+//	Tensor *ln_res = layer_norm_forward(A, ln, out); // x is out MHA output
+//	printf("shape out: \n");
+//	tensor_get_2d(out);
+//	tensor_shape_2d(out);
+//	bool *visited = vislist();
+//	//run_graph_validation(A, out, GLOBAL_TENSOR_ID);
+//
+//	printf("Traversing graph: \n");
+//
+//	traverse_graph(out, visited);
+//	return 0;
+//}
 

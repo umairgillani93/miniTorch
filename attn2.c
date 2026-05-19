@@ -337,33 +337,33 @@ MHA *mha_create(int num_heads, int seq_len, int emb_dim) {
 
 	
 
-//int main() {
-//	Arena *A = malloc(sizeof(Arena));
-//	int SIZE = 1024 * 1024 * 1024;
-//	arena_init(A, SIZE);
-//	int ndim = 2;
-//	int shape[2] = {SEQ_LEN, EMB_DIM};
-//
-//	Tensor *x = tensor_create_new(A ,ndim, shape);
-//
-//	tensor_randomize_weights(x);
-//	//printf("%ld\n", GLOBAL_TENSOR_ID);
-//	x->requires_grad = true;
-//
-//	bool *visited = vislist();
-//	//for (int i = 0; i < MAX_NODES; i++) {
-//	//	printf("%d\n", visited[i]);
-//	//}
-//	int num_heads = 8;
-//	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
-//	mha_init_params(mha);
-//	Tensor *out = mha_forward(A, x, mha);
-//	tensor_get_2d(out);
-//	//tensor_metadata(out);
-//	run_graph_validation(A, out, GLOBAL_TENSOR_ID);
-//	//tensor_get_2d(multi_head);
-//	//tensor_metadata(multi_head);
-//	//traverse_graph(out, visited);
-//
-//	return 0;
-//}
+int main() {
+	Arena *A = malloc(sizeof(Arena));
+	int SIZE = 1024 * 1024 * 1024;
+	arena_init(A, SIZE);
+	int ndim = 2;
+	int shape[2] = {SEQ_LEN, EMB_DIM};
+
+	Tensor *x = tensor_create_new(A ,ndim, shape);
+
+	tensor_randomize_weights(x);
+	//printf("%ld\n", GLOBAL_TENSOR_ID);
+	//x->requires_grad = true;
+
+	bool *visited = vislist();
+	//for (int i = 0; i < MAX_NODES; i++) {
+	//	printf("%d\n", visited[i]);
+	//}
+	int num_heads = 8;
+	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
+	mha_init_params(mha);
+	Tensor *out = mha_forward(A, x, mha);
+	tensor_get_2d(out);
+	//tensor_metadata(out);
+	run_graph_validation(A, out, GLOBAL_TENSOR_ID);
+	//tensor_get_2d(multi_head);
+	//tensor_metadata(multi_head);
+	//traverse_graph(out, visited);
+
+	return 0;
+}
