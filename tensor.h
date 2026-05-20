@@ -14,6 +14,7 @@ typedef struct {
     int null_ops;
     int null_grad;
     int missing_links;
+		int corrupt_nodes;
 } GraphReport;
 
 typedef enum {

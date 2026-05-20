@@ -184,10 +184,11 @@ void run_graph_validation(Arena *A, Tensor *output, int max_nodes) {
     memset(visited, 0, max_nodes * sizeof(bool));
 
     GraphReport rep = {0};
+			
 
     printf("\n========== GRAPH VALIDATION START ==========\n");
 
-    validate_tensor_graph(A, output, visited, &rep);
+    validate_tensor_graph(A, output, visited, &rep, max_nodes);
 
     printf("\n========== GRAPH REPORT ==========\n");
     printf("Visited nodes     : %d\n", rep.visited_nodes);
