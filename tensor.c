@@ -698,20 +698,35 @@ void tensor_check(char *name, Tensor *x) {
 
 
 // for rows expansion
-Tensor *tensor_expand_rows(Arena *A, Tensor *a, int out_rows) {
-	assert(a->shape[0] = 1); // has only single row
-	int cols = a->shape[1];
-	int ndim = a->ndim;
+Tensor *tensor_expand_rows(Arena *A, Tensor *m, int out_rows) {
+	assert(m->shape[0] = 1); // has only single row
+	int cols = m->shape[1];
+	int ndim = m->ndim;
 
 	int *out_shape = arena_alloc(A, ndim * sizeof(int));
 	out_shape[0] = out_rows;
 	out_shape[1] = cols;
 	Tensor *out = tensor_create_new(A, ndim, out_shape);
 
+	if (m->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, sizeof(Tensor *));
+		out->parents[0] = m;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_expand_rows_backward;
+		out->operations = op;
+		op->type = EXPAND_ROWS;
+		op->name = "OP_EXPAND_ROWS";
+		out->grad = tensor_create_new(A, ndim, out_shape);
+		//out->cols = out_cols;
+	}
+
+
 	// computing logic
 	for (int r = 0; r < out_rows; r++) {
 		for (int c = 0; c < cols; c++) {
-			out->data[r * cols + c] = a->data[c];
+			out->data[r * cols + c] = m->data[c];
 		}
 	}
 	return out;
@@ -913,7 +928,7 @@ Tensor *tensor_subtract(Arena *A, Tensor *a, Tensor *b) {
 		// Operations
 		Op *op = arena_alloc(A, sizeof(Op));
 		
-		op->backward = tensor_add_backward;
+		op->backward = tensor_subtract_backward;
 		op->type = SUB;
 		op->name = "OP_SUBTRACT";
 		
@@ -1477,7 +1492,7 @@ Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_cols) {
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_expand_cols_backward;
 		out->operations = op;
-		op->type = EXPAND;
+		op->type = EXPAND_COLS;
 		op->name = "OP_EXPAND_COLS";
 		out->grad = tensor_create_new(A, ndim, out_shape);
 		out->cols = out_cols;
@@ -1616,6 +1631,10 @@ void tensor_sqrt_backward(Tensor *x) {
 	// Will be implemented later IA
 }
 
+void tensor_expand_rows_backward(Tensor *x) {
+	// Will be implemented later IA
+}
+
 void tensor_square_backward(Tensor *x) {
 	// Will be implemented later IA
 }
@@ -1663,6 +1682,10 @@ void tensor_softmax_backward(Tensor *x) {
 }
 
 void tensor_relu_backward(Tensor *x) {
+	// Will be implemented later. IA
+}
+
+void tensor_subtract_backward(Tensor *x) {
 	// Will be implemented later. IA
 }
 
