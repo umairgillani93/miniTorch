@@ -221,25 +221,25 @@ int main() {
 	int shape[2] = {SEQ_LEN, EMB_DIM};
 	Tensor *x = tensor_create_new(A, ndim, shape);
 	tensor_randomize_weights(x);
-	//x->requires_grad = true;
+	x->requires_grad = true;
 	int features = 32;
 
-	int num_heads = 8;
-	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
-	mha_init_params(mha);
-	Tensor *out = mha_forward(A, x, mha);
-	printf("MHA DATA: \n");
-	tensor_get_2d(out);
+	//int num_heads = 8;
+	//MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
+	//mha_init_params(mha);
+	//Tensor *out = mha_forward(A, x, mha);
+	//printf("MHA DATA: \n");
+	//tensor_get_2d(out);
 
-	printf("MAH visited Graph: \n");
-	run_graph_validation(A, out, MAX_NODES);
-	printf("----------------------------------------\n");
+	//printf("MAH visited Graph: \n");
+	//run_graph_validation(A, out, MAX_NODES);
+	//printf("----------------------------------------\n");
 	
 	LayerNorm *ln = layer_norm_create_new(A, features);
 	printf("Iniitiazing parameters for Layer Norm:\n");
 	layer_norm_init_params(ln);
 
-	Tensor *ln_res = layer_norm_forward(A, ln, out); // x is out MHA output
+	Tensor *ln_res = layer_norm_forward(A, ln, x); // x is out MHA output
 
 	printf("LAYER NORM DATA: \n");
 	tensor_get_2d(ln_res);
@@ -247,4 +247,3 @@ int main() {
 
 	return 0;
 }
-

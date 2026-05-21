@@ -360,7 +360,7 @@ MHA *mha_create(int num_heads, int seq_len, int emb_dim) {
 //	Tensor *out = mha_forward(A, x, mha);
 //	tensor_get_2d(out);
 //	//tensor_metadata(out);
-//	//run_graph_validation(A, out, MAX_NODES);
+//	run_graph_validation(A, out, MAX_NODES);
 //
 //	//printf("corrupted Nodes: %d\n", g->corrupt_nodes);
 //	//tensor_get_2d(multi_head);

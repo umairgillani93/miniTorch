@@ -748,6 +748,9 @@ Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b) {
 		out->requires_grad = true;
 		out->num_parents = 2;
 		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		if (a == NULL || b == NULL) {
+			fprintf(stderr, "Found parents NULL, graph broken!\n");
+		}
 		out->parents[0] = a;
 		out->parents[1] = b;
 		Op *op = arena_alloc(A, sizeof(Op));
@@ -845,6 +848,9 @@ Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b) {
 		// out parents
 		out->num_parents = 2;
 		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		if (a == NULL || b == NULL) {
+			fprintf(stderr, "Found parents NULL, graph broken!\n");
+		}
 		out->parents[0] = a;
 		out->parents[1] = b;
 
@@ -924,6 +930,12 @@ Tensor *tensor_subtract(Arena *A, Tensor *a, Tensor *b) {
 		// out parents
 		out->num_parents = 2;
 		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		
+		if (a == NULL || b == NULL) {
+			fprintf(stderr, "Found parents NULL, graph broken!\n");
+		}
+		out->parents[0] = a;
+		out->parents[1] = b;
 
 		// Operations
 		Op *op = arena_alloc(A, sizeof(Op));
