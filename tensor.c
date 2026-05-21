@@ -101,11 +101,12 @@ void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *r
     // --------------------------------------------------
     // 4. DEBUG PRINT
     // --------------------------------------------------
-    printf("[NODE] id=%d | req=%d | parents=%d | ops=%p | grad=%p\n",
+    printf("[NODE] id=%d | req=%d | parents=%d | ops=%s | grad=%p\n",
            root->id,
            root->requires_grad,
            root->num_parents,
-           (void*)root->operations,
+					 (root->operations && root->operations->name) ? 
+					 root->operations->name : "LEAF",
            (void*)root->grad);
 
     // --------------------------------------------------
@@ -581,7 +582,7 @@ Tensor *tensor_exp(Arena *A, Tensor *x) {
 		op->name = "OP_EXPONENT";
 		op->backward = tensor_softmax_backward;
 		out->operations = op;
-		out->grad = arena_alloc(A, rows * cols * sizeof(float));
+		out->grad = tensor_create_new(A, ndim, out_shape);
 	}
 
 	for (int r = 0; r < rows; r++) {
@@ -1037,6 +1038,7 @@ Tensor *tensor_create(int ndim, int *shape) {
 
 Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
 	Tensor *t = arena_alloc(A, sizeof(Tensor));
+	memset(t, 0, sizeof(Tensor));
 	t->id = GLOBAL_TENSOR_ID++;
 	//printf("GLOABL TENSOR ID: %ld\n", GLOBAL_TENSOR_ID);
 	t->ndim = ndim;
@@ -1053,6 +1055,8 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
 	// For autograd
 	t->data = arena_alloc(A, total * sizeof(float));
 	t->parents = NULL;
+	Op *op = arena_alloc(A, sizeof(Op));
+	memset(op, 0, sizeof(Op));
 	t->operations = NULL;
 	t->grad = NULL;
 	t->num_parents = 0;

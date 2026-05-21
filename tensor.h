@@ -18,6 +18,7 @@ typedef struct {
 } GraphReport;
 
 typedef enum {
+	LEAF,
 	ADD, 
 	MUL,
 	MATMUL,
