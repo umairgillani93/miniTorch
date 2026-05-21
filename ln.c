@@ -224,10 +224,10 @@ int main() {
 	x->requires_grad = true;
 	int features = 32;
 
-	//int num_heads = 8;
-	//MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
-	//mha_init_params(mha);
-	//Tensor *out = mha_forward(A, x, mha);
+	int num_heads = 8;
+	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
+	mha_init_params(mha);
+	Tensor *out = mha_forward(A, x, mha);
 	//printf("MHA DATA: \n");
 	//tensor_get_2d(out);
 
@@ -239,10 +239,12 @@ int main() {
 	printf("Iniitiazing parameters for Layer Norm:\n");
 	layer_norm_init_params(ln);
 
-	Tensor *ln_res = layer_norm_forward(A, ln, x); // x is out MHA output
+	Tensor *ln_res = layer_norm_forward(A, ln, out); // x is out MHA output
+																								// 
 
 	printf("LAYER NORM DATA: \n");
 	tensor_get_2d(ln_res);
+	bool *visited  = vislist();
 	run_graph_validation(A, ln_res, MAX_NODES);
 
 	return 0;
