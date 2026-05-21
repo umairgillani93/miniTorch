@@ -6,6 +6,7 @@
 #include "arena.h"
 #include "layer_norm.h"
 #include "config.h"
+#include "graph_viz.h"
 
 float mean(float *arr, int size) {
 	float sum = 0.0f;
@@ -246,7 +247,9 @@ int main() {
 	printf("LAYER NORM DATA: \n");
 	tensor_get_2d(ln_res);
 	bool *visited  = vislist();
-	run_graph_validation(A, ln_res, MAX_NODES);
+	export_and_visualize_graph(ln_res, "graph.dot", "graph.png");
+
+	//run_graph_validation(A, ln_res, MAX_NODES);
 	free(A);
 
 	return 0;
