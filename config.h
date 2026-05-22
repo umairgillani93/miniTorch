@@ -1,6 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
-
+#include <stddef.h>
 
 #define RAND_FLOAT (float) rand() / (float) RAND_MAX
 #define HIDDEN_DIM 128

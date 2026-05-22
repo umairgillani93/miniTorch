@@ -12,6 +12,8 @@
 #include "arena.h"
 #include "config.h"
 
+#include <stddef.h>
+
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 #define EPS 1e-5
 #define MAX_NODES 10000
@@ -296,7 +298,7 @@ void dfs(Arena *A, Tensor *root, bool *visited, Tensor **topo, int *size) {
 }
 
 
-void backward(Arena *A, Tensor *loss, size_t max_nodes) {
+void backward(Arena *A, Tensor *loss, int max_nodes) {
 	bool visited[MAX_NODES] = {0};
 	Tensor *topo[MAX_NODES];
 	int size = 0;
@@ -373,7 +375,7 @@ void tensor_matmul_backward(Arena *A, Tensor *currNode) {
 	x->grad = tensor_create_new(A, x->ndim, x->shape); 
 	tensor_randomize(x->grad);
 
-	size_t size_x = x->grad->shape[0] * x->grad->shape[1];
+	int size_x = x->grad->shape[0] * x->grad->shape[1];
 	for (int i = 0; i < size_x; i++) {
 		x->grad->data[i] += dxt->data[i];
 	}
@@ -388,7 +390,7 @@ void tensor_matmul_backward(Arena *A, Tensor *currNode) {
 	// Accumulate y now and first initilize 'y->grad'
 	y->grad = tensor_create_new(A, y->ndim, y->shape); 
 	tensor_randomize(y->grad);
-	size_t size_y = y->grad->shape[0] * y->grad->shape[1];
+	int size_y = y->grad->shape[0] * y->grad->shape[1];
 	for (int i = 0; i < size_y; i++) {
 		y->grad->data[i] += dy->data[i];
 	}
@@ -650,14 +652,14 @@ Tensor *tensor_fill_like(Arena *A, Tensor *x, double eps) {
 }
 
 void tensor_randomize_weights(Tensor *x) {
-	size_t size = tensor_size(x);
+	int size = tensor_size(x);
 	for (int i = 0; i < size; i++) {
 		x->data[i] = RAND_FLOAT;
 	}
 }
 
 void tensor_randomize(Tensor *x) {
-	size_t size = tensor_size(x);
+	int size = tensor_size(x);
 	for (int i = 0; i < size; i++) {
 		x->data[i] = (rand() % 10) + 1.0f;
 	}

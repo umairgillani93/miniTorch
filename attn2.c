@@ -8,6 +8,7 @@
 #include "feed_forward_nn.h"
 #include "arena.h"
 #include "config.h"
+#include <stddef.h>
 
 
 //#define RAND_FLOAT  (float) rand() / (float) RAND_MAX

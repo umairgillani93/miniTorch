@@ -8,6 +8,8 @@
 #include "config.h"
 #include "graph_viz.h"
 
+#include <stddef.h>
+
 float mean(float *arr, int size) {
 	float sum = 0.0f;
 	for (int i = 0; i < size; i++) {
@@ -215,42 +217,42 @@ LayerNorm *layer_norm_create_new(Arena *A, int features) {
 	return ln;
 }
 
-int main() {
-	Arena *A = malloc(sizeof(Arena));
-	int SIZE = 1024 * 1024 * 1024;
-	arena_init(A, SIZE);
-	int ndim = 2;
-	int shape[2] = {SEQ_LEN, EMB_DIM};
-	Tensor *x = tensor_create_new(A, ndim, shape);
-	tensor_randomize_weights(x);
-	//x->requires_grad = true;
-	int features = 32;
-
-	int num_heads = 8;
-	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
-	mha_init_params(mha);
-	Tensor *out = mha_forward(A, x, mha);
-	//printf("MHA DATA: \n");
-	//tensor_get_2d(out);
-
-	//printf("MAH visited Graph: \n");
-	//run_graph_validation(A, out, MAX_NODES);
-	//printf("----------------------------------------\n");
-	
-	LayerNorm *ln = layer_norm_create_new(A, features);
-	printf("Iniitiazing parameters for Layer Norm:\n");
-	layer_norm_init_params(ln);
-
-	Tensor *ln_res = layer_norm_forward(A, ln, out); // x is out MHA output
-																								// 
-
-	printf("LAYER NORM DATA: \n");
-	tensor_get_2d(ln_res);
-	bool *visited  = vislist();
-	export_and_visualize_graph(ln_res, "graph.dot", "graph.png");
-
-	//run_graph_validation(A, ln_res, MAX_NODES);
-	free(A);
-
-	return 0;
-}
+//int main() {
+//	Arena *A = malloc(sizeof(Arena));
+//	int SIZE = 1024 * 1024 * 1024;
+//	arena_init(A, SIZE);
+//	int ndim = 2;
+//	int shape[2] = {SEQ_LEN, EMB_DIM};
+//	Tensor *x = tensor_create_new(A, ndim, shape);
+//	tensor_randomize_weights(x);
+//	//x->requires_grad = true;
+//	int features = 32;
+//
+//	int num_heads = 8;
+//	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
+//	mha_init_params(mha);
+//	Tensor *out = mha_forward(A, x, mha);
+//	//printf("MHA DATA: \n");
+//	//tensor_get_2d(out);
+//
+//	//printf("MAH visited Graph: \n");
+//	//run_graph_validation(A, out, MAX_NODES);
+//	//printf("----------------------------------------\n");
+//	
+//	LayerNorm *ln = layer_norm_create_new(A, features);
+//	printf("Iniitiazing parameters for Layer Norm:\n");
+//	layer_norm_init_params(ln);
+//
+//	Tensor *ln_res = layer_norm_forward(A, ln, out); // x is out MHA output
+//																								// 
+//
+//	printf("LAYER NORM DATA: \n");
+//	tensor_get_2d(ln_res);
+//	bool *visited  = vislist();
+//	//export_and_visualize_graph(ln_res, "graph.dot", "graph.png");
+//
+//	run_graph_validation(A, ln_res, MAX_NODES);
+//	free(A);
+//
+//	return 0;
+//}

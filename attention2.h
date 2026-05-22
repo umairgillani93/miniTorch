@@ -2,6 +2,7 @@
 #define ATTENTION_H
 #include "tensor.h"
 #include "arena.h"
+#include <stddef.h>
 
 typedef struct {
 	int num_heads;

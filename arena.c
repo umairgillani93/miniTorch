@@ -10,20 +10,22 @@
 #include "arena.h"
 #include "model.h"
 #include "config.h"
+#include <stddef.h>
 
+#include <stddef.h>
 
 void arena_reset(Arena *A) {
 	A->offset = 0;
 }
 
 
-void arena_init(Arena *A, int size) {
+void arena_init(Arena *A, size_t size) {
 	A->base = (char *)malloc(size);
 	A->size = size;
 	A->offset = 0;
 }
 
-void *arena_alloc(Arena *A, int size) {
+void *arena_alloc(Arena *A, size_t size) {
 	void *ptr = A->base + A->offset;
 	A->offset += size; // This should be size in bytes
 										 //
