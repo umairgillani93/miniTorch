@@ -8,8 +8,8 @@
 #include "feed_forward_nn.h"
 #include "arena.h"
 #include "config.h"
+#include <stddef.h>
 
-static size_t GLOBAL_TENSOR_ID = 0;
 
 //#define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 //#define EMB_DIM 32 // out model dimension, i.e Embedding size for each token
@@ -59,6 +59,10 @@ void mha_init_params(MHA *m) {
 	tensor_randomize_weights(m->wk);
 	tensor_randomize_weights(m->wv);
 	tensor_randomize_weights(m->wo);
+	m->wq->requires_grad = true;
+	m->wk->requires_grad = true;
+	m->wv->requires_grad = true;
+	m->wo->requires_grad = true;
 }
 
 void mha_backward_temp_weights(Arena *AA, Tensor *dO, Tensor *A, Tensor *B, Tensor **dA, Tensor **dV) {
@@ -222,6 +226,7 @@ Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {
 }
 
 
+
 Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
 	// 1. tensor_slice_cols(a, tensor *x, int start_idx, int width);
 	// 2. tensor_concat(A, tensor *out, int heads)
@@ -237,6 +242,7 @@ Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
 
 	for (int k = 0; k < mha->num_heads; k++) {
 		Tensor *Qk = tensor_slice_cols(A, mha->Q, k, mha->dk);
+
 		Tensor *Kk = tensor_slice_cols(A, mha->K, k, mha->dk);
 		Tensor *Vk = tensor_slice_cols(A, mha->V, k, mha->dk);
 		Tensor *head_score = scaled_dot_product_attention(
@@ -280,6 +286,7 @@ Tensor *scaled_dot_product_attention(Arena *A, Tensor *Q, Tensor *K, Tensor *V, 
 }
 
 MHA *mha_create_new(Arena *A, int num_heads, int seq_len, int emb_dim) {
+
 	MHA *mha = arena_alloc(A, sizeof(MHA));
 	int ndim = 2;
 	int *shape_weights = arena_alloc(A, ndim * sizeof(int));
@@ -328,27 +335,38 @@ MHA *mha_create(int num_heads, int seq_len, int emb_dim) {
 	return mha;
 }
 
+
 	
 
-int main() {
-	Arena *A = malloc(sizeof(Arena));
-	int SIZE = 1024 * 1024 * 1024;
-	arena_init(A, SIZE);
-	int ndim = 2;
-	int shape[2] = {SEQ_LEN, EMB_DIM};
-
-	Tensor *x = tensor_create_new(A ,ndim, shape);
-	tensor_randomize_weights(x);
-	x->requires_grad = true;
-
-	bool visited[MAX_NODES] = {0};
-	int num_heads = 8;
-	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
-	mha_init_params(mha);
-	Tensor *multi_head = mha_forward(A, x, mha);
-	tensor_get_2d(multi_head);
-	tensor_metadata(multi_head);
-	//traverse_graph(multi_head, visited);
-
-	return 0;
-}
+//int main() {
+//	Arena *A = malloc(sizeof(Arena));
+//	int SIZE = 1024 * 1024 * 1024;
+//	arena_init(A, SIZE);
+//	int ndim = 2;
+//	int shape[2] = {SEQ_LEN, EMB_DIM};
+//
+//	Tensor *x = tensor_create_new(A ,ndim, shape);
+//
+//	tensor_randomize_weights(x);
+//	//printf("%ld\n", GLOBAL_TENSOR_ID);
+//	//x->requires_grad = true;
+//
+//	bool *visited = vislist();
+//	//for (int i = 0; i < MAX_NODES; i++) {
+//	//	printf("%d\n", visited[i]);
+//	//}
+//	int num_heads = 8;
+//	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
+//	mha_init_params(mha);
+//	Tensor *out = mha_forward(A, x, mha);
+//	tensor_get_2d(out);
+//	//tensor_metadata(out);
+//	run_graph_validation(A, out, MAX_NODES);
+//
+//	//printf("corrupted Nodes: %d\n", g->corrupt_nodes);
+//	//tensor_get_2d(multi_head);
+//	//tensor_metadata(multi_head);
+//	//traverse_graph(out, visited);
+//
+//	return 0;
+//}

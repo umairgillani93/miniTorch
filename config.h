@@ -1,6 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
-
+#include <stddef.h>
 
 #define RAND_FLOAT (float) rand() / (float) RAND_MAX
 #define HIDDEN_DIM 128
@@ -16,5 +16,6 @@
 #define EPS       1e-5
 #define ARENA_SIZE 1024 * 1024 * 1024
 #define MAX_NODES 10000
+#define MAX_PARENTS 100
 
 #endif

@@ -4,6 +4,7 @@
 #include "tensor.h"
 #include "attention2.h"
 #include "arena.h"
+#include <stddef.h>
 
 typedef struct {
 	int features; // in out case it's d_model OR embedding dimension,

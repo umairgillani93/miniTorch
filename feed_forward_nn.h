@@ -6,6 +6,8 @@
 #include "layer_norm.h"
 #include "arena.h"
 
+#include <stddef.h>
+
 typedef struct {
 	// create the required tensors
 	Tensor *w1;

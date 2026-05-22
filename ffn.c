@@ -3,10 +3,17 @@
 #include <assert.h>
 #include <math.h>
 #include <stdbool.h>
+#include <string.h>
 #include "tensor.h"
 #include "attention2.h"
 #include "layer_norm.h"
 #include "feed_forward_nn.h"
+#include "arena.h"
+
+#include <stddef.h>
+
+
+//#include "config.h"
 
 #define SEQ_LEN 10
 #define EMB_DIM 32
@@ -147,51 +154,43 @@ Tensor *forward(Arena *A, Tensor *x) {
 }	
 
 //int main() {
-//	int BACH_SIZE = 10;
-//	int EPOCHS = 2;
-//	for (int i = 0; i < EPOCHS; i++) {
-//		for (int j = 0; j < BACH_SIZE; j++) {
-//			// .. Rest of logic comes here
-//		}
-//	}
+//
+//	Arena *A = malloc(sizeof(Arena));
+//	int SIZE = 1024 * 1024 * 1024;
+//	arena_init(A, SIZE);
 //	int ndim = 2;
-//	int *shape_tokens = malloc(ndim * sizeof(int));
-//	int *shape_weights= malloc(ndim * sizeof(int));
-//
-//	shape_tokens[0] = SEQ_LEN;
-//	shape_tokens[1] = EMB_DIM;
-//
-//	shape_weights[0] = EMB_DIM;
-//	shape_weights[1] = EMB_DIM;
+//	int shape[2] = {SEQ_LEN, EMB_DIM};
+//	Tensor *x = tensor_create_new(A, ndim, shape);
+//	tensor_randomize_weights(x);
+//	//x->requires_grad = true;
+//	int features = 32;
 //
 //	int num_heads = 8;
+//	MHA *mha = mha_create_new(A, num_heads, SEQ_LEN, EMB_DIM);
+//	mha_init_params(mha);
+//	Tensor *out = mha_forward(A, x, mha);
+//	////printf("MHA DATA: \n");
+//	////tensor_get_2d(out);
 //
-//	// define token tensors
-//	Tensor *tokens = tensor_create(ndim, shape_tokens);
-//
-//
-//	// define FFN weights
-//	FFN *f = ffn_create(32, 128);
-//	//ffn_backward(f);
-//
-//	int heads = 8;
-//	MHA *mha = mha_create(heads, SEQ_LEN, EMB_DIM);
-//	Tensor *score = mha_forward(tokens, mha);
-//	Tensor *ln1 = layer_norm(score);
-//	Tensor *res = ffn_forward(ln1, f);
-//	Tensor *pred = layer_norm(res);
+//	////printf("MAH visited Graph: \n");
+//	////run_graph_validation(A, out, MAX_NODES);
+//	////printf("----------------------------------------\n");
+//	//
+//	LayerNorm *ln = layer_norm_create_new(A, features);
+//	printf("Iniitiazing parameters for Layer Norm:\n");
+//	layer_norm_init_params(ln);
+//	Tensor *ln_out= layer_norm_forward(A, ln, out); // x is out MHA output
 //	
-//	// Backward pass functions start here
-//	Tensor *target = tensor_create(ndim, shape_tokens);
-//	Tensor *loss = tensor_mse_loss(pred, target);
-//	Tensor *final = ffn_backward(f, tokens, loss);
+//	FFN *f = ffn_create(A, EMB_DIM, HIDDEN_DIM);
+//	ffn_init_params(f);
+//	Tensor *ffn_out = ffn_forward(A, ln_out, f);
+//	tensor_get_2d(out);
 //
-//	tensor_shape(final);
-//	tensor_shape(tokens);
-//	tensor_shape(mha->out);
+//	//bool *visited  = vislist();
+//	export_and_visualize_graph(ffn_out, "graph_ffn.dot", "graph_ffn.png");
 //
-//	Tensor *mha_back = mha_backward(mha, final, tokens);
-//	tensor_get(mha_back);
+//	//run_graph_validation(A, ffn_out, MAX_NODES);
+//	//free(A);
 //
 //	return 0;
 //}

@@ -12,12 +12,13 @@
 #include "arena.h"
 #include "config.h"
 
+#include <stddef.h>
+
 #define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 #define EPS 1e-5
 #define MAX_NODES 10000
 
-static size_t GLOBAL_TENSOR_ID = 0;
-
+size_t GLOBAL_TENSOR_ID = 0;
 
 
 // Backpropagation Intuition:
@@ -38,6 +39,170 @@ static size_t GLOBAL_TENSOR_ID = 0;
 // We want to take local gradiens depending upons the operations for this backward funntion (PyTorch style)
 
 
+bool *vislist() {
+	bool *visited = (bool *)malloc(MAX_NODES *sizeof(bool));
+	for (int i = 0; i < MAX_NODES; i++) {
+		visited[i] = false;
+	}
+	return visited;
+}
+
+void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *rep, int max_tensors)
+{
+    if (!root) {
+        rep->missing_links++;
+        return;
+    }
+
+    // --------------------------------------------------
+    // 1. SAFE ID CHECK (CRITICAL FIX)
+    // --------------------------------------------------
+    if (root->id < 0 || root->id >= max_tensors) {
+        printf("[FATAL] Invalid tensor id=%d\n", root->id);
+        rep->corrupt_nodes++;
+        return;
+    }
+
+    if (visited[root->id]) return;
+    visited[root->id] = true;
+
+    rep->visited_nodes++;
+
+    // --------------------------------------------------
+    // 2. SAFE PARENTS COUNT CHECK (CRITICAL FIX)
+    // --------------------------------------------------
+    if (root->num_parents < 0 || root->num_parents > MAX_PARENTS) {
+        printf("[FATAL] Tensor %d has invalid num_parents=%d\n",
+               root->id, root->num_parents);
+        rep->corrupt_nodes++;
+        return;
+    }
+
+    // --------------------------------------------------
+    // 3. SAFE NULL / STRUCT VALIDATION
+    // --------------------------------------------------
+
+    if (root->num_parents > 0 && root->parents == NULL) {
+        printf("[ERROR] Tensor %d: num_parents=%d but parents=NULL\n",
+               root->id, root->num_parents);
+        rep->null_parents++;
+    }
+
+    if (root->requires_grad && root->num_parents > 0 && root->operations == NULL) {
+        printf("[WARNING] Tensor %d missing operations (non-leaf requires_grad tensor)\n",
+               root->id);
+        rep->null_ops++;
+    }
+
+    if (root->requires_grad && root->grad == NULL) {
+        printf("[ERROR] Tensor %d requires_grad=1 but grad=NULL\n",
+               root->id);
+        rep->null_grad++;
+    }
+
+    // --------------------------------------------------
+    // 4. DEBUG PRINT
+    // --------------------------------------------------
+    printf("[NODE] id=%d | req=%d | parents=%d | ops=%s | grad=%p\n",
+           root->id,
+           root->requires_grad,
+           root->num_parents,
+					 (root->operations && root->operations->name) ? 
+					 root->operations->name : "LEAF",
+           (void*)root->grad);
+
+    // --------------------------------------------------
+    // 5. SAFE DFS TRAVERSAL (CRITICAL FIX)
+    // --------------------------------------------------
+    if (!root->parents) return;
+
+    for (int i = 0; i < root->num_parents; i++) {
+
+        Tensor *p = root->parents[i];
+
+        if (!p) {
+            printf("[ERROR] Tensor %d has NULL parent at index %d\n",
+                   root->id, i);
+            rep->missing_links++;
+            continue;
+        }
+
+        validate_tensor_graph(A, p, visited, rep, max_tensors);
+    }
+}
+
+//void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *rep) {
+//    if (!root) {
+//        rep->missing_links++;
+//        return;
+//    }
+//
+//    if (visited[root->id]) return;
+//    visited[root->id] = true;
+//
+//    rep->visited_nodes++;
+//
+//    // ---- BASIC VALIDATION ----
+//    if (root->parents == NULL && root->num_parents > 0) {
+//        printf("[ERROR] Tensor %d: num_parents=%d but parents=NULL\n",
+//               root->id, root->num_parents);
+//        rep->null_parents++;
+//    }
+//
+//    if (root->requires_grad && root->operations == NULL) {
+//        printf("[WARNING] Tensor %d requires_grad=1 but operations=NULL\n",
+//               root->id);
+//        rep->null_ops++;
+//    }
+//
+//    if (root->requires_grad && root->grad == NULL) {
+//        printf("[ERROR] Tensor %d requires_grad=1 but grad=NULL\n",
+//               root->id);
+//        rep->null_grad++;
+//    }
+//
+//    // ---- PRINT DEBUG INFO ----
+//    printf("[NODE] id=%d | req=%d | parents=%d | ops=%p | grad=%p\n",
+//           root->id,
+//           root->requires_grad,
+//           root->num_parents,
+//           (void*)root->operations,
+//           (void*)root->grad);
+//
+//    // ---- DFS TRAVERSAL ----
+//    for (int i = 0; i < root->num_parents; i++) {
+//        if (!root->parents || !root->parents[i]) {
+//            printf("[ERROR] Tensor %d has invalid parent at index %d\n",
+//                   root->id, i);
+//            rep->missing_links++;
+//            continue;
+//        }
+//
+//        validate_tensor_graph(A, root->parents[i], visited, rep);
+//    }
+//}
+
+void run_graph_validation(Arena *A, Tensor *output, int max_nodes) {
+    bool *visited = arena_alloc(A, max_nodes * sizeof(bool));
+    memset(visited, 0, max_nodes * sizeof(bool));
+
+    GraphReport rep = {0};
+			
+
+    printf("\n========== GRAPH VALIDATION START ==========\n");
+
+    validate_tensor_graph(A, output, visited, &rep, max_nodes);
+
+    printf("\n========== GRAPH REPORT ==========\n");
+    printf("Visited nodes     : %d\n", rep.visited_nodes);
+    printf("Null parents      : %d\n", rep.null_parents);
+    printf("Null ops          : %d\n", rep.null_ops);
+    printf("Null grad         : %d\n", rep.null_grad);
+    printf("Missing links     : %d\n", rep.missing_links);
+}
+
+
+
 void traverse_graph(Tensor *root, bool *visited) {
 	if (root == NULL) return;
 	if (visited[root->id]) return;
@@ -45,8 +210,11 @@ void traverse_graph(Tensor *root, bool *visited) {
 
 	printf("----------------------------------------\n");
 	tensor_metadata(root);
-	for (int i = 0; i < root->num_parents; i++) {
-		traverse_graph(root->parents[i], visited);
+	if (root->num_parents > 0) {
+		int parents = root->num_parents;
+		for (int i = 0; i < root->num_parents; i++) {
+			traverse_graph(root->parents[i], visited);
+		}
 	}
 }
 
@@ -130,7 +298,7 @@ void dfs(Arena *A, Tensor *root, bool *visited, Tensor **topo, int *size) {
 }
 
 
-void backward(Arena *A, Tensor *loss, size_t max_nodes) {
+void backward(Arena *A, Tensor *loss, int max_nodes) {
 	bool visited[MAX_NODES] = {0};
 	Tensor *topo[MAX_NODES];
 	int size = 0;
@@ -207,7 +375,7 @@ void tensor_matmul_backward(Arena *A, Tensor *currNode) {
 	x->grad = tensor_create_new(A, x->ndim, x->shape); 
 	tensor_randomize(x->grad);
 
-	size_t size_x = x->grad->shape[0] * x->grad->shape[1];
+	int size_x = x->grad->shape[0] * x->grad->shape[1];
 	for (int i = 0; i < size_x; i++) {
 		x->grad->data[i] += dxt->data[i];
 	}
@@ -222,7 +390,7 @@ void tensor_matmul_backward(Arena *A, Tensor *currNode) {
 	// Accumulate y now and first initilize 'y->grad'
 	y->grad = tensor_create_new(A, y->ndim, y->shape); 
 	tensor_randomize(y->grad);
-	size_t size_y = y->grad->shape[0] * y->grad->shape[1];
+	int size_y = y->grad->shape[0] * y->grad->shape[1];
 	for (int i = 0; i < size_y; i++) {
 		y->grad->data[i] += dy->data[i];
 	}
@@ -251,6 +419,8 @@ Tensor *tensor_relu(Arena *A, Tensor *x) {
 		out->parents[0] = x;
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_relu_backward;
+		op->type = RELU;
+		op->name = "OP_RELU";
 		out->operations = op;
 		out->grad = tensor_create_new(A, ndim, out_shape);
 	}
@@ -376,7 +546,10 @@ Tensor *tensor_row_max(Arena *A, Tensor *x) {
 		out->parents[0] = x;
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_softmax_backward;
+		op->type = ROW_MAX;
+		op->name = "OP_ROW_MAX";
 		out->operations = op;
+		
 		out->grad = tensor_create_new(A, ndim, out_shape);
 	}
 
@@ -401,16 +574,18 @@ Tensor *tensor_exp(Arena *A, Tensor *x) {
 	// Create output tensor
 	Tensor *out = tensor_create_new(A, ndim, out_shape);
 
-	//if (x->requires_grad) {
-	//	out->requires_grad = true;
-	//	out->num_parents = 1;
-	//	out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
-	//	out->parents[0] = x;
-	//	Op *op = arena_alloc(A, sizeof(Op));
-	//	op->backward = tensor_softmax_backward;
-	//	out->operations = op;
-	//	out->grad = arena_alloc(A, rows * cols * sizeof(float));
-	//}
+	if (x->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = x;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->type = EXP;
+		op->name = "OP_EXPONENT";
+		op->backward = tensor_softmax_backward;
+		out->operations = op;
+		out->grad = tensor_create_new(A, ndim, out_shape);
+	}
 
 	for (int r = 0; r < rows; r++) {
 		for (int c = 0; c < cols; c++) {
@@ -437,6 +612,8 @@ Tensor *tensor_row_sum(Arena *A, Tensor *x) {
 		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
 		out->parents[0] = x;
 		Op *op = arena_alloc(A, sizeof(Op));
+		op->type = ROW_SUM;
+		op->name = "OP_ROW_SUM";
 		op->backward = tensor_softmax_backward;
 		out->operations = op;
 		out->grad = tensor_create_new(A, ndim, out_shape);
@@ -475,14 +652,14 @@ Tensor *tensor_fill_like(Arena *A, Tensor *x, double eps) {
 }
 
 void tensor_randomize_weights(Tensor *x) {
-	size_t size = tensor_size(x);
+	int size = tensor_size(x);
 	for (int i = 0; i < size; i++) {
 		x->data[i] = RAND_FLOAT;
 	}
 }
 
 void tensor_randomize(Tensor *x) {
-	size_t size = tensor_size(x);
+	int size = tensor_size(x);
 	for (int i = 0; i < size; i++) {
 		x->data[i] = (rand() % 10) + 1.0f;
 	}
@@ -524,20 +701,35 @@ void tensor_check(char *name, Tensor *x) {
 
 
 // for rows expansion
-Tensor *tensor_expand_rows(Arena *A, Tensor *a, int out_rows) {
-	assert(a->shape[0] = 1); // has only single row
-	int cols = a->shape[1];
-	int ndim = a->ndim;
+Tensor *tensor_expand_rows(Arena *A, Tensor *m, int out_rows) {
+	assert(m->shape[0] = 1); // has only single row
+	int cols = m->shape[1];
+	int ndim = m->ndim;
 
 	int *out_shape = arena_alloc(A, ndim * sizeof(int));
 	out_shape[0] = out_rows;
 	out_shape[1] = cols;
 	Tensor *out = tensor_create_new(A, ndim, out_shape);
 
+	if (m->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, sizeof(Tensor *));
+		out->parents[0] = m;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_expand_rows_backward;
+		out->operations = op;
+		op->type = EXPAND_ROWS;
+		op->name = "OP_EXPAND_ROWS";
+		out->grad = tensor_create_new(A, ndim, out_shape);
+		//out->cols = out_cols;
+	}
+
+
 	// computing logic
 	for (int r = 0; r < out_rows; r++) {
 		for (int c = 0; c < cols; c++) {
-			out->data[r * cols + c] = a->data[c];
+			out->data[r * cols + c] = m->data[c];
 		}
 	}
 	return out;
@@ -559,9 +751,14 @@ Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b) {
 		out->requires_grad = true;
 		out->num_parents = 2;
 		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		if (a == NULL || b == NULL) {
+			fprintf(stderr, "Found parents NULL, graph broken!\n");
+		}
 		out->parents[0] = a;
 		out->parents[1] = b;
 		Op *op = arena_alloc(A, sizeof(Op));
+		op->type= SCALLED;
+		op->name = "OP_SCALED";
 		op->backward = tensor_square_backward;
 		out->operations = op;
 		out->grad = tensor_create_new(A, ndim, out_shape);
@@ -593,7 +790,21 @@ Tensor *tensor_scaler_div(Arena *A, Tensor *x, float val) {
 			out->data[r * cols + c] = x->data[r * cols + c] / val;
 		}
 	}
+
+	if (x->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = x;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->type= SCALER_DIV;
+		op->name = "OP_SCALER_DIV";
+		op->backward = tensor_softmax_backward;
+		out->operations = op;
+		out->grad = tensor_create_new(A, ndim, out_shape);
+	}
 	return out;
+
 }
 
 Tensor *tensor_scaler_multiplication(Tensor *x, float val) {
@@ -633,7 +844,6 @@ Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b) {
 	out_shape[1] = cols;
 
 	Tensor *out = tensor_create_new(A, ndim, out_shape);
-	out->id = GLOBAL_TENSOR_ID++;
 
 	if (a->requires_grad || b->requires_grad) {
 		out->requires_grad = true;
@@ -641,6 +851,9 @@ Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b) {
 		// out parents
 		out->num_parents = 2;
 		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		if (a == NULL || b == NULL) {
+			fprintf(stderr, "Found parents NULL, graph broken!\n");
+		}
 		out->parents[0] = a;
 		out->parents[1] = b;
 
@@ -720,11 +933,22 @@ Tensor *tensor_subtract(Arena *A, Tensor *a, Tensor *b) {
 		// out parents
 		out->num_parents = 2;
 		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		
+		if (a == NULL || b == NULL) {
+			fprintf(stderr, "Found parents NULL, graph broken!\n");
+		}
+		out->parents[0] = a;
+		out->parents[1] = b;
 
 		// Operations
 		Op *op = arena_alloc(A, sizeof(Op));
-		op->backward = tensor_add_backward;
+		
+		op->backward = tensor_subtract_backward;
+		op->type = SUB;
+		op->name = "OP_SUBTRACT";
+		
 		out->operations = op;
+		
 
 		// gradients
 		out->grad = tensor_create_new(A, ndim, out_shape);
@@ -816,7 +1040,9 @@ Tensor *tensor_create(int ndim, int *shape) {
 
 Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
 	Tensor *t = arena_alloc(A, sizeof(Tensor));
+	memset(t, 0, sizeof(Tensor));
 	t->id = GLOBAL_TENSOR_ID++;
+	//printf("GLOABL TENSOR ID: %ld\n", GLOBAL_TENSOR_ID);
 	t->ndim = ndim;
 	t->shape = arena_alloc(A, ndim * sizeof(int));
 	t->stride = arena_alloc(A, ndim * sizeof(int));
@@ -831,10 +1057,12 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
 	// For autograd
 	t->data = arena_alloc(A, total * sizeof(float));
 	t->parents = NULL;
+	Op *op = arena_alloc(A, sizeof(Op));
+	memset(op, 0, sizeof(Op));
 	t->operations = NULL;
 	t->grad = NULL;
 	t->num_parents = 0;
-	t->requires_grad = true;
+	t->requires_grad = false;
 	return t;
 }
 
@@ -956,7 +1184,6 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 	out_shape[1] = b_cols;
 
 	Tensor *out = tensor_create_new(A, a->ndim, out_shape);
-	out->id = GLOBAL_TENSOR_ID++;
 
 	int ndim = a->ndim;
 	if (a->requires_grad || b->requires_grad) {
@@ -966,10 +1193,9 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
 		out->parents[0] = a;
 		out->parents[1] = b;
-		out->requires_grad = true;
 		
 		// 2. NEED TO POPULATE THE grad
-		int out_size = a->shape[0] * b->shape[1];
+		//int out_size = a->shape[0] * b->shape[1];
 		
 		out->grad = tensor_create_new(A, ndim, out_shape);
 		
@@ -979,7 +1205,6 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 		op->type = MATMUL;
 		op->name = "OP_TIMES";
 		out->operations = op;
-
 	}
 
 	for (int r = 0; r < a_rows; r++) {
@@ -1078,6 +1303,7 @@ Tensor *tensor_softmax(Arena *A, Tensor *x) {
 	 */
 		int rows = x->shape[0];
     int cols = x->shape[1];
+		int ndim = x->ndim;
 
     Tensor *row_max = tensor_row_max(A, x);
     //Tensor *row_max_expanded = tensor_expand_cols(A, row_max, cols);
@@ -1088,6 +1314,19 @@ Tensor *tensor_softmax(Arena *A, Tensor *x) {
 
     Tensor *row_sum_expanded = tensor_expand_cols(A, row_sum, cols);
     Tensor *out = tensor_div(A, exp, row_sum_expanded);
+
+		if (x->requires_grad) {
+			out->requires_grad;
+			out->num_parents = 1;
+			out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+			out->parents[0] = x;
+			Op *op = arena_alloc(A, sizeof(Op));
+			op->backward = tensor_softmax_backward;
+			op->type = SOFTMAX;
+			op->name = "OP_SOFTMAX";
+			out->operations = op;
+			out->grad = tensor_create_new(A, ndim, x->shape);
+		}
 
     return out;
 }
@@ -1151,14 +1390,14 @@ Tensor *tensor_transpose(Arena *A, Tensor *a) {
 	out_shape[0] = cols;
 	out_shape[1] = rows;
 	Tensor *t = tensor_create_new(A, ndim, out_shape);
-	t->id = GLOBAL_TENSOR_ID++;
+	//t->id = GLOBAL_TENSOR_ID++;
 
 	if (a->requires_grad) {
 		t->requires_grad = true;
 		t->num_parents = 1;
 		t->parents = arena_alloc(A, t->num_parents * sizeof(Tensor *));
 		t->parents[0] = a;
-		t->grad = arena_alloc(A, rows * cols * sizeof(float));
+		t->grad = tensor_create_new(A, ndim, out_shape);
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_transpose_backward;
 		op->type = TRANSPOSE;
@@ -1219,7 +1458,11 @@ Tensor *tensor_mean(Arena *A, Tensor *a) {
 		out->parents[0] = a;
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_mean_backward;
+		op->type = MEAN;
+		op->name = "OP_MEAN";
 		out->operations = op;
+		
+
 
 		// define gradients matrix
 		out->grad = tensor_create_new(A, ndim, out_shape);
@@ -1267,8 +1510,10 @@ Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_cols) {
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_expand_cols_backward;
 		out->operations = op;
+		op->type = EXPAND_COLS;
+		op->name = "OP_EXPAND_COLS";
 		out->grad = tensor_create_new(A, ndim, out_shape);
-		
+		out->cols = out_cols;
 	}
 
 	// IMPORTANT!!!
@@ -1305,6 +1550,8 @@ Tensor *tensor_square(Arena *A, Tensor *a, Tensor *b) {
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_square_backward;
 		out->operations = op;
+		op->type = SQUARE;
+		op->name = "OP_SQUARE";
 		out->grad = tensor_create_new(A, ndim, out_shape);
 	}
 
@@ -1340,6 +1587,8 @@ Tensor *tensor_sqrt(Arena *A, Tensor *a) {
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_sqrt_backward;
 		out->operations = op;
+		op->type = SQRT;
+		op->name = "OP_SQRT";
 		out->grad = tensor_create_new(A, ndim, out_shape);
 	}
 
@@ -1375,7 +1624,10 @@ Tensor *tensor_div(Arena *A, Tensor *a, Tensor *b) {
 		out->parents[1] = b;
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->backward = tensor_square_backward;
+		op->type = DIVISION;
+		op->name = "OP_DIVISION";
 		out->operations = op;
+		
 		out->grad = tensor_create_new(A, ndim, out_shape);
 	}
 
@@ -1388,11 +1640,16 @@ Tensor *tensor_div(Arena *A, Tensor *a, Tensor *b) {
 			out->data[r * cols + c] = a->data[r * cols + c] / b->data[r * cols + c];
 		}
 	}
+
 	return out;
 
 }
 
 void tensor_sqrt_backward(Tensor *x) {
+	// Will be implemented later IA
+}
+
+void tensor_expand_rows_backward(Tensor *x) {
 	// Will be implemented later IA
 }
 
@@ -1446,11 +1703,19 @@ void tensor_relu_backward(Tensor *x) {
 	// Will be implemented later. IA
 }
 
+void tensor_subtract_backward(Tensor *x) {
+	// Will be implemented later. IA
+}
+
 void tensor_slice_cols_backward(Tensor *x) {
 	// Will be implemented later. IA
 }
 
 void tensor_transpose_backward(Tensor *x) {
+	// Will be implemented later. IA
+}
+
+void tensor_concat_backward(Tensor *x) {
 	// Will be implemented later. IA
 }
 
@@ -1481,6 +1746,26 @@ Tensor *tensor_concat(Arena *A, Tensor **heads, int num_heads) {
 	// create out tensor
 	Tensor *out = tensor_create_new(A, ndim, out_shape);
 
+	if (heads[0]->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents= HEADS;
+		out->parents = arena_alloc(A, HEADS * sizeof(Tensor *));
+		for (int i = 0; i < HEADS; i++) {
+			out->parents[i] = heads[i];
+		}
+
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->type = CONCAT;
+		op->name = "OP_CONCAT";
+		op->backward = tensor_concat_backward;
+		out->operations = op;
+
+		out->grad = tensor_create_new(A, ndim, out_shape);
+		
+		// Extra parameter, which we are setting only for concat method
+		out->cols = out_cols;
+
+	}
 	// core logic
 	for (int k = 0; k < num_heads; k++) {
 		Tensor *head = heads[k]; // head chunk
