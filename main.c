@@ -32,6 +32,7 @@ int main() {
 	// this should work
 	Tensor *T = tensor_create_new(A, 2, shape);
 	tensor_randomize_weights(T); 
+	T->requires_grad = true;
 	int size = tensor_size(T);
 
 	// Create global MHA
