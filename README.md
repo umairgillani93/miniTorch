@@ -18,7 +18,7 @@ The model successfully tracks gradients, learns, and minimizes loss over trainin
 When running forward passes inside `miniTorch`, the system natively builds and tracks a directed acyclic graph (DAG) of mathematical operations. Below is an execution pass exported directly by the framework via Graphviz:
 
 <!-- Replace this with your actual graph PNG file if named differently -->
-![Computational Graph](computational_graph.png)
+![Computational Graph](graph_ffn.png)
 
 *Intermediate nodes capture execution states, maintaining parent-child dependencies directly within our raw memory allocation layers to facilitate topological sorting during backpropagation.*
 
