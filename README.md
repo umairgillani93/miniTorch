@@ -2,7 +2,7 @@
 
 A **from-scratch implementation of the Transformer architecture and a custom Autograd engine in pure C**, built to deeply understand how modern deep learning infrastructure works at the metal.
 
-This project implements the core components of a Transformer encoder alongside a functional **Forward Pass Computational Graph Engine** using only standard C—completely free of PyTorch, TensorFlow, or high-level frameworks. 
+This project implements the core components of a Transformer encoder alongside a functional **Forward Pass Computational Graph Engine & Backpropagation to update gradients** using only standard C—completely (having custom Tensor library) free of PyTorch, TensorFlow, or high-level frameworks. 
 
 The goal is to explore exactly how attention-based models and automatic differentiation operate at the lowest level, covering raw tensor memory management, strided layouts, explicit DAG tracking, and custom backward passes.
 
