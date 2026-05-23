@@ -35,7 +35,7 @@ When running forward passes inside `miniTorch`, the system natively builds and t
 ---
 
 ## 🛠️ Current Development Focus: C-Native Autograd
-We are actively building out and hardening the **Backward Pass Engine** written purely in C. This expansion moves the project from a forward-only inference engine into a dynamic training framework focusing on:
+I'm actively building out and hardening the **Backward Pass Engine** written purely in C. This expansion moves the project from a forward-only inference engine into a dynamic training framework focusing on:
 1. **Topological Sorting:** Evaluating computational graph nodes in reverse topological sequence to guarantee flawless gradient propagation.
 2. **Gradient Accumulation:** Ensuring calculated gradient shapes match exact raw tensor tensor dimensions, handling non-contiguous blocks via stride computations.
 3. **Memory Arena Optimization:** Consolidating dynamic graph node allocations into flat arenas to eliminate heap fragmentation during execution loops.
