@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -9,15 +10,7 @@
 #include "layer_norm.h"
 #include "feed_forward_nn.h"
 #include "arena.h"
-
-#include <stddef.h>
-
-
-//#include "config.h"
-
-#define SEQ_LEN 10
-#define EMB_DIM 32
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#include "config.h"
 
 void sgd_optimizer(Tensor *w, Tensor *dw, float lr) {
 	// simple SGD Soptmizer 
@@ -176,20 +169,26 @@ Tensor *forward(Arena *A, Tensor *x) {
 //	////run_graph_validation(A, out, MAX_NODES);
 //	////printf("----------------------------------------\n");
 //	//
-//	LayerNorm *ln = layer_norm_create_new(A, features);
+//	LayerNorm *ln1 = layer_norm_create_new(A, features);
 //	printf("Iniitiazing parameters for Layer Norm:\n");
-//	layer_norm_init_params(ln);
-//	Tensor *ln_out= layer_norm_forward(A, ln, out); // x is out MHA output
+//	layer_norm_init_params(ln1);
+//	Tensor *ln_out= layer_norm_forward(A, ln1, out); // x is out MHA output
 //	
 //	FFN *f = ffn_create(A, EMB_DIM, HIDDEN_DIM);
 //	ffn_init_params(f);
 //	Tensor *ffn_out = ffn_forward(A, ln_out, f);
 //	tensor_get_2d(out);
 //
+//	LayerNorm *ln2 = layer_norm_create_new(A, features);
+//	printf("Iniitiazing parameters for Layer Norm 2:\n");
+//	layer_norm_init_params(ln2);
+//	Tensor *ln2_out= layer_norm_forward(A, ln2, ffn_out); // x is out MHA output
+//	
+//	tensor_shape_2d(ln2_out);
 //	//bool *visited  = vislist();
-//	export_and_visualize_graph(ffn_out, "graph_ffn.dot", "graph_ffn.png");
+//	//export_and_visualize_graph(ffn_out, "graph_ffn.dot", "graph_ffn.png");
 //
-//	//run_graph_validation(A, ffn_out, MAX_NODES);
+//	run_graph_validation(A, ffn_out, MAX_NODES);
 //	//free(A);
 //
 //	return 0;

@@ -1,29 +1,68 @@
-# Traning Loss Curve:
+# Transformer & Autograd Engine From Scratch in C
 
-Model successfully learns and reduces the Loss over Epochs.
-![Training Curve](training_curve.png)
+A **from-scratch implementation of the Transformer architecture and a custom Autograd engine in pure C**, built to deeply understand how modern deep learning infrastructure works at the metal.
 
-# Transformer From Scratch in C
+This project implements the core components of a Transformer encoder alongside a functional **Forward Pass Computational Graph Engine** using only standard C—completely free of PyTorch, TensorFlow, or high-level frameworks. 
 
-A **from-scratch implementation of the Transformer architecture in pure C**, built to deeply understand how modern deep learning models work internally.
-
-This project implements the **core components of a Transformer encoder** using only standard C, without relying on any machine learning frameworks such as PyTorch, TensorFlow, or JAX.
-
-The goal is to explore **how attention-based models work at the lowest level**, including tensor operations, memory management, and neural network building blocks.
-
-## Main files:
-- tensor.c (All the methods related to Tensor operations)
-- attn2.c (All the methods related to multihead attention forward / backward pass)
-- ln.c (Layer normalization implementation)
-- ffn.c (Methods related to feed forward neural network; forward / backward pass) 
-- attention2.h (Attention header file)
-- tensor.h (Tensor header file)
-- layer_norm.h (Layer norm header file)
-- feed_forward_nn.h (feed forward NN header file)
-- main.c (main file)
-
+The goal is to explore exactly how attention-based models and automatic differentiation operate at the lowest level, covering raw tensor memory management, strided layouts, explicit DAG tracking, and custom backward passes.
 
 ---
+
+# Training Loss Curve
+The model successfully tracks gradients, learns, and minimizes loss over training iterations:
+![Training Curve](training_curve.png)
+
+---
+
+# 📊 Computational Graph Execution
+When running forward passes inside `miniTorch`, the system natively builds and tracks a directed acyclic graph (DAG) of mathematical operations. Below is an execution pass exported directly by the framework via Graphviz:
+
+<!-- Replace this with your actual graph PNG file if named differently -->
+![Computational Graph](computational_graph.png)
+
+*Intermediate nodes capture execution states, maintaining parent-child dependencies directly within our raw memory allocation layers to facilitate topological sorting during backpropagation.*
+
+---
+
+## 🏗️ Core Architecture & File Layout
+
+- `tensor.c` / `tensor.h`: Core tensor primitives, data storage layouts, memory allocation, and strided operations.
+- `attn2.c` / `attention2.h`: Multi-Head Attention forward pass logic, shape transformations, and backward pass gradient calculations.
+- `ln.c` / `layer_norm.h`: Layer Normalization implementation for training stability.
+- `ffn.c` / `feed_forward_nn.h`: Feed-Forward Neural Network blocks (Linear transformations and activations).
+- `main.c`: Framework entry point orchestrating tensor initialization, graph building, and model execution.
+
+---
+
+## 🛠️ Current Development Focus: C-Native Autograd
+We are actively building out and hardening the **Backward Pass Engine** written purely in C. This expansion moves the project from a forward-only inference engine into a dynamic training framework focusing on:
+1. **Topological Sorting:** Evaluating computational graph nodes in reverse topological sequence to guarantee flawless gradient propagation.
+2. **Gradient Accumulation:** Ensuring calculated gradient shapes match exact raw tensor tensor dimensions, handling non-contiguous blocks via stride computations.
+3. **Memory Arena Optimization:** Consolidating dynamic graph node allocations into flat arenas to eliminate heap fragmentation during execution loops.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+* A C99-compatible compiler (`gcc` or `clang`)
+* Bash shell environment
+* Graphviz (Optional, for rendering `.png` computation graph pipelines)
+
+### Building and Running
+Compilation of all internal modules alongside `main.c` is fully automated via a shell wrapper. Build the project and execute the tensor pipeline in a single command:
+
+```bash
+# Clone the repository
+git clone [https://github.com/umairgillani93/miniTorch.git](https://github.com/umairgillani93/miniTorch.git)
+cd miniTorch
+
+# Ensure script execution permissions
+chmod +x run.sh
+
+# Compile modules and execute main engine
+./run.sh
+```
 
 ## Motivation
 

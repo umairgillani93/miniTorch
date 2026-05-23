@@ -26,12 +26,16 @@ int main() {
 	printf("Arena initilized\n");
 
 	int ndim = 2;
-	int shape[2] = {SEQ_LEN, EMB_DIM};
+	int *shape_input = arena_alloc(A, ndim * sizeof(int));
+	shape_input[0] = SEQ_LEN;
+	shape_input[1] = EMB_DIM;
 	
 	// Creating actual data tensor
 	// this should work
-	Tensor *T = tensor_create_new(A, 2, shape);
+	Tensor *T = tensor_create_new(A, 2, shape_input);
 	tensor_randomize_weights(T); 
+	T->requires_grad = true;
+
 	int size = tensor_size(T);
 
 	// Create global MHA
@@ -39,7 +43,10 @@ int main() {
 	//MHA *M = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
 
 	// Target tensor to compare the output against
-	int shape_target[2] = {SEQ_LEN, EMB_DIM};
+	int *shape_target = arena_alloc(A, ndim * sizeof(int));
+	shape_target[0] = SEQ_LEN;
+	shape_target[1] = EMB_DIM;
+
 	Tensor *target = tensor_create_new(A, ndim, shape_target);
 	tensor_randomize(target);
 
@@ -72,7 +79,10 @@ int main() {
 			float *batch_ptr = T->data + b * BATCH_SIZE * EMB_DIM;
 			float *target_ptr = target->data + b * BATCH_SIZE * EMB_DIM;
 
-			int shape_local[2] = {BATCH_SIZE, EMB_DIM};
+			int *shape_local = arena_alloc(A, ndim * sizeof(int));
+			shape_local[0] = BATCH_SIZE;
+			shape_local[1] = EMB_DIM;
+
 			Tensor *batch_tensor = tensor_create_new(A, 2, shape_local);
 			Tensor *target_batch = tensor_create_new(A, 2, shape_local);
 			
@@ -101,22 +111,17 @@ int main() {
 			tensor_check("ln2_forward", ln2);
 			//tensor_shape(ln2);
 
-			Tensor *loss = tensor_mse_loss(A, ln2, target_batch);
-			float loss_to_show = loss_value(ln2, target_batch);
+			Tensor *loss = tensor_mse_loss(A, ffn_ln, target_batch);
+			float loss_to_show = loss_value(ffn_ln, target_batch);
 			
 			// Printing the Graph ...
 			//bool *visited  = vislist();
 			//export_and_visualize_graph(ffn_out, "graph_ffn.dot", "graph_ffn.png");
 
+			printf("Loss: %f\n", loss_to_show);
 			run_graph_validation(A, loss, MAX_NODES);
 			exit(1);
 
-			printf("loss tensor : \n");
-			tensor_get_2d(loss);
-			tensor_shape_2d(loss);
-			printf("Actual loss: %f\n", loss_to_show);
-			//backward(A, loss, MAX_NODES);
-			exit(1);
 
 			///Tensor *dx_for_ffn = tensor_create_new(A, 2, shape_local);
 			///Tensor *dx_for_mha = tensor_create_new(A, 2, shape_local);

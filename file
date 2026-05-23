@@ -1,0 +1,6 @@
+Normal Flow: Tensor x -> MHA -> LN -> FFN -> LN -> LOSS
+
+Batch Flow:  Tensor x -> x1 
+                      -> x2
+                      -> x3
+                      .. 

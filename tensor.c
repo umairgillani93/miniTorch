@@ -990,13 +990,43 @@ float loss_value(Tensor *pred, Tensor *target) {
 }
 
 Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target) {
-	Tensor *grad = tensor_create_weights_new(A, pred->ndim, pred->shape);	
-	int size = tensor_size(pred);
-	
-	for (int i = 0; i < size; i++) {
-		grad->data[i] = 2.0f * (pred->data[i] - target->data[i]);
+	int rows = pred->shape[0];
+	int cols = pred->shape[1];
+	int ndim = pred->ndim;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	// create output tensor
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+
+	// Tensor graph metadata
+	if (pred->requires_grad || target->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 2;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = pred;
+		out->parents[1] = target;
+
+		// define out Operations
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = tensor_mse_backward;
+		op->type = MSE;
+		op->name = "OP_MSE";
+
+		// out grad
+		out->grad = tensor_create_new(A, ndim, out_shape);
+
 	}
-	return grad; 
+
+	Tensor *sub = tensor_subtract(A, pred, target);
+	Tensor *sq = tensor_square(A, sub, sub);
+	out = tensor_sqrt(A, sq);
+
+	return out;
+
 }
 
 Tensor *tensor_create(int ndim, int *shape) {
@@ -1646,6 +1676,10 @@ Tensor *tensor_div(Arena *A, Tensor *a, Tensor *b) {
 }
 
 void tensor_sqrt_backward(Tensor *x) {
+	// Will be implemented later IA
+}
+
+void tensor_mse_backward(Tensor *x) {
 	// Will be implemented later IA
 }
 

@@ -19,6 +19,7 @@ typedef struct {
 
 typedef enum {
 	LEAF,
+	MSE,
 	ADD, 
 	MUL,
 	MATMUL,
@@ -137,6 +138,7 @@ void tensor_mean_backward(Tensor *x);
 void tensor_add_backward(Arena *A, Tensor *x);
 void tensor_square_backward(Tensor *x);
 void tensor_sqrt_backward(Tensor *x);
+void tensor_mse_backward(Tensor *x);
 void tensor_expand_cols_backward(Tensor *x);
 void tensor_expand_rows_backward(Tensor *x);
 void tensor_softmax_backward(Tensor *x);
