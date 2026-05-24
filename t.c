@@ -13,6 +13,45 @@
 
 
 
+Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target) {
+	int rows = pred->shape[0];
+	int cols = pred->shape[1];
+	int ndim = pred->ndim;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	Tensor *sub = tensor_subtract(A, pred, target);
+	Tensor *sq = tensor_square(A, sub, sub);
+	Tensor *mu = tensor_mean(A, sq);
+
+	Tensor *out = tensor_expand_cols(A, mu, cols);
+
+	// Tensor graph metadata
+	//if (pred->requires_grad || target->requires_grad) {
+	//	out->requires_grad = true;
+	//	out->num_parents = 2;
+	//	out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+	//	out->parents[0] = pred;
+	//	out->parents[1] = target;
+
+	//	// define out Operations
+	//	Op *op = arena_alloc(A, sizeof(Op));
+	//	op->backward = tensor_mse_backward;
+	//	op->type = MSE;
+	//	op->name = "OP_MSE";
+
+	//	// out grad
+	//	out->grad = tensor_create_new(A, ndim, out_shape);
+	//	out->cols = cols
+	//}
+
+	return out;
+
+}
+
+
 int main() {
 
 	srand(time(NULL));
