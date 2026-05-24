@@ -1519,6 +1519,8 @@ Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_cols) {
 	//               [m2, m2, m2]
 	//               [m3, m3, m3]
 	
+	printf("shape m: \n");
+	tensor_shape_2d(m);
 	assert(m->ndim == 2);
 	assert(m->shape[1] == 1);
 	int rows = m->shape[0];
@@ -1693,7 +1695,7 @@ void tensor_expand_rows_backward(Tensor *x) {
 }
 
 void tensor_square_backward(Tensor *x) {
-	// Will be implemented later IA
+
 }
 
 void tensor_expand_cols_backward(Tensor *x) {
@@ -1711,10 +1713,6 @@ void tensor_expand_cols_backward(Tensor *x) {
 	//                       [sum(r2)]]
 	//
 	
-	// x->parameter that we are passing here is tensor_expand_cols output i.e output from forward pass 
-	// out-> |expand_cols_func| -> output
-	// this 'output' uses chainrule to update gradient of 'input' i.e
-	//
 	Tensor *p = x->parents[0];
 
 	if (!p) {
@@ -1724,20 +1722,27 @@ void tensor_expand_cols_backward(Tensor *x) {
 
 	if (!p->requires_grad) return;
 
-	printf("Found parent: %d\n", x->num_parents);
-	tensor_shape_2d(p);
-
 	int rows = x->shape[0];
 	int cols = x->shape[1]; // we'll be shrinking along axis = 1;
-	
+
+	if (!x->grad) {
+		fprintf(stderr, "x->grad is NULL, no up stream gradients found\n");
+		return;
+	}
+
 	for (int r = 0; r < rows; r++) {
 		float sum = 0.0f;
 		for (int c = 0; c < cols; c++) {
-			sum += x->data[r * cols + c];
-			//printf("sum: %f\n", sum);
+			sum += x->grad->data[r * cols + c];
+			printf("sum: %f\n", sum);
 		}
-		p->grad->data[r] = sum;
+		p->grad->data[r] += sum;
 	}
+	/*
+	 * d(mean)/dL = d(expanded)/dL * prev_grad(dL/dL)
+	 * d(mean)/dL = d(expanded)/dL * 1 
+	 */
+	printf("[Success] Gradient for <TENSOR_EXPAND_COLS_BACKWARD> saved!\n");
 }
 
 void tensor_mean_backward(Tensor *x) {
@@ -1963,30 +1968,21 @@ int main() {
 	shape[1] = 32;
 
 	Tensor *x = tensor_create_new(A, ndim, shape);
-	x->grad = tensor_create_new(A, ndim, x->shape);
 	tensor_randomize_weights(x);
-
-	int *p_shape = arena_alloc(A, ndim * sizeof(int));
-	p_shape[0] = 16;
-	p_shape[1] = 1;
-
-	x->parents = arena_alloc(A, 1 * sizeof(Tensor *));
-	Tensor *parent = tensor_create_new(A, ndim, p_shape);
-	tensor_randomize_weights(parent);
-	parent->requires_grad = true;
-
-	x->parents[0] = parent;
 	x->requires_grad = true;
+	x->grad = tensor_create_new(A, ndim, shape);
+	tensor_fill_ones(x->grad);
 
-	tensor_metadata(x);
-	tensor_metadata(x->parents[0]);
+	Tensor *mean = tensor_mean(A, x);
+	int cols = x->shape[1];
+	Tensor *expanded = tensor_expand_cols(A, mean, cols);
+
+	tensor_shape_2d(expanded);
 
 
-	tensor_expand_cols_backward(x);	
+	tensor_expand_cols_backward(expanded);	
+
 	printf("worked: \n");
 
 	return 0;
-
-
 }
-

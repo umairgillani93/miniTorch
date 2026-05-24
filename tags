@@ -1,0 +1,343 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_EXCMD	mixed	/number, pattern, mixed, or combineV2/
+!_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
+!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
+!_TAG_PROC_CWD	/home/umairgillani/github/ml-algorithms-from-scratch/	//
+!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
+!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
+!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
+!_TAG_PROGRAM_VERSION	5.9.0	//
+ADD	tensor.h	/^	ADD, $/;"	e	enum:__anonf138f8960203
+ADD	test.c	/^	ADD = 10,$/;"	e	enum:__anon1dda1bf60203	file:
+ARENA_H	arena.h	/^#define ARENA_H$/;"	d
+ARENA_SIZE	config.h	/^#define ARENA_SIZE /;"	d
+ATTENTION_H	attention2.h	/^#define ATTENTION_H$/;"	d
+Arena	arena.h	/^typedef struct Arena {$/;"	s
+Arena	arena.h	/^} Arena;$/;"	t	typeref:struct:Arena
+Arena	tensor.h	/^typedef struct Arena Arena;$/;"	t	typeref:struct:Arena
+Author	README.md	/^## Author$/;"	s	chapter:📊 Computational Graph Execution
+BATCH_SIZE	config.h	/^#define BATCH_SIZE /;"	d
+BETA	config.h	/^#define BETA /;"	d
+Building and Running	README.md	/^### Building and Running$/;"	S	section:📊 Computational Graph Execution""🚀 Getting Started
+CONCAT	tensor.h	/^	CONCAT,$/;"	e	enum:__anonf138f8960203
+CONFIG_H	config.h	/^#define CONFIG_H$/;"	d
+DIV	tensor.h	/^	DIV,$/;"	e	enum:__anonf138f8960203
+DIV	test.c	/^	DIV,$/;"	e	enum:__anon1dda1bf60203	file:
+DIVISION	tensor.h	/^	DIVISION,$/;"	e	enum:__anonf138f8960203
+Design Goals	README.md	/^## Design Goals$/;"	s	chapter:📊 Computational Graph Execution
+EMB_DIM	config.h	/^#define EMB_DIM /;"	d
+EPOCHS	config.h	/^#define EPOCHS /;"	d
+EPS	config.h	/^#define EPS /;"	d
+EPS	tensor.c	/^#define EPS /;"	d	file:
+EXP	tensor.h	/^	EXP,$/;"	e	enum:__anonf138f8960203
+EXP	test.c	/^	EXP,$/;"	e	enum:__anon1dda1bf60203	file:
+EXPAND_COLS	tensor.h	/^	EXPAND_COLS,$/;"	e	enum:__anonf138f8960203
+EXPAND_ROWS	tensor.h	/^	EXPAND_ROWS,$/;"	e	enum:__anonf138f8960203
+Educational Purpose	README.md	/^## Educational Purpose$/;"	s	chapter:📊 Computational Graph Execution
+FFN	feed_forward_nn.h	/^} FFN;$/;"	t	typeref:struct:__anond2dd829e0108
+FFN_H	feed_forward_nn.h	/^#define FFN_H$/;"	d
+Future Work	README.md	/^## Future Work$/;"	s	chapter:📊 Computational Graph Execution
+GEMMA	config.h	/^#define GEMMA /;"	d
+GLOBAL_TENSOR_ID	tensor.c	/^size_t GLOBAL_TENSOR_ID = 0;$/;"	v	typeref:typename:size_t
+GRAPH_VIZ_H	graph_viz.h	/^#define GRAPH_VIZ_H$/;"	d
+Graph	dag.c	/^} Graph;$/;"	t	typeref:struct:__anon0f477fc20108	file:
+GraphReport	tensor.h	/^} GraphReport;$/;"	t	typeref:struct:__anonf138f8960108
+HEADS	config.h	/^#define HEADS /;"	d
+HEAD_DIM	config.h	/^#define HEAD_DIM /;"	d
+HIDDEN_DIM	config.h	/^#define HIDDEN_DIM /;"	d
+Inspirational Implementations	README.md	/^### Inspirational Implementations$/;"	S	section:📊 Computational Graph Execution""References
+K	attention2.h	/^	Tensor *K;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:Tensor *
+K	t.h	/^	Tensor *K;$/;"	m	struct:__anon0b88a6af0108	typeref:typename:Tensor *
+LAYER_NORM_H	layer_norm.h	/^#define LAYER_NORM_H$/;"	d
+LEAF	tensor.h	/^	LEAF,$/;"	e	enum:__anonf138f8960203
+LOG	tensor.h	/^	LOG,$/;"	e	enum:__anonf138f8960203
+LOG	test.c	/^	LOG$/;"	e	enum:__anon1dda1bf60203	file:
+LR	config.h	/^#define LR /;"	d
+LayerNorm	layer_norm.h	/^} LayerNorm;$/;"	t	typeref:struct:__anon3463cb330108
+License	README.md	/^## License$/;"	s	chapter:📊 Computational Graph Execution
+MATMUL	tensor.h	/^	MATMUL,$/;"	e	enum:__anonf138f8960203
+MATMUL	test.c	/^	MATMUL,$/;"	e	enum:__anon1dda1bf60203	file:
+MAX	config.h	/^#define MAX(/;"	d
+MAX	dsa/longest_contiguous_array.c	/^#define MAX(/;"	d	file:
+MAX	dsa/main.c	/^#define MAX(/;"	d	file:
+MAX	dsa/max_subarray_sum.c	/^#define MAX(/;"	d	file:
+MAX	dsa/max_sum_array_with_size_k.c	/^#define MAX(/;"	d	file:
+MAX	dsa/prefix_sum_k_elements.c	/^#define MAX(/;"	d	file:
+MAX_NODES	config.h	/^#define MAX_NODES /;"	d
+MAX_NODES	tensor.c	/^#define MAX_NODES /;"	d	file:
+MAX_PARENTS	config.h	/^#define MAX_PARENTS /;"	d
+MAX_TENSORS	graph_viz.c	/^#define MAX_TENSORS /;"	d	file:
+MEAN	tensor.h	/^	MEAN,$/;"	e	enum:__anonf138f8960203
+MHA	attention2.h	/^} MHA;$/;"	t	typeref:struct:__anon7f6e16e30108
+MHA	t.h	/^} MHA;$/;"	t	typeref:struct:__anon0b88a6af0108
+MODEL_H	model.h	/^#define MODEL_H$/;"	d
+MSE	tensor.h	/^	MSE,$/;"	e	enum:__anonf138f8960203
+MUL	tensor.h	/^	MUL,$/;"	e	enum:__anonf138f8960203
+MUL	test.c	/^	MUL,$/;"	e	enum:__anon1dda1bf60203	file:
+Motivation	README.md	/^## Motivation$/;"	s	chapter:📊 Computational Graph Execution
+Node	dag.c	/^typedef struct Node {$/;"	s	file:
+Node	dag.c	/^} Node;$/;"	t	typeref:struct:Node	file:
+Node	dsa/ll.c	/^struct Node {$/;"	s	file:
+Op	tensor.h	/^typedef struct Op {$/;"	s
+Op	tensor.h	/^} Op;$/;"	t	typeref:struct:Op
+Op	test.c	/^typedef struct Op {$/;"	s	file:
+Op	test.c	/^} Op;$/;"	t	typeref:struct:Op	file:
+OpName	test.c	/^} OpName;$/;"	t	typeref:enum:__anon1dda1bf60203	file:
+OpType	tensor.h	/^} OpType;$/;"	t	typeref:enum:__anonf138f8960203
+Prerequisites	README.md	/^### Prerequisites$/;"	S	section:📊 Computational Graph Execution""🚀 Getting Started
+Q	attention2.h	/^	Tensor *Q;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:Tensor *
+Q	t.h	/^	Tensor *Q;$/;"	m	struct:__anon0b88a6af0108	typeref:typename:Tensor *
+RAND_FLOAT	config.h	/^#define RAND_FLOAT /;"	d
+RAND_FLOAT	model.c	/^#define RAND_FLOAT /;"	d	file:
+RAND_FLOAT	tensor.c	/^#define RAND_FLOAT /;"	d	file:
+RELU	tensor.h	/^	RELU,$/;"	e	enum:__anonf138f8960203
+RELU	test.c	/^	RELU,$/;"	e	enum:__anon1dda1bf60203	file:
+ROW_MAX	tensor.h	/^	ROW_MAX,$/;"	e	enum:__anonf138f8960203
+ROW_SUM	tensor.h	/^	ROW_SUM,$/;"	e	enum:__anonf138f8960203
+References	README.md	/^## References$/;"	s	chapter:📊 Computational Graph Execution
+Research Paper	README.md	/^### Research Paper$/;"	S	section:📊 Computational Graph Execution""References
+SCALER_DIV	tensor.h	/^	SCALER_DIV$/;"	e	enum:__anonf138f8960203
+SCALLED	tensor.h	/^	SCALLED,$/;"	e	enum:__anonf138f8960203
+SEQ_LEN	config.h	/^#define SEQ_LEN /;"	d
+SLICE	tensor.h	/^	SLICE,$/;"	e	enum:__anonf138f8960203
+SOFTMAX	tensor.h	/^	SOFTMAX,$/;"	e	enum:__anonf138f8960203
+SQRT	tensor.h	/^	SQRT,$/;"	e	enum:__anonf138f8960203
+SQUARE	tensor.h	/^	SQUARE,$/;"	e	enum:__anonf138f8960203
+SUB	tensor.h	/^	SUB,$/;"	e	enum:__anonf138f8960203
+SUB	test.c	/^	SUB,$/;"	e	enum:__anon1dda1bf60203	file:
+TENSOR_H	tensor.h	/^#define TENSOR_H$/;"	d
+TEST_H	t.h	/^#define TEST_H$/;"	d
+TRANSPOSE	tensor.h	/^	TRANSPOSE,$/;"	e	enum:__anonf138f8960203
+Tensor	graph_viz.h	/^typedef struct Tensor Tensor;$/;"	t	typeref:struct:Tensor
+Tensor	tensor.h	/^typedef struct Tensor Tensor;$/;"	t	typeref:struct:Tensor
+Tensor	tensor.h	/^typedef struct Tensor {$/;"	s
+Tensor	tensor.h	/^} Tensor;$/;"	t	typeref:struct:Tensor
+Tensor	test.c	/^typedef struct Tensor {$/;"	s	file:
+Tensor	test.c	/^} Tensor;$/;"	t	typeref:struct:Tensor	file:
+Training Loss Curve	README.md	/^# Training Loss Curve$/;"	c
+Transformer & Autograd Engine From Scratch in C	README.md	/^# Transformer & Autograd Engine From Scratch in C$/;"	c
+Transformer Architecture	README.md	/^## Transformer Architecture$/;"	s	chapter:📊 Computational Graph Execution
+Transformers Architecture	README.md	/^## Transformers Architecture$/;"	s	chapter:📊 Computational Graph Execution
+V	attention2.h	/^	Tensor *V;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:Tensor *
+V	t.h	/^	Tensor *V;$/;"	m	struct:__anon0b88a6af0108	typeref:typename:Tensor *
+Why C?	README.md	/^## Why C?$/;"	s	chapter:📊 Computational Graph Execution
+__anon0b88a6af0108	t.h	/^typedef struct {$/;"	s
+__anon0f477fc20108	dag.c	/^typedef struct {$/;"	s	file:
+__anon1dda1bf60203	test.c	/^typedef enum {$/;"	g	file:
+__anon3463cb330108	layer_norm.h	/^typedef struct {$/;"	s
+__anon7f6e16e30108	attention2.h	/^typedef struct {$/;"	s
+__anond2dd829e0108	feed_forward_nn.h	/^typedef struct {$/;"	s
+__anonf138f8960108	tensor.h	/^typedef struct {$/;"	s
+__anonf138f8960203	tensor.h	/^typedef enum {$/;"	g
+a1	feed_forward_nn.h	/^	Tensor *a1;$/;"	m	struct:__anond2dd829e0108	typeref:typename:Tensor *
+adj_list	dag.c	/^	Node **adj_list;$/;"	m	struct:__anon0f477fc20108	typeref:typename:Node **	file:
+arena_alloc	arena.c	/^void *arena_alloc(Arena *A, size_t size) {$/;"	f	typeref:typename:void *
+arena_init	arena.c	/^void arena_init(Arena *A, size_t size) {$/;"	f	typeref:typename:void
+arena_reset	arena.c	/^void arena_reset(Arena *A) {$/;"	f	typeref:typename:void
+backward	tensor.c	/^void backward(Arena *A, Tensor *loss, int max_nodes) {$/;"	f	typeref:typename:void
+backward	tensor.h	/^	void(*backward)(Arena *A, struct Tensor *self);$/;"	m	struct:Op	typeref:typename:void (*)(Arena * A,struct Tensor * self)
+backward	test.c	/^	void(*backward)(Arena *A, struct Tensor *self);$/;"	m	struct:Op	typeref:typename:void (*)(Arena * A,struct Tensor * self)	file:
+base	arena.h	/^	char *base;$/;"	m	struct:Arena	typeref:typename:char *
+beta	layer_norm.h	/^	Tensor *beta; \/\/ Learnable shift. shape: features OR emb_dim$/;"	m	struct:__anon3463cb330108	typeref:typename:Tensor *
+clip_gradient	tensor.c	/^void clip_gradient(Tensor *x) {$/;"	f	typeref:typename:void
+cols	tensor.h	/^	int cols;$/;"	m	struct:Tensor	typeref:typename:int
+corrupt_nodes	tensor.h	/^		int corrupt_nodes;$/;"	m	struct:__anonf138f8960108	typeref:typename:int
+create_linked_list	dsa/ll.c	/^void create_linked_list(int A[], int size) {$/;"	f	typeref:typename:void
+dK	attention2.h	/^	Tensor *dK;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:Tensor *
+dQ	attention2.h	/^	Tensor *dQ;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:Tensor *
+dV	attention2.h	/^	Tensor *dV;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:Tensor *
+d_beta	layer_norm.h	/^	Tensor *d_beta;$/;"	m	struct:__anon3463cb330108	typeref:typename:Tensor *
+d_gamma	layer_norm.h	/^	Tensor *d_gamma;$/;"	m	struct:__anon3463cb330108	typeref:typename:Tensor *
+da1	feed_forward_nn.h	/^	Tensor *da1;$/;"	m	struct:__anond2dd829e0108	typeref:typename:Tensor *
+data	dag.c	/^	int data;$/;"	m	struct:Node	typeref:typename:int	file:
+data	tensor.h	/^	float *data;$/;"	m	struct:Tensor	typeref:typename:float *
+data	test.c	/^	float *data;$/;"	m	struct:Tensor	typeref:typename:float *	file:
+df	plot.py	/^df = pd.read_csv("loss.csv")$/;"	v
+dfs	dag.c	/^void dfs(Node *node, bool *visited) {$/;"	f	typeref:typename:void
+dfs	tensor.c	/^void dfs(Arena *A, Tensor *root, bool *visited, Tensor **topo, int *size) {$/;"	f	typeref:typename:void
+dh1	feed_forward_nn.h	/^	Tensor *dh1;$/;"	m	struct:__anond2dd829e0108	typeref:typename:Tensor *
+display	dsa/ll.c	/^void display(struct Node *p) {$/;"	f	typeref:typename:void
+dk	attention2.h	/^	int dk;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:int
+dk	t.h	/^	int dk;$/;"	m	struct:__anon0b88a6af0108	typeref:typename:int
+dw1	feed_forward_nn.h	/^	Tensor *dw1;$/;"	m	struct:__anond2dd829e0108	typeref:typename:Tensor *
+dw2	feed_forward_nn.h	/^	Tensor *dw2;$/;"	m	struct:__anond2dd829e0108	typeref:typename:Tensor *
+dwk	attention2.h	/^	Tensor *dwk;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:Tensor *
+dwq	attention2.h	/^	Tensor *dwq;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:Tensor *
+dwv	attention2.h	/^	Tensor *dwv;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:Tensor *
+export_and_visualize_graph	graph_viz.c	/^void export_and_visualize_graph(Tensor *root,$/;"	f	typeref:typename:void
+features	layer_norm.h	/^	int features; \/\/ in out case it's d_model OR embedding dimension,$/;"	m	struct:__anon3463cb330108	typeref:typename:int
+ffn_backward	ffn.c	/^Tensor *ffn_backward(Arena *A, FFN *f, Tensor *x, Tensor *dout) {$/;"	f	typeref:typename:Tensor *
+ffn_create	ffn.c	/^FFN *ffn_create(Arena *A, int input_dim, int hidden_dim) {$/;"	f	typeref:typename:FFN *
+ffn_forward	ffn.c	/^Tensor *ffn_forward(Arena *A, Tensor *x, FFN *f) {$/;"	f	typeref:typename:Tensor *
+ffn_init_params	ffn.c	/^void ffn_init_params(FFN *F) {$/;"	f	typeref:typename:void
+first	dsa/ll.c	/^struct Node *first = NULL;$/;"	v	typeref:struct:Node *
+forward	ffn.c	/^Tensor *forward(Arena *A, Tensor *x) {$/;"	f	typeref:typename:Tensor *
+gamma	layer_norm.h	/^	Tensor *gamma; \/\/ Learnable sclae. shape: features OR emb_dim$/;"	m	struct:__anon3463cb330108	typeref:typename:Tensor *
+grad	tensor.h	/^	Tensor *grad;$/;"	m	struct:Tensor	typeref:typename:Tensor *
+grad	test.c	/^	Tensor *grad;$/;"	m	struct:Tensor	typeref:typename:Tensor *	file:
+graph_create	dag.c	/^Graph *graph_create(int nodes) {$/;"	f	typeref:typename:Graph *
+graph_edge	dag.c	/^void graph_edge(Graph *g, int A, int B) {$/;"	f	typeref:typename:void
+h1	feed_forward_nn.h	/^	Tensor *h1;$/;"	m	struct:__anond2dd829e0108	typeref:typename:Tensor *
+id	tensor.h	/^	int id;$/;"	m	struct:Tensor	typeref:typename:int
+id	test.c	/^	int id;$/;"	m	struct:Tensor	typeref:typename:int	file:
+inputs	feed_forward_nn.h	/^	Tensor *inputs;$/;"	m	struct:__anond2dd829e0108	typeref:typename:Tensor *
+is_exploding	tensor.c	/^bool is_exploding(Tensor *x) {$/;"	f	typeref:typename:bool
+is_valid_tensor	graph_viz.c	/^static bool is_valid_tensor(Tensor *t) {$/;"	f	typeref:typename:bool	file:
+layer_norm_create	ln.c	/^LayerNorm *layer_norm_create(int features) {$/;"	f	typeref:typename:LayerNorm *
+layer_norm_create_new	ln.c	/^LayerNorm *layer_norm_create_new(Arena *A, int features) {$/;"	f	typeref:typename:LayerNorm *
+layer_norm_forward	ln.c	/^Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {$/;"	f	typeref:typename:Tensor *
+layer_norm_init_params	ln.c	/^void layer_norm_init_params(LayerNorm *ln) {$/;"	f	typeref:typename:void
+ln	.ipynb_checkpoints/test-checkpoint.py	/^ln = nn.LayerNorm(10)$/;"	v
+ln	test.py	/^ln = nn.LayerNorm(10)$/;"	v
+loss	.ipynb_checkpoints/main-checkpoint.py	/^loss = y.sum()$/;"	v
+loss_value	tensor.c	/^float loss_value(Tensor *pred, Tensor *target) {$/;"	f	typeref:typename:float
+main	dag.c	/^int main() {$/;"	f	typeref:typename:int
+main	dsa/ll.c	/^int main() {$/;"	f	typeref:typename:int
+main	dsa/longest_contiguous_array.c	/^int main() {$/;"	f	typeref:typename:int
+main	dsa/main.c	/^int main() {$/;"	f	typeref:typename:int
+main	dsa/max_subarray_sum.c	/^int main() {$/;"	f	typeref:typename:int
+main	dsa/max_sum_array_with_size_k.c	/^int main() {$/;"	f	typeref:typename:int
+main	dsa/prefix_sum_k_elements.c	/^int main() {$/;"	f	typeref:typename:int
+main	dsa/t.c	/^int main() {$/;"	f	typeref:typename:int
+main	t.c	/^int main() {$/;"	f	typeref:typename:int
+main	tensor.c	/^int main() {$/;"	f	typeref:typename:int
+main	test.c	/^int main() {$/;"	f	typeref:typename:int
+max_element	tensor.c	/^float max_element(float *row, int cols) {$/;"	f	typeref:typename:float
+mean	ln.c	/^float mean(float *arr, int size) {$/;"	f	typeref:typename:float
+mha_backward	attn2.c	/^Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {$/;"	f	typeref:typename:Tensor *
+mha_backward_temp_weights	attn2.c	/^void mha_backward_temp_weights(Arena *AA, Tensor *dO, Tensor *A, Tensor *B, Tensor **dA, Tensor /;"	f	typeref:typename:void
+mha_create	attn2.c	/^MHA *mha_create(int num_heads, int seq_len, int emb_dim) {$/;"	f	typeref:typename:MHA *
+mha_create_new	attn2.c	/^MHA *mha_create_new(Arena *A, int num_heads, int seq_len, int emb_dim) {$/;"	f	typeref:typename:MHA *
+mha_forward	attn2.c	/^Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {$/;"	f	typeref:typename:Tensor *
+mha_init_params	attn2.c	/^void mha_init_params(MHA *m) {$/;"	f	typeref:typename:void
+missing_links	tensor.h	/^    int missing_links;$/;"	m	struct:__anonf138f8960108	typeref:typename:int
+name	tensor.h	/^	const char *name;$/;"	m	struct:Op	typeref:typename:const char *
+name	test.c	/^	const *char name;$/;"	m	struct:Op	typeref:typename:const * char	file:
+ndim	tensor.h	/^	int ndim;$/;"	m	struct:Tensor	typeref:typename:int
+ndim	test.c	/^	int ndim;$/;"	m	struct:Tensor	typeref:typename:int	file:
+next	dsa/ll.c	/^	struct Node *next;$/;"	m	struct:Node	typeref:struct:Node *	file:
+nextNode	dag.c	/^	struct Node *nextNode;$/;"	m	struct:Node	typeref:struct:Node *	file:
+nn	.ipynb_checkpoints/test-checkpoint.py	/^import torch.nn as nn $/;"	I	nameref:module:torch.nn
+nn	test.py	/^import torch.nn as nn $/;"	I	nameref:module:torch.nn
+node_create	dag.c	/^Node *node_create(int data) {$/;"	f	typeref:typename:Node *
+null_grad	tensor.h	/^    int null_grad;$/;"	m	struct:__anonf138f8960108	typeref:typename:int
+null_ops	tensor.h	/^    int null_ops;$/;"	m	struct:__anonf138f8960108	typeref:typename:int
+null_parents	tensor.h	/^    int null_parents;$/;"	m	struct:__anonf138f8960108	typeref:typename:int
+num_heads	attention2.h	/^	int num_heads;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:int
+num_heads	t.h	/^	int num_heads;$/;"	m	struct:__anon0b88a6af0108	typeref:typename:int
+num_nodes	dag.c	/^	int num_nodes;$/;"	m	struct:__anon0f477fc20108	typeref:typename:int	file:
+num_parents	tensor.h	/^	int num_parents;$/;"	m	struct:Tensor	typeref:typename:int
+num_parents	test.c	/^	int num_parents;$/;"	m	struct:Tensor	typeref:typename:int	file:
+offset	arena.h	/^	size_t offset;$/;"	m	struct:Arena	typeref:typename:size_t
+operations	tensor.h	/^	Op *operations; \/\/ Added name, and type as well!$/;"	m	struct:Tensor	typeref:typename:Op *
+operations	test.c	/^	Op *operations; \/\/ Added name, and type as well!$/;"	m	struct:Tensor	typeref:typename:Op *	file:
+out	attention2.h	/^	Tensor *out;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:Tensor *
+out	feed_forward_nn.h	/^	Tensor *out;$/;"	m	struct:__anond2dd829e0108	typeref:typename:Tensor *
+out	t.h	/^	Tensor *out;$/;"	m	struct:__anon0b88a6af0108	typeref:typename:Tensor *
+output	.ipynb_checkpoints/test-checkpoint.py	/^output = ln(x)$/;"	v
+output	test.py	/^output = ln(x)$/;"	v
+parents	tensor.h	/^	Tensor **parents;$/;"	m	struct:Tensor	typeref:typename:Tensor **
+parents	test.c	/^	Tensor **parents;$/;"	m	struct:Tensor	typeref:typename:Tensor **	file:
+pd	plot.py	/^import pandas as pd$/;"	I	nameref:module:pandas
+plt	plot.py	/^import matplotlib.pyplot as plt$/;"	I	nameref:module:matplotlib.pyplot
+relu	ffn.c	/^Tensor *relu(Tensor *x) {$/;"	f	typeref:typename:Tensor *
+requires_grad	tensor.h	/^	bool requires_grad;$/;"	m	struct:Tensor	typeref:typename:bool
+requires_grad	test.c	/^	bool requires_grad;$/;"	m	struct:Tensor	typeref:typename:bool	file:
+run_graph_validation	tensor.c	/^void run_graph_validation(Arena *A, Tensor *output, int max_nodes) {$/;"	f	typeref:typename:void
+save_inputs	feed_forward_nn.h	/^	bool save_inputs;$/;"	m	struct:__anond2dd829e0108	typeref:typename:bool
+scaled_dot_product_attention	attn2.c	/^Tensor *scaled_dot_product_attention(Arena *A, Tensor *Q, Tensor *K, Tensor *V, int dk) {$/;"	f	typeref:typename:Tensor *
+sgd_optimizer	ffn.c	/^void sgd_optimizer(Tensor *w, Tensor *dw, float lr) {$/;"	f	typeref:typename:void
+shape	tensor.h	/^	int *shape;$/;"	m	struct:Tensor	typeref:typename:int *
+shape	test.c	/^	int *shape;$/;"	m	struct:Tensor	typeref:typename:int *	file:
+size	arena.h	/^	size_t size;$/;"	m	struct:Arena	typeref:typename:size_t
+softmax_gradient	attn2.c	/^Tensor *softmax_gradient(Tensor *A, Tensor *dA) {$/;"	f	typeref:typename:Tensor *
+stride	tensor.h	/^	int *stride;$/;"	m	struct:Tensor	typeref:typename:int *
+stride	test.c	/^	int *stride;$/;"	m	struct:Tensor	typeref:typename:int *	file:
+tensor_accumulate	tensor.c	/^void tensor_accumulate(Tensor *x, Tensor *grad) {$/;"	f	typeref:typename:void
+tensor_add	tensor.c	/^Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b) {$/;"	f	typeref:typename:Tensor *
+tensor_add_backward	tensor.c	/^void tensor_add_backward(Arena *A, Tensor *currNode) {$/;"	f	typeref:typename:void
+tensor_add_inplace	tensor.c	/^void tensor_add_inplace(Tensor **a, Tensor **b) {$/;"	f	typeref:typename:void
+tensor_check	tensor.c	/^void tensor_check(char *name, Tensor *x) {$/;"	f	typeref:typename:void
+tensor_concat	tensor.c	/^Tensor *tensor_concat(Arena *A, Tensor **heads, int num_heads) {$/;"	f	typeref:typename:Tensor *
+tensor_concat_backward	tensor.c	/^void tensor_concat_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_create	tensor.c	/^Tensor *tensor_create(int ndim, int *shape) {$/;"	f	typeref:typename:Tensor *
+tensor_create_new	tensor.c	/^Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {$/;"	f	typeref:typename:Tensor *
+tensor_create_new	test.c	/^Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {$/;"	f	typeref:typename:Tensor *
+tensor_create_weights	tensor.c	/^Tensor *tensor_create_weights(int ndim, int *shape) {$/;"	f	typeref:typename:Tensor *
+tensor_create_weights_new	tensor.c	/^Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape) {$/;"	f	typeref:typename:Tensor *
+tensor_div	tensor.c	/^Tensor *tensor_div(Arena *A, Tensor *a, Tensor *b) {$/;"	f	typeref:typename:Tensor *
+tensor_equal	tensor.c	/^bool tensor_equal(Tensor *x, Tensor *y) {$/;"	f	typeref:typename:bool
+tensor_exp	tensor.c	/^Tensor *tensor_exp(Arena *A, Tensor *x) {$/;"	f	typeref:typename:Tensor *
+tensor_expand_cols	tensor.c	/^Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_cols) {$/;"	f	typeref:typename:Tensor *
+tensor_expand_cols_backward	tensor.c	/^void tensor_expand_cols_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_expand_rows	tensor.c	/^Tensor *tensor_expand_rows(Arena *A, Tensor *m, int out_rows) {$/;"	f	typeref:typename:Tensor *
+tensor_expand_rows_backward	tensor.c	/^void tensor_expand_rows_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_fill_like	tensor.c	/^Tensor *tensor_fill_like(Arena *A, Tensor *x, double eps) {$/;"	f	typeref:typename:Tensor *
+tensor_fill_ones	tensor.c	/^void tensor_fill_ones(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_fill_val	tensor.c	/^Tensor *tensor_fill_val(Arena *A, Tensor *x, int v) {$/;"	f	typeref:typename:Tensor *
+tensor_fill_zeros	tensor.c	/^void tensor_fill_zeros(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_get_2d	tensor.c	/^void tensor_get_2d(Tensor *t) {$/;"	f	typeref:typename:void
+tensor_matmul	tensor.c	/^Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {$/;"	f	typeref:typename:Tensor *
+tensor_matmul_backward	tensor.c	/^void tensor_matmul_backward(Arena *A, Tensor *currNode) {$/;"	f	typeref:typename:void
+tensor_mean	tensor.c	/^Tensor *tensor_mean(Arena *A, Tensor *a) {$/;"	f	typeref:typename:Tensor *
+tensor_mean_backward	tensor.c	/^void tensor_mean_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_metadata	tensor.c	/^void tensor_metadata(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_mse_backward	tensor.c	/^void tensor_mse_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_mse_loss	t.c	/^Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target) {$/;"	f	typeref:typename:Tensor *
+tensor_mse_loss	tensor.c	/^Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target) {$/;"	f	typeref:typename:Tensor *
+tensor_randomize	tensor.c	/^void tensor_randomize(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_randomize_weights	tensor.c	/^void tensor_randomize_weights(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_relu	tensor.c	/^Tensor *tensor_relu(Arena *A, Tensor *x) {$/;"	f	typeref:typename:Tensor *
+tensor_relu_backward	tensor.c	/^void tensor_relu_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_row_max	tensor.c	/^Tensor *tensor_row_max(Arena *A, Tensor *x) {$/;"	f	typeref:typename:Tensor *
+tensor_row_sum	tensor.c	/^Tensor *tensor_row_sum(Arena *A, Tensor *x) {$/;"	f	typeref:typename:Tensor *
+tensor_scaler_addition	tensor.c	/^Tensor *tensor_scaler_addition(Arena *A, Tensor *x, float val) {$/;"	f	typeref:typename:Tensor *
+tensor_scaler_div	tensor.c	/^Tensor *tensor_scaler_div(Arena *A, Tensor *x, float val) {$/;"	f	typeref:typename:Tensor *
+tensor_scaler_multiplication	tensor.c	/^Tensor *tensor_scaler_multiplication(Tensor *x, float val) {$/;"	f	typeref:typename:Tensor *
+tensor_scalling	tensor.c	/^Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b) {$/;"	f	typeref:typename:Tensor *
+tensor_scalling_backward	tensor.c	/^void tensor_scalling_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_shape_2d	tensor.c	/^void tensor_shape_2d(Tensor *t) {$/;"	f	typeref:typename:void
+tensor_size	tensor.c	/^int tensor_size(Tensor *t) {$/;"	f	typeref:typename:int
+tensor_slice_cols	tensor.c	/^Tensor *tensor_slice_cols(Arena *A, Tensor *x, int k, int dk) {$/;"	f	typeref:typename:Tensor *
+tensor_slice_cols_backward	tensor.c	/^void tensor_slice_cols_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_softmax	tensor.c	/^Tensor *tensor_softmax(Arena *A, Tensor *x) {$/;"	f	typeref:typename:Tensor *
+tensor_softmax_backward	tensor.c	/^void tensor_softmax_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_sqrt	tensor.c	/^Tensor *tensor_sqrt(Arena *A, Tensor *a) {$/;"	f	typeref:typename:Tensor *
+tensor_sqrt_backward	tensor.c	/^void tensor_sqrt_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_square	tensor.c	/^Tensor *tensor_square(Arena *A, Tensor *a, Tensor *b) {$/;"	f	typeref:typename:Tensor *
+tensor_square_backward	tensor.c	/^void tensor_square_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_stride_2d	tensor.c	/^void tensor_stride_2d(Tensor *t) {$/;"	f	typeref:typename:void
+tensor_subtract	tensor.c	/^Tensor *tensor_subtract(Arena *A, Tensor *a, Tensor *b) {$/;"	f	typeref:typename:Tensor *
+tensor_subtract_backward	tensor.c	/^void tensor_subtract_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_transpose	tensor.c	/^Tensor *tensor_transpose(Arena *A, Tensor *a) {$/;"	f	typeref:typename:Tensor *
+tensor_transpose_backward	tensor.c	/^void tensor_transpose_backward(Tensor *x) {$/;"	f	typeref:typename:void
+traverse_graph	tensor.c	/^void traverse_graph(Tensor *root, bool *visited) {$/;"	f	typeref:typename:void
+type	tensor.h	/^	OpType type;$/;"	m	struct:Op	typeref:typename:OpType
+type	test.c	/^	OpType type;$/;"	m	struct:Op	typeref:typename:OpType	file:
+validate_tensor_graph	tensor.c	/^void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *rep, int max_tens/;"	f	typeref:typename:void
+var	layer_norm.h	/^	Tensor *var; \/\/ cached per row variance$/;"	m	struct:__anon3463cb330108	typeref:typename:Tensor *
+visited	graph_viz.c	/^static bool visited[MAX_TENSORS];$/;"	v	typeref:typename:bool[]	file:
+visited_nodes	tensor.h	/^    int visited_nodes;$/;"	m	struct:__anonf138f8960108	typeref:typename:int
+vislist	tensor.c	/^bool *vislist() {$/;"	f	typeref:typename:bool *
+w1	feed_forward_nn.h	/^	Tensor *w1;$/;"	m	struct:__anond2dd829e0108	typeref:typename:Tensor *
+w2	feed_forward_nn.h	/^	Tensor *w2;$/;"	m	struct:__anond2dd829e0108	typeref:typename:Tensor *
+wk	attention2.h	/^	Tensor *wk;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:Tensor *
+wk	t.h	/^	Tensor *wk;$/;"	m	struct:__anon0b88a6af0108	typeref:typename:Tensor *
+wo	attention2.h	/^	Tensor *wo;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:Tensor *
+wo	t.h	/^	Tensor *wo;$/;"	m	struct:__anon0b88a6af0108	typeref:typename:Tensor *
+wq	attention2.h	/^	Tensor *wq;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:Tensor *
+wq	t.h	/^	Tensor *wq;$/;"	m	struct:__anon0b88a6af0108	typeref:typename:Tensor *
+wv	attention2.h	/^	Tensor *wv;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:Tensor *
+wv	t.h	/^	Tensor *wv;$/;"	m	struct:__anon0b88a6af0108	typeref:typename:Tensor *
+x	.ipynb_checkpoints/main-checkpoint.py	/^x = torch.randn((5,5), requires_grad = True)$/;"	v
+x	.ipynb_checkpoints/test-checkpoint.py	/^x = torch.randn(10,5,10)$/;"	v
+x	dsa/ll.c	/^	int x;$/;"	m	struct:Node	typeref:typename:int	file:
+x	test.py	/^x = torch.randn(10,5,10)$/;"	v
+x_hat	layer_norm.h	/^	Tensor *x_hat; \/\/ Normalized(x)$/;"	m	struct:__anon3463cb330108	typeref:typename:Tensor *
+y	.ipynb_checkpoints/main-checkpoint.py	/^y = 2 * x + 5$/;"	v
+🏗️ Core Architecture & File Layout	README.md	/^## 🏗️ Core Architecture & File Layout$/;"	s	chapter:📊 Computational Graph Execution
+📊 Computational Graph Execution	README.md	/^# 📊 Computational Graph Execution$/;"	c
+🚀 Getting Started	README.md	/^## 🚀 Getting Started$/;"	s	chapter:📊 Computational Graph Execution
+🛠️ Current Development Focus: C-Native Autograd	README.md	/^## 🛠️ Current Development Focus: C-Native Autograd$/;"	s	chapter:📊 Computational Graph Execution
