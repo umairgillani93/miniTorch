@@ -111,16 +111,17 @@ int main() {
 			tensor_check("ln2_forward", ln2);
 			//tensor_shape(ln2);
 
-			Tensor *loss = tensor_mse_loss(A, ffn_ln, target_batch);
-			float loss_to_show = loss_value(ffn_ln, target_batch);
+			Tensor *loss = tensor_mse_loss(A, ln2, target_batch);
+			tensor_metadata(loss);
+			tensor_get_2d(loss);
+			//float loss_to_show = loss_value(ffn_ln, target_batch);
 			
 			// Printing the Graph ...
 			//bool *visited  = vislist();
-			//export_and_visualize_graph(ffn_out, "graph_ffn.dot", "graph_ffn.png");
+			//export_and_visualize_graph(ln2, "graph_final.dot", "graph_final.png");
 
-			printf("Loss: %f\n", loss_to_show);
-			run_graph_validation(A, loss, MAX_NODES);
-			exit(1);
+			//run_graph_validation(A, loss, MAX_NODES);
+			//printf("loss: %f\n", loss_to_show);
 
 
 			///Tensor *dx_for_ffn = tensor_create_new(A, 2, shape_local);

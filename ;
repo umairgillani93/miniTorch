@@ -39,10 +39,9 @@ int main() {
 	Tensor *y = tensor_create_new(A, ndim, shape);
 	tensor_randomize(y);
 
-	Tensor *z = tensor_mse_loss(A, ln, x);
+	Tensor *z = tensor_mse_loss(A, x, y);
 	//tensor_get_2d(z);
 	//tensor_shape_2d(z);;
 	tensor_metadata(z);
-	return 0;
 
 }
