@@ -43,9 +43,12 @@ void backward(Arena *A, Tensor *x) {
 		return;
 	}
 
+	int p = x->num_parents;
 	x->operations->backward(A, x);
-	//tensor_get_2d(x->parents[0]->grad);
-	//printf("[OK]\n");
+	for (int i = 0; i < p; i++) {
+		x->operations->backward(A, x->parents[i]);
+	}
+	
 }
 
 // Backpropagation Intuition:
@@ -1902,8 +1905,37 @@ void tensor_expand_cols_backward(Tensor *out, Tensor *prev_grad) {
 //	printf("[Success] Gradient for <TENSOR_EXPAND_COLS_BACKWARD> saved!\n");
 //}
 
-void tensor_mean_backward(Tensor *x) {
-	// will implement later. IA
+void tensor_mean_backward(Arena *A, Tensor *o) {
+
+	if (!o || !o->parents) {
+		fprintf(stderr, "[Error] <tensor_mean_backward> Input Parents not found..!\n");
+		return;
+	}
+	
+	// since this is a rows wise mean 
+	// i.e sum(row) / cols
+	// y[ith_row] = sum(row) / cols;
+	// y'[ith_row] += 1/cols * o->grad;
+
+	Tensor *p = o->parents[0];
+	int p_rows = p->shape[0];
+	int p_cols = p->shape[1];
+
+	int o_rows = o->shape[0];
+	int o_cols = o->shape[1];
+
+	for (int r = 0; r < o_rows; r++) {
+    float grad = o->grad->data[r];
+    float scale = 1.0f / o_cols;
+
+    for (int c = 0; c < o_cols; c++) {
+        p->grad->data[r * o_cols + c] += grad * scale;
+    }
+	}
+
+
+	tensor_get_2d(p->grad);
+	printf("[OK] <tensor_mean_backward> done!\n");
 }
 
 //void tensor_matmul_backward(Arena *A, Tensor *x, Tensor *y, Tensor *grad_prev) {
@@ -2138,8 +2170,6 @@ int main() {
 
 	Tensor *loss = tensor_f(A, expanded);
 	loss->grad->data[0] = 1.0f; // set the loss->grad manually for entry point
-	tensor_metadata(loss);
-	//tensor_expand_cols_backward(expanded, loss->grad);	
 
 	backward(A, loss);
 	
