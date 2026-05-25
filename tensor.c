@@ -21,43 +21,32 @@
 size_t GLOBAL_TENSOR_ID = 0;
 
 
-//void backward_fn(Arena *A, Tensor *x) {
-//	/*
-//	 * The way this should work is 
-//	 * first it takes a Tensor pointer *x
-//	 * then it sees whether it has operations or not
-//	 * if (x->operations) 
-//	 * if it has operation that means it's created throught some tensor operation, involving some parents 
-//	 * and we want to apply backward function traversing all the parents
-//	 * and this backward function has some notion of definition available
-//	 * 
-//	 */ 
-//
-//	if (!x->operations) {
-//		printf("x->opearations is NULL. Exiting..\n");
-//		return;
-//	}
-//
-//	if (!x->parents) {
-//		printf("x->parents is NULL. Exiting..\n");
-//		return;
-//	}
-//
-//	backward_fn(x->operations->backward(A, x));
-//
-//	if (p == 0) {
-//	 printf("[Error<backward>]  x->parents are 0. Please fix!\n");
-//	 return;
-//	}
-//
-//	x->operations->backward(A, x);
-//
-//	for (int i = 0; i < p; i++) {
-//	 if (x->parents[i]) {
-//		backward(A, x->parents[i]);
-//	 }
-//	}
-//}
+void backward(Arena *A, Tensor *x) {
+	/*
+	 * The way this should work is 
+	 * first it takes a Tensor pointer *x
+	 * then it sees whether it has operations or not
+	 * if (x->operations) 
+	 * if it has operation that means it's created throught some tensor operation, involving some parents 
+	 * and we want to apply backward function traversing all the parents
+	 * and this backward function has some notion of definition available
+	 * 
+	 */ 
+
+	if (!x || !x->operations) {
+		printf("x->opearations is NULL. Exiting..\n");
+		return;
+	}
+
+	if (!x->parents) {
+		printf("x->parents is NULL. Exiting..\n");
+		return;
+	}
+
+	x->operations->backward(A, x);
+	//tensor_get_2d(x->parents[0]->grad);
+	//printf("[OK]\n");
+}
 
 // Backpropagation Intuition:
  	// so can we say like
@@ -382,8 +371,8 @@ void tensor_metadata(Tensor *x) {
 
 	if (x->operations != NULL) {
 		printf("Created by: %s\n", x->operations->name);
-		printf("Backward Function: %d\n", x->operations->type);
-		//printf("Back Pointer: %p\n", x->operations->backward);
+		printf("Backward Function Type: %d\n", x->operations->type);
+		printf("Backward Function Pointer: %p\n", x->operations->backward);
 		printf("Num Parents: %d\n", x->num_parents);
 	}
 
@@ -1260,7 +1249,7 @@ Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape) {
 	return t;
 }
 
-Tensor *f(Arena *A, Tensor *x) {
+Tensor *tensor_f(Arena *A, Tensor *x) {
 	// sums all the elements of Tensor 'x' and returns 
 	// scaler Tensor of shape (1,1)
 	
@@ -1790,16 +1779,19 @@ Tensor *tensor_div(Arena *A, Tensor *a, Tensor *b) {
 // back methods
 
 
-void f_backward(Tensor *o) {
+void f_backward(Arena *A, Tensor *o) {
 	// Takes the foward output and computes it's parent gradient
 	
+	//printf("backward function pointer: %p\n", o->operations->backward);
+	//printf("o parents: %d\n", o->num_parents);
 	if (!o || !o->parents) {
-		fprintf(stderr, "Input Parents not found..!\n");
+		fprintf(stderr, "[Error] Input Parents not found..!\n");
 		return;
 	}
 
 	Tensor *p = o->parents[0];
 	float v = o->grad->data[0];
+	
 
 	int p_rows = p->shape[0];
 	int p_cols = p->shape[1];
@@ -1809,6 +1801,8 @@ void f_backward(Tensor *o) {
 			p->grad->data[r * p_cols + c] = v;
 		}
 	}
+	tensor_get_2d(p->grad);
+	printf("[OK] <f_backward> done!\n");
 }
 
 void tensor_sqrt_backward(Tensor *x) {
@@ -2142,16 +2136,12 @@ int main() {
 	int cols = x->shape[1];
 	Tensor *expanded = tensor_expand_cols(A, mean, cols);
 
-	Tensor *loss = f(A, expanded);
-	tensor_shape_2d(loss);
-	tensor_get_2d(loss);
+	Tensor *loss = tensor_f(A, expanded);
+	loss->grad->data[0] = 1.0f; // set the loss->grad manually for entry point
+	tensor_metadata(loss);
 	//tensor_expand_cols_backward(expanded, loss->grad);	
 
-
-	backward();
+	backward(A, loss);
 	
-
-	printf("worked: \n");
-
 	return 0;
 }

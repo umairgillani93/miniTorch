@@ -36,6 +36,7 @@ EXP	test.c	/^	EXP,$/;"	e	enum:__anon1dda1bf60203	file:
 EXPAND_COLS	tensor.h	/^	EXPAND_COLS,$/;"	e	enum:__anonf138f8960203
 EXPAND_ROWS	tensor.h	/^	EXPAND_ROWS,$/;"	e	enum:__anonf138f8960203
 Educational Purpose	README.md	/^## Educational Purpose$/;"	s	chapter:📊 Computational Graph Execution
+F	tensor.h	/^	F,$/;"	e	enum:__anonf138f8960203
 FFN	feed_forward_nn.h	/^} FFN;$/;"	t	typeref:struct:__anond2dd829e0108
 FFN_H	feed_forward_nn.h	/^#define FFN_H$/;"	d
 Future Work	README.md	/^## Future Work$/;"	s	chapter:📊 Computational Graph Execution
@@ -136,7 +137,7 @@ adj_list	dag.c	/^	Node **adj_list;$/;"	m	struct:__anon0f477fc20108	typeref:typen
 arena_alloc	arena.c	/^void *arena_alloc(Arena *A, size_t size) {$/;"	f	typeref:typename:void *
 arena_init	arena.c	/^void arena_init(Arena *A, size_t size) {$/;"	f	typeref:typename:void
 arena_reset	arena.c	/^void arena_reset(Arena *A) {$/;"	f	typeref:typename:void
-backward	tensor.c	/^void backward(Arena *A, Tensor *loss, int max_nodes) {$/;"	f	typeref:typename:void
+backward	tensor.c	/^void backward(Arena *A, Tensor *x) {$/;"	f	typeref:typename:void
 backward	tensor.h	/^	void(*backward)(Arena *A, struct Tensor *self);$/;"	m	struct:Op	typeref:typename:void (*)(Arena * A,struct Tensor * self)
 backward	test.c	/^	void(*backward)(Arena *A, struct Tensor *self);$/;"	m	struct:Op	typeref:typename:void (*)(Arena * A,struct Tensor * self)	file:
 base	arena.h	/^	char *base;$/;"	m	struct:Arena	typeref:typename:char *
@@ -167,6 +168,7 @@ dwk	attention2.h	/^	Tensor *dwk;$/;"	m	struct:__anon7f6e16e30108	typeref:typenam
 dwq	attention2.h	/^	Tensor *dwq;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:Tensor *
 dwv	attention2.h	/^	Tensor *dwv;$/;"	m	struct:__anon7f6e16e30108	typeref:typename:Tensor *
 export_and_visualize_graph	graph_viz.c	/^void export_and_visualize_graph(Tensor *root,$/;"	f	typeref:typename:void
+f_backward	tensor.c	/^void f_backward(Tensor *o) {$/;"	f	typeref:typename:void
 features	layer_norm.h	/^	int features; \/\/ in out case it's d_model OR embedding dimension,$/;"	m	struct:__anon3463cb330108	typeref:typename:int
 ffn_backward	ffn.c	/^Tensor *ffn_backward(Arena *A, FFN *f, Tensor *x, Tensor *dout) {$/;"	f	typeref:typename:Tensor *
 ffn_create	ffn.c	/^FFN *ffn_create(Arena *A, int input_dim, int hidden_dim) {$/;"	f	typeref:typename:FFN *
@@ -184,6 +186,7 @@ id	tensor.h	/^	int id;$/;"	m	struct:Tensor	typeref:typename:int
 id	test.c	/^	int id;$/;"	m	struct:Tensor	typeref:typename:int	file:
 inputs	feed_forward_nn.h	/^	Tensor *inputs;$/;"	m	struct:__anond2dd829e0108	typeref:typename:Tensor *
 is_exploding	tensor.c	/^bool is_exploding(Tensor *x) {$/;"	f	typeref:typename:bool
+is_leaf	tensor.h	/^	bool is_leaf;	$/;"	m	struct:Tensor	typeref:typename:bool
 is_valid_tensor	graph_viz.c	/^static bool is_valid_tensor(Tensor *t) {$/;"	f	typeref:typename:bool	file:
 layer_norm_create	ln.c	/^LayerNorm *layer_norm_create(int features) {$/;"	f	typeref:typename:LayerNorm *
 layer_norm_create_new	ln.c	/^LayerNorm *layer_norm_create_new(Arena *A, int features) {$/;"	f	typeref:typename:LayerNorm *
@@ -271,12 +274,14 @@ tensor_div	tensor.c	/^Tensor *tensor_div(Arena *A, Tensor *a, Tensor *b) {$/;"	f
 tensor_equal	tensor.c	/^bool tensor_equal(Tensor *x, Tensor *y) {$/;"	f	typeref:typename:bool
 tensor_exp	tensor.c	/^Tensor *tensor_exp(Arena *A, Tensor *x) {$/;"	f	typeref:typename:Tensor *
 tensor_expand_cols	tensor.c	/^Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_cols) {$/;"	f	typeref:typename:Tensor *
-tensor_expand_cols_backward	tensor.c	/^void tensor_expand_cols_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_expand_cols_backward	tensor.c	/^void tensor_expand_cols_backward(Tensor *out, Tensor *prev_grad) {$/;"	f	typeref:typename:void
 tensor_expand_rows	tensor.c	/^Tensor *tensor_expand_rows(Arena *A, Tensor *m, int out_rows) {$/;"	f	typeref:typename:Tensor *
 tensor_expand_rows_backward	tensor.c	/^void tensor_expand_rows_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_f	tensor.c	/^Tensor *tensor_f(Arena *A, Tensor *x) {$/;"	f	typeref:typename:Tensor *
 tensor_fill_like	tensor.c	/^Tensor *tensor_fill_like(Arena *A, Tensor *x, double eps) {$/;"	f	typeref:typename:Tensor *
 tensor_fill_ones	tensor.c	/^void tensor_fill_ones(Tensor *x) {$/;"	f	typeref:typename:void
 tensor_fill_val	tensor.c	/^Tensor *tensor_fill_val(Arena *A, Tensor *x, int v) {$/;"	f	typeref:typename:Tensor *
+tensor_fill_with	tensor.c	/^void tensor_fill_with(Tensor *x, float v) {$/;"	f	typeref:typename:void
 tensor_fill_zeros	tensor.c	/^void tensor_fill_zeros(Tensor *x) {$/;"	f	typeref:typename:void
 tensor_get_2d	tensor.c	/^void tensor_get_2d(Tensor *t) {$/;"	f	typeref:typename:void
 tensor_matmul	tensor.c	/^Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {$/;"	f	typeref:typename:Tensor *
