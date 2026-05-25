@@ -21,30 +21,43 @@
 size_t GLOBAL_TENSOR_ID = 0;
 
 
-void backward(Tensor *x) {
-	if (!x->operations) {
-		printf("x->opearations is NULL. Exiting..\n");
-		return;
-	}
-
-	if (!x->parents) {
-		printf("x->parents is NULL. Exiting..\n");
-		return;
-	}
-
-	if (p == 0) {
-	 printf("[Error<backward>]  x->parents are 0. Please fix!\n");
-	 return;
-	}
-
-	x->operations->backward(A, x);
-
-	for (int i = 0; i < p; i++) {
-	 if (x->parents[i]) {
-		backward(A, x->parents[i]);
-	 }
-	}
-}
+//void backward_fn(Arena *A, Tensor *x) {
+//	/*
+//	 * The way this should work is 
+//	 * first it takes a Tensor pointer *x
+//	 * then it sees whether it has operations or not
+//	 * if (x->operations) 
+//	 * if it has operation that means it's created throught some tensor operation, involving some parents 
+//	 * and we want to apply backward function traversing all the parents
+//	 * and this backward function has some notion of definition available
+//	 * 
+//	 */ 
+//
+//	if (!x->operations) {
+//		printf("x->opearations is NULL. Exiting..\n");
+//		return;
+//	}
+//
+//	if (!x->parents) {
+//		printf("x->parents is NULL. Exiting..\n");
+//		return;
+//	}
+//
+//	backward_fn(x->operations->backward(A, x));
+//
+//	if (p == 0) {
+//	 printf("[Error<backward>]  x->parents are 0. Please fix!\n");
+//	 return;
+//	}
+//
+//	x->operations->backward(A, x);
+//
+//	for (int i = 0; i < p; i++) {
+//	 if (x->parents[i]) {
+//		backward(A, x->parents[i]);
+//	 }
+//	}
+//}
 
 // Backpropagation Intuition:
  	// so can we say like
@@ -501,8 +514,9 @@ void tensor_fill_zeros(Tensor *x) {
 }
 
 void tensor_fill_with(Tensor *x, float v) {
+	tensor_shape_2d(x->grad);
 	if (!x || !x->grad) {
-		fprintf(stderr, "x/x->grad is NULL\n");
+		fprintf(stderr, "x OR x->grad is NULL\n");
 		return;
 	}
 	int size = tensor_size(x);
@@ -1246,6 +1260,44 @@ Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape) {
 	return t;
 }
 
+Tensor *f(Arena *A, Tensor *x) {
+	// sums all the elements of Tensor 'x' and returns 
+	// scaler Tensor of shape (1,1)
+	
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+	int ndim = 2;
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = 1;
+	out_shape[1] = 1;
+
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+	
+	float sum = 0.0f;
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			sum += x->data[r * cols + c];
+		}
+	}
+	out->data[0] = sum;
+
+	if (x->requires_grad) {
+		out->requires_grad = true;
+		out->is_leaf = false; // not leaf anymore
+		out->num_parents = 1;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		out->parents[0] = x;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->backward = f_backward;
+		op->type = F;
+		op->name = "OP_F";
+		out->operations = op;
+
+		out->grad = tensor_create_new(A, ndim, out_shape);
+	}
+	return out;
+}
+
 Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 	// let's say bot tensors are off same shape
 	assert(a->shape[1] == b->shape[0]);
@@ -1737,6 +1789,28 @@ Tensor *tensor_div(Arena *A, Tensor *a, Tensor *b) {
 
 // back methods
 
+
+void f_backward(Tensor *o) {
+	// Takes the foward output and computes it's parent gradient
+	
+	if (!o || !o->parents) {
+		fprintf(stderr, "Input Parents not found..!\n");
+		return;
+	}
+
+	Tensor *p = o->parents[0];
+	float v = o->grad->data[0];
+
+	int p_rows = p->shape[0];
+	int p_cols = p->shape[1];
+
+	for (int r = 0; r < p_rows; r++) {
+		for (int c = 0; c < p_cols; c++) {
+			p->grad->data[r * p_cols + c] = v;
+		}
+	}
+}
+
 void tensor_sqrt_backward(Tensor *x) {
 	// Will be implemented later IA
 }
@@ -1753,30 +1827,38 @@ void tensor_square_backward(Tensor *x) {
 
 }
 
-void tensor_expand_cols_backward(Tensor *out, Tensor *loss) {
+void tensor_expand_cols_backward(Tensor *out, Tensor *prev_grad) {
 	// out is the forward pass output, we'll be updating out->grad here
 	// loss is the previous tensor
-	
-	if (!loss) {
-		printf("Loss is NULL! \n");
+	//
+
+	if (!prev_grad) {
+		printf("prev_grad is NULL! \n");
 		return;
 	}
-
-	if (!loss->grad) {
-		printf("Loss->grad is NULL! \n");
-		return;
-	}
-
-	float val = loss->grad->data[0]; // we know that it's only a single value in loss scaler tensor
 
 	if (!out || !out->grad) {
-		fprintf(stderr, "Out / Out->grad is Null!\n");
+		fprintf(stderr, "Out OR Out->grad is Null!\n");
+		return;
+	}
+	
+	int prev_grad_size = tensor_size(prev_grad);
+	
+	if(prev_grad_size == 1) {
+		float val = prev_grad->data[0];
+		tensor_fill_with(out->grad, val);
+		printf("[Ok] <tensor_expand_cols_backward> done, with prev_grad size: %d\n", prev_grad_size);
 		return;
 	}
 
-	tensor_fill_with(out, val);
-	printf("[OK] <tensor_expand_cols_backward> done!\n");
+	else {
+		assert((out->shape[0] == prev_grad->shape[0]) && (out->shape[1] == prev_grad->shape[1]));
+		float val = prev_grad->data[0];
+		tensor_fill_with(out->grad, val);
+		printf("[Ok] <tensor_expand_cols_backward> done, with prev_grad size: %d\n", prev_grad_size);
 
+		return;
+	}
 }
 
 //void tensor_expand_cols_backward(Tensor *x) {
@@ -2059,54 +2141,15 @@ int main() {
 	Tensor *mean = tensor_mean(A, x);
 	int cols = x->shape[1];
 	Tensor *expanded = tensor_expand_cols(A, mean, cols);
-	//tensor_get_2d(expanded);
 
-	int *s_shape = arena_alloc(A, 2 * sizeof(int));
-	s_shape[0] = 1;
-	s_shape[1] = 1;
-	
-	Tensor *loss = tensor_create_new(A, 2, s_shape);
-
-	float sum = 0.0f;
-
-	for (int r = 0; r < expanded->shape[0]; r++) {
-		for (int c = 0; c < expanded->shape[1]; c++) {
-			sum += expanded->data[r * expanded->shape[1] + c];
-		}
-	}
-
-	// loss created
-	loss->data = &sum;
-	loss->grad = tensor_create_new(A, 2, s_shape);
-	float val = 1.0f;
-	// dL/L = 1
-	loss->grad->data = &val;
-
+	Tensor *loss = f(A, expanded);
+	tensor_shape_2d(loss);
 	tensor_get_2d(loss);
-	tensor_get_2d(loss->grad);
-
-	/*
-	 * dL/L = 1
-	 * y = f(x) -> sum(i = 0; n);
-	 * dL/dy = dL/dy[x[i]] -> 1 so we will have expanded_cols_grad = tensor of 1s
-	 */
-
-	if (!expanded->grad) {
-		fprintf(stderr, "Gradient Not found! <tensor_expanded_cols>\n");
-		return 1;
-	}
-
-	tensor_fill_ones(expanded->grad);
-	//tensor_get_2d(expanded->grad);
+	//tensor_expand_cols_backward(expanded, loss->grad);	
 
 
-
-	tensor_expand_cols_backward(expanded, loss);	
-
-	tensor_metadata(expanded);
-	printf("expanded parents: %d\n", expanded->num_parents);
-
-	//backward(expanded);
+	backward();
+	
 
 	printf("worked: \n");
 
