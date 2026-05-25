@@ -21,6 +21,31 @@
 size_t GLOBAL_TENSOR_ID = 0;
 
 
+void backward(Tensor *x) {
+	if (!x->operations) {
+		printf("x->opearations is NULL. Exiting..\n");
+		return;
+	}
+
+	if (!x->parents) {
+		printf("x->parents is NULL. Exiting..\n");
+		return;
+	}
+
+	if (p == 0) {
+	 printf("[Error<backward>]  x->parents are 0. Please fix!\n");
+	 return;
+	}
+
+	x->operations->backward(A, x);
+
+	for (int i = 0; i < p; i++) {
+	 if (x->parents[i]) {
+		backward(A, x->parents[i]);
+	 }
+	}
+}
+
 // Backpropagation Intuition:
  	// so can we say like
 	// if we have x @ y = z
@@ -33,7 +58,7 @@ size_t GLOBAL_TENSOR_ID = 0;
 	// dL/dy = dL/dc * dc/dz * dz/dy => grad_z * dz/dy
 	//
 	//
-	//
+
 
 // Some backward functions
 // We want to take local gradiens depending upons the operations for this backward funntion (PyTorch style)
@@ -299,37 +324,37 @@ void dfs(Arena *A, Tensor *root, bool *visited, Tensor **topo, int *size) {
 }
 
 
-void backward(Arena *A, Tensor *loss, int max_nodes) {
-	bool visited[MAX_NODES] = {0};
-	Tensor *topo[MAX_NODES];
-	int size = 0;
-
-	dfs(A, loss, visited, topo, &size);
-
-	// backward pass
-	for (int i = size - 1; i > 0; i--) {
-		Tensor *node = topo[i];
-		printf("got the Node from topo list: \n");
-		tensor_metadata(node);
-
-		//if (node->operations) {
-		//	int type = node->operations-type;
-		//	printf("Operation Type: %d\n", type);
-		//	switch (type) {
-		//		case ADD:
-		//				printf("Type :%d\n", type);
-		//				tensor_add_backward(A, node);
-		//				break;
-
-		//		case MATMUL:
-		//				printf("Type :%d\n", type);
-		//				tensor_matmul_backward(A, node);
-		//				break;
-		//	}
-		//}
-	}
-}
-
+//void backward(arena *a, tensor *loss, int max_nodes) {
+//	bool visited[MAX_NODES] = {0};
+//	Tensor *topo[MAX_NODES];
+//	int size = 0;
+//
+//	dfs(A, loss, visited, topo, &size);
+//
+//	// backward pass
+//	for (int i = size - 1; i > 0; i--) {
+//		Tensor *node = topo[i];
+//		printf("got the Node from topo list: \n");
+//		tensor_metadata(node);
+//
+//		//if (node->operations) {
+//		//	int type = node->operations-type;
+//		//	printf("Operation Type: %d\n", type);
+//		//	switch (type) {
+//		//		case ADD:
+//		//				printf("Type :%d\n", type);
+//		//				tensor_add_backward(A, node);
+//		//				break;
+//
+//		//		case MATMUL:
+//		//				printf("Type :%d\n", type);
+//		//				tensor_matmul_backward(A, node);
+//		//				break;
+//		//	}
+//		//}
+//	}
+//}
+//
 
 void tensor_metadata(Tensor *x) {
 	// prints tensor shape
@@ -1752,7 +1777,6 @@ void tensor_expand_cols_backward(Tensor *out, Tensor *loss) {
 	tensor_fill_with(out, val);
 	printf("[OK] <tensor_expand_cols_backward> done!\n");
 
-	tensor_get_2d(out->grad);
 }
 
 //void tensor_expand_cols_backward(Tensor *x) {
@@ -2076,7 +2100,13 @@ int main() {
 	//tensor_get_2d(expanded->grad);
 
 
+
 	tensor_expand_cols_backward(expanded, loss);	
+
+	tensor_metadata(expanded);
+	printf("expanded parents: %d\n", expanded->num_parents);
+
+	//backward(expanded);
 
 	printf("worked: \n");
 

@@ -81,7 +81,7 @@ void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *r
 void run_graph_validation(Arena *A, Tensor *o, int max_nodes);
 void traverse_graph(Tensor *root, bool *visited);
 void tensor_metadata(Tensor *x);
-void backward(Arena *A, Tensor *loss, int MAX_NODES);
+void backward(Tensor *out);
 void dfs(Arena *A, Tensor *root, bool *visited, Tensor **topo, int *size);
 Tensor *tensor_scaler_div(Arena *A, Tensor *x, float val);
 Tensor *tensor_slice_cols(Arena *A, Tensor *a, int num_heads, int dk);
