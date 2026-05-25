@@ -60,6 +60,7 @@ typedef struct Tensor {
 	float *data;
 	
 	// New parameters
+	bool is_leaf;	
 	Tensor *grad;
 	bool requires_grad;
 	Op *operations; // Added name, and type as well!
