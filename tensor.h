@@ -82,7 +82,7 @@ void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *r
 void run_graph_validation(Arena *A, Tensor *o, int max_nodes);
 void traverse_graph(Tensor *root, bool *visited);
 void tensor_metadata(Tensor *x);
-void backward(Arena *A, Tensor *out);
+void backward(Arena *A, Tensor *out, bool *visited);
 void f_backward(Arena *A, Tensor *out);
 void dfs(Arena *A, Tensor *root, bool *visited, Tensor **topo, int *size);
 Tensor *tensor_f(Arena *A, Tensor *x);
@@ -143,7 +143,7 @@ void tensor_add_backward(Arena *A, Tensor *x);
 void tensor_square_backward(Tensor *x);
 void tensor_sqrt_backward(Tensor *x);
 void tensor_mse_backward(Tensor *x);
-void tensor_expand_cols_backward(Tensor *out, Tensor *loss);
+void tensor_expand_cols_backward(Arena *A, Tensor *out);
 void tensor_expand_rows_backward(Tensor *out);
 void tensor_softmax_backward(Tensor *x);
 void tensor_relu_backward(Tensor *x);

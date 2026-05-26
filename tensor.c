@@ -21,7 +21,7 @@
 size_t GLOBAL_TENSOR_ID = 0;
 
 
-void backward(Arena *A, Tensor *x) {
+void backward(Arena *A, Tensor *x, bool *visited) {
 	/*
 	 * The way this should work is 
 	 * first it takes a Tensor pointer *x
@@ -33,22 +33,23 @@ void backward(Arena *A, Tensor *x) {
 	 * 
 	 */ 
 
-	if (!x || !x->operations) {
-		printf("x->opearations is NULL. Exiting..\n");
-		return;
+	if (!x) return;
+	if (visited[x->id]) return;
+	visited[x->id] = true;
+
+	if (x->operations && x->operations->backward) {
+		x->operations->backward(A, x);
+		printf("Operation Name: %s\n", x->operations->name);
+		tensor_get_2d(x->grad);
 	}
 
-	if (!x->parents) {
-		printf("x->parents is NULL. Exiting..\n");
-		return;
+	if (x->parents) {
+		int p = x->num_parents;
+		printf("found x->parents: %d\n", x->num_parents);
+		for (int i = 0; i < p; i++) {
+			backward(A, x->parents[i], visited);
+		}
 	}
-
-	int p = x->num_parents;
-	x->operations->backward(A, x);
-	for (int i = 0; i < p; i++) {
-		x->operations->backward(A, x->parents[i]);
-	}
-	
 }
 
 // Backpropagation Intuition:
@@ -1804,7 +1805,7 @@ void f_backward(Arena *A, Tensor *o) {
 			p->grad->data[r * p_cols + c] = v;
 		}
 	}
-	tensor_get_2d(p->grad);
+	//tensor_get_2d(p->grad);
 	printf("[OK] <f_backward> done!\n");
 }
 
@@ -1824,38 +1825,30 @@ void tensor_square_backward(Tensor *x) {
 
 }
 
-void tensor_expand_cols_backward(Tensor *out, Tensor *prev_grad) {
-	// out is the forward pass output, we'll be updating out->grad here
-	// loss is the previous tensor
-	//
+void tensor_expand_cols_backward(Arena *A, Tensor *o) {
 
-	if (!prev_grad) {
-		printf("prev_grad is NULL! \n");
+	if (!o || !o->grad) {
+		fprintf(stderr, "out OR out->grad is NULL.\n");
 		return;
 	}
 
-	if (!out || !out->grad) {
-		fprintf(stderr, "Out OR Out->grad is Null!\n");
+	if (!o->parents) {
+		fprintf(stderr, "[Error] <tensor_expand_cols_backward>! Parents is NULL.\n");
 		return;
 	}
 	
-	int prev_grad_size = tensor_size(prev_grad);
-	
-	if(prev_grad_size == 1) {
-		float val = prev_grad->data[0];
-		tensor_fill_with(out->grad, val);
-		printf("[Ok] <tensor_expand_cols_backward> done, with prev_grad size: %d\n", prev_grad_size);
-		return;
-	}
+	Tensor *p = o->parents[0];
+	int rows = p->shape[0];
+	int cols = p->shape[1];
 
-	else {
-		assert((out->shape[0] == prev_grad->shape[0]) && (out->shape[1] == prev_grad->shape[1]));
-		float val = prev_grad->data[0];
-		tensor_fill_with(out->grad, val);
-		printf("[Ok] <tensor_expand_cols_backward> done, with prev_grad size: %d\n", prev_grad_size);
-
-		return;
+	float v = o->grad->data[0];
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			p->grad->data[r * cols + c] += v;
+		}
 	}
+	//tensor_get_2d(p->grad);
+	printf("[OK] <tensor_expand_cols_backward> done!\n");
 }
 
 //void tensor_expand_cols_backward(Tensor *x) {
@@ -1918,23 +1911,25 @@ void tensor_mean_backward(Arena *A, Tensor *o) {
 	// y'[ith_row] += 1/cols * o->grad;
 
 	Tensor *p = o->parents[0];
-	int p_rows = p->shape[0];
-	int p_cols = p->shape[1];
+	int rows = p->shape[0];
+	int cols = p->shape[1];
 
-	int o_rows = o->shape[0];
-	int o_cols = o->shape[1];
+	printf("in mean \n");
+	tensor_shape_2d(o->grad);
+	tensor_shape_2d(p->grad);
 
-	for (int r = 0; r < o_rows; r++) {
+	for (int r = 0; r < rows; r++) {
     float grad = o->grad->data[r];
-    float scale = 1.0f / o_cols;
+    float scale = 1.0f / cols;
+		printf("mean grad: %f\n", grad);
+		printf("scale %f\n", scale);
 
-    for (int c = 0; c < o_cols; c++) {
-        p->grad->data[r * o_cols + c] += grad * scale;
+    for (int c = 0; c < cols; c++) {
+        p->grad->data[r * cols + c] += (grad * scale);
     }
 	}
 
-
-	tensor_get_2d(p->grad);
+	//tensor_get_2d(p->grad);
 	printf("[OK] <tensor_mean_backward> done!\n");
 }
 
@@ -2171,7 +2166,14 @@ int main() {
 	Tensor *loss = tensor_f(A, expanded);
 	loss->grad->data[0] = 1.0f; // set the loss->grad manually for entry point
 
-	backward(A, loss);
+	bool *v = vislist();
+	backward(A, loss, v);
+
+	///int c = 0;
+	///for (int i = 0; i < MAX_NODES; i++) {
+	///	if (v[i] == true) c++;
+	///}
+	///printf("%d\n", c);
 	
 	return 0;
 }

@@ -117,9 +117,9 @@
 //			
 //			// Printing the Graph ...
 //			//bool *visited  = vislist();
-//			//export_and_visualize_graph(ln2, "graph_final.dot", "graph_final.png");
+//			run_graph_validation(A, loss, MAX_NODES);
+//			export_and_visualize_graph(ln2, "graph_final.dot", "graph_final.png");
 //
-//			//run_graph_validation(A, loss, MAX_NODES);
 //			//printf("loss: %f\n", loss_to_show);
 //			//
 //			exit(1);
