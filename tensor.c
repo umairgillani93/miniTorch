@@ -37,14 +37,26 @@ void backward(Arena *A, Tensor *x, bool *visited) {
 	if (visited[x->id]) return;
 	visited[x->id] = true;
 
+
+	/*
+	 * LOSS -> GRAD = 1
+	 * WE TAKE THIS LOSS TO CALCULATE IT'S PARENT GRADIENT, WHICH IS TENSOR_EXPAND_COLS
+	 * TENSOR_EXPAND_COLS -> GRAD = (16,32) ALL 1S
+	 * TENSOR_EXPAND_COLS -> GRAD = (16,32), WILL CALCULATE IT'S PARENT GRADIENT WHICH IS TENSOR_MEAN HAVING SHAPE (16, 1)
+	 * AND WE DO SO BY TAKING THE SUM OF ROW WHICH IS ALL ONES (1 + 1 + 1 + 1... TILL 31INDEX) / 32 = 32 / 32 = 1
+	 * AND WE STORE TENSOR_MEAN -> GRAD = (16, 1) ALL 1S
+	 * NOW WE USE THIS TO CALCULATE IT'S PARENT GRADIENT WHICH IS 
+	 * 
+
 	if (x->operations && x->operations->backward) {
 		x->operations->backward(A, x);
 		printf("Operation Name: %s\n", x->operations->name);
-		tensor_get_2d(x->grad);
+		//tensor_get_2d(x->grad);
 	}
 
 	if (x->parents) {
 		int p = x->num_parents;
+		//if (x->operations->name == "OP_MEAN") return;
 		printf("found x->parents: %d\n", x->num_parents);
 		for (int i = 0; i < p; i++) {
 			backward(A, x->parents[i], visited);
@@ -1802,10 +1814,10 @@ void f_backward(Arena *A, Tensor *o) {
 
 	for (int r = 0; r < p_rows; r++) {
 		for (int c = 0; c < p_cols; c++) {
-			p->grad->data[r * p_cols + c] = v;
+			p->grad->data[r * p_cols + c] += v;
 		}
 	}
-	//tensor_get_2d(p->grad);
+	tensor_get_2d(p->grad);
 	printf("[OK] <f_backward> done!\n");
 }
 
@@ -1837,17 +1849,21 @@ void tensor_expand_cols_backward(Arena *A, Tensor *o) {
 		return;
 	}
 	
-	Tensor *p = o->parents[0];
-	int rows = p->shape[0];
-	int cols = p->shape[1];
+	Tensor *p = o->parents[0]; // it's parent is tensor_mean operation
+	int o_rows = o->shape[0];
+	int o_cols = o->shape[1];
 
-	float v = o->grad->data[0];
-	for (int r = 0; r < rows; r++) {
-		for (int c = 0; c < cols; c++) {
-			p->grad->data[r * cols + c] += v;
+	//float v = o->grad->data[0];
+	for (int r = 0; r < o_rows; r++) {
+		float sum = 0.0f;
+		for (int c = 0; c < o_cols; c++) {
+			sum += (o->grad->data[r * o_cols + c]);
+			
 		}
+		sum /= o_cols;
+		p->grad->data[r] = sum;
 	}
-	//tensor_get_2d(p->grad);
+	tensor_get_2d(p->grad);
 	printf("[OK] <tensor_expand_cols_backward> done!\n");
 }
 
