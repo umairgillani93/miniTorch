@@ -47,6 +47,7 @@ void backward(Arena *A, Tensor *x, bool *visited) {
 	 * AND WE STORE TENSOR_MEAN -> GRAD = (16, 1) ALL 1S
 	 * NOW WE USE THIS TO CALCULATE IT'S PARENT GRADIENT WHICH IS 
 	 * 
+	 */
 
 	if (x->operations && x->operations->backward) {
 		x->operations->backward(A, x);
@@ -56,7 +57,6 @@ void backward(Arena *A, Tensor *x, bool *visited) {
 
 	if (x->parents) {
 		int p = x->num_parents;
-		//if (x->operations->name == "OP_MEAN") return;
 		printf("found x->parents: %d\n", x->num_parents);
 		for (int i = 0; i < p; i++) {
 			backward(A, x->parents[i], visited);
@@ -1916,36 +1916,41 @@ void tensor_expand_cols_backward(Arena *A, Tensor *o) {
 
 void tensor_mean_backward(Arena *A, Tensor *o) {
 
-	if (!o || !o->parents) {
-		fprintf(stderr, "[Error] <tensor_mean_backward> Input Parents not found..!\n");
+	if (!o || !o->grad) {
+		fprintf(stderr, "out OR out->grad is NULL.\n");
 		return;
 	}
-	
-	// since this is a rows wise mean 
-	// i.e sum(row) / cols
-	// y[ith_row] = sum(row) / cols;
-	// y'[ith_row] += 1/cols * o->grad;
 
-	Tensor *p = o->parents[0];
-	int rows = p->shape[0];
-	int cols = p->shape[1];
+	/* parent is square function
+	 * square is x ^ 2 and it's derivative (local one) is going to be 2 * x
+	 * d(square)/dL = do/dp * up_stream_derivative coming from child Node
+	 * ..           = 2 * x * o->grad
+	 *              = (16, 32) * (16, 1) 
+	 *              = we need to broatcast the gradients to match the dimensions of p->grad (square function gradient)
+	 */
 
-	printf("in mean \n");
-	tensor_shape_2d(o->grad);
-	tensor_shape_2d(p->grad);
-
-	for (int r = 0; r < rows; r++) {
-    float grad = o->grad->data[r];
-    float scale = 1.0f / cols;
-		printf("mean grad: %f\n", grad);
-		printf("scale %f\n", scale);
-
-    for (int c = 0; c < cols; c++) {
-        p->grad->data[r * cols + c] += (grad * scale);
-    }
+	if (!o->parents) {
+		fprintf(stderr, "[Error] <tensor_mean_backward>! Parents is NULL.\n");
+		return;
 	}
 
-	//tensor_get_2d(p->grad);
+
+	Tensor *p = o->parents[0];
+	int p_rows = p->shape[0];
+	int p_cols = p->shape[1];
+
+	int o_rows = o->shape[0];
+	int o_cols = o->shape[1];
+
+
+	for (int r = 0; r < p_rows; r++) {
+		float val = o->grad->data[r]; // upstream gradient
+		for (int c = 0; c < p_cols; c++) {
+			p->grad->data[r * p_cols + c] += val * (2  * (p->data[r * p_cols + c])); // 2 * p->data[r * p_cols + c] is 2 ^ x -> local gradient
+		}
+	}
+
+	tensor_get_2d(p->grad);
 	printf("[OK] <tensor_mean_backward> done!\n");
 }
 
