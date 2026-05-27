@@ -70,7 +70,7 @@ Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {
 	// Docs reference: pytorch -> LINK HERE
 	Tensor *mean_exp = tensor_expand_cols(A, mean, x->shape[1]);
 	Tensor *diff = tensor_subtract(A, x, mean_exp);
-	Tensor *sq = tensor_square(A, diff, diff);
+	Tensor *sq = tensor_square(A, diff);
 	Tensor *var = tensor_mean(A, sq);
 	Tensor *var_exp = tensor_expand_cols(A, var, x->shape[1]);
 	Tensor *eps = tensor_fill_like(A, var_exp, 1e-3);
