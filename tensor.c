@@ -2195,6 +2195,6 @@ int main() {
 	///	if (v[i] == true) c++;
 	///}
 	///printf("%d\n", c);
-	
+
 	return 0;
 }

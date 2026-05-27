@@ -55,6 +55,25 @@ void dfs(Node *node, bool *visited) {
 }
 
 
+void recurse(Tensor *root, bool *visited, Tensor **topo_list) {
+	if (root == NULL) return;
+	if (visited[root->id] == true) return;
+
+	visited[root->id] = true;
+
+	// show root
+	tensor_metadata(root);
+
+	 if (root->parents) {
+		 for (int p = 0; p < root->num_parents; p++) {
+			 recurse(root->parents[p], visited);
+		 }
+	 }	
+	 topo_list[*index]++;
+	 (*index)++;
+		 
+}
+
 int main() {
 	/*
 	 * DFS INTUITION:
