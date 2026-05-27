@@ -20,49 +20,79 @@
 
 size_t GLOBAL_TENSOR_ID = 0;
 
+void build_topology(Tensor *root, bool *visited, Tensor **topo, int *idx) {
+	if (root == NULL || visited[root->id] == true) return;
+	visited[root->id] = true;
 
-void backward(Arena *A, Tensor *x, bool *visited) {
-	/*
-	 * The way this should work is 
-	 * first it takes a Tensor pointer *x
-	 * then it sees whether it has operations or not
-	 * if (x->operations) 
-	 * if it has operation that means it's created throught some tensor operation, involving some parents 
-	 * and we want to apply backward function traversing all the parents
-	 * and this backward function has some notion of definition available
-	 * 
-	 */ 
-
-	if (!x) return;
-	if (visited[x->id]) return;
-	visited[x->id] = true;
-
-
-	/*
-	 * LOSS -> GRAD = 1
-	 * WE TAKE THIS LOSS TO CALCULATE IT'S PARENT GRADIENT, WHICH IS TENSOR_EXPAND_COLS
-	 * TENSOR_EXPAND_COLS -> GRAD = (16,32) ALL 1S
-	 * TENSOR_EXPAND_COLS -> GRAD = (16,32), WILL CALCULATE IT'S PARENT GRADIENT WHICH IS TENSOR_MEAN HAVING SHAPE (16, 1)
-	 * AND WE DO SO BY TAKING THE SUM OF ROW WHICH IS ALL ONES (1 + 1 + 1 + 1... TILL 31INDEX) / 32 = 32 / 32 = 1
-	 * AND WE STORE TENSOR_MEAN -> GRAD = (16, 1) ALL 1S
-	 * NOW WE USE THIS TO CALCULATE IT'S PARENT GRADIENT WHICH IS 
-	 * 
-	 */
-
-	if (x->operations && x->operations->backward) {
-		x->operations->backward(A, x);
-		printf("Operation Name: %s\n", x->operations->name);
-		//tensor_get_2d(x->grad);
+	if (root->parents == NULL) return;
+	for (int p = 0; p < root->num_parents; p++) {
+		build_topology(root->parents[p], visited, topo, idx);
 	}
+	topo[(*idx)++] = root;
+}
 
-	if (x->parents) {
-		int p = x->num_parents;
-		printf("found x->parents: %d\n", x->num_parents);
-		for (int i = 0; i < p; i++) {
-			backward(A, x->parents[i], visited);
-		}
+
+void backward(Arena *A, Tensor *root) {
+	Tensor *topo[MAX_NODES]; // create a dynamic array of Tensor pointers and initialize it with
+													 // MAX_NODES length
+	bool visited[MAX_NODES] = {0}; // set all the visited indices = false
+	int index = 0;
+
+	build_topology(root, visited, topo, &index);
+	
+	// iterate backward through the list
+	for (int i = index - 1; i >= 0; i--) {
+		Tensor *x = topo[i]; // get ith tensor
+		if (x->operations && x->operations->backward) x->operations->backward(A, x);
 	}
 }
+
+
+//void backward(Arena *A, Tensor *x, bool *visited, **Tensor topo, int index) {
+//	/*
+//* The way this should work is 
+//	 * first it takes a Tensor pointer *x
+//	 * then it sees whether it has operations or not
+//	 * if (x->operations) 
+//	 * if it has operation that means it's created throught some tensor operation, involving some parents 
+//	 * and we want to apply backward function traversing all the parents
+//	 * and this backward function has some notion of definition available
+//	 * 
+//	 */ 
+//
+//	if (!x) return;
+//	if (visited[x->id]) return;
+//	visited[x->id] = true;
+//
+//
+//	/*
+//	 * LOSS -> GRAD = 1
+//	 * WE TAKE THIS LOSS TO CALCULATE IT'S PARENT GRADIENT, WHICH IS TENSOR_EXPAND_COLS
+//	 * TENSOR_EXPAND_COLS -> GRAD = (16,32) ALL 1S
+//	 * TENSOR_EXPAND_COLS -> GRAD = (16,32), WILL CALCULATE IT'S PARENT GRADIENT WHICH IS TENSOR_MEAN HAVING SHAPE (16, 1)
+//	 * AND WE DO SO BY TAKING THE SUM OF ROW WHICH IS ALL ONES (1 + 1 + 1 + 1... TILL 31INDEX) / 32 = 32 / 32 = 1
+//	 * AND WE STORE TENSOR_MEAN -> GRAD = (16, 1) ALL 1S
+//	 * NOW WE USE THIS TO CALCULATE IT'S PARENT GRADIENT WHICH IS 
+//	 * 
+//	 */
+//
+//	if (x->operations && x->operations->backward) {
+//		x->operations->backward(A, x);
+//		printf("Operation Name: %s\n", x->operations->name);
+//		//tensor_get_2d(x->grad);
+//	}
+//
+//	if (x->parents) {
+//		int p = x->num_parents;
+//		printf("found x->parents: %d\n", x->num_parents);
+//		for (int i = 0; i < p; i++) {
+//			backward(A, x->parents[i], visited);
+//		}
+//	}
+//
+//	topo_list[&index]++;
+//	(&index)++;
+//}
 
 // Backpropagation Intuition:
  	// so can we say like
@@ -2188,7 +2218,7 @@ int main() {
 	loss->grad->data[0] = 1.0f; // set the loss->grad manually for entry point
 
 	bool *v = vislist();
-	backward(A, loss, v);
+	backward(A, loss);
 
 	///int c = 0;
 	///for (int i = 0; i < MAX_NODES; i++) {
