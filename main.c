@@ -114,14 +114,14 @@
 //			Tensor *mse = tensor_mse_loss(A, ln2, target_batch);
 //			Tensor *loss = tensor_f(A, mse);
 //			tensor_get_2d(loss);
+//			loss->grad->data[0] = 1.0;
+//			backward(A, loss);
 //			
 //			// Printing the Graph ...
 //			//bool *visited  = vislist();
-//			run_graph_validation(A, loss, MAX_NODES);
-//			export_and_visualize_graph(ln2, "graph_final.dot", "graph_final.png");
+//			//run_graph_validation(A, loss, MAX_NODES);
+//			//export_and_visualize_graph(ln2, "graph_final.dot", "graph_final.png");
 //
-//			//printf("loss: %f\n", loss_to_show);
-//			//
 //			exit(1);
 //
 //			///Tensor *dx_for_ffn = tensor_create_new(A, 2, shape_local);

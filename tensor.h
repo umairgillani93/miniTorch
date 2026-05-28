@@ -19,6 +19,7 @@ typedef struct {
 
 typedef enum {
 	F,
+	FILL_LIKE,
 	LEAF,
 	MSE,
 	ADD, 
@@ -113,7 +114,9 @@ void tensor_fill_ones(Tensor *x);
 void tensor_accumulate(Tensor *a, Tensor *b);
 void tensor_relu_backward( Tensor *out);
 void tensor_subtract_backward(Arena *A, Tensor *x);
+void tensor_fill_like_backward(Arena *A, Tensor *o);
 void tensor_concat_backward(Tensor *out);
+void tensor_div_backward(Arena *A, Tensor *out);
 //void tensor_free(Tensor *t);
 void tensor_get_2d(Tensor *t);
 void tensor_check(char *name, Tensor *x);
@@ -139,7 +142,7 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape);
 void tensor_transpose_backward(Tensor *x);
 void tensor_matmul_backward(Arena *A, Tensor *currNode);
 void tensor_mean_backward(Arena *A, Tensor *x);
-void tensor_add_backward(Arena *A, Tensor *x);
+void tensor_add_backward(Arena *A, Tensor *o);
 void tensor_square_backward(Arena *A, Tensor *o);
 void tensor_sqrt_backward(Tensor *x);
 void tensor_mse_backward(Tensor *x);
