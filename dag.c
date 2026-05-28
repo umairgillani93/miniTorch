@@ -74,6 +74,8 @@ void recurse(Tensor *root, bool *visited, Tensor **topo_list) {
 		 
 }
 
+
+
 int main() {
 	/*
 	 * DFS INTUITION:
@@ -91,6 +93,7 @@ int main() {
 	graph_edge(g, 3, 5);
 
 	bool visited[g->num_nodes];
+
 	for (int i = 0; i < g->num_nodes; i++) {
 		visited[i] = false;
 	}
