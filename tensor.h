@@ -147,7 +147,7 @@ void tensor_square_backward(Arena *A, Tensor *o);
 void tensor_sqrt_backward(Arena *A, Tensor *o);
 void tensor_mse_backward(Tensor *x);
 void tensor_expand_cols_backward(Arena *A, Tensor *out);
-void tensor_expand_rows_backward(Tensor *out);
+void tensor_expand_rows_backward(Arena *A, Tensor *o);
 void tensor_softmax_backward(Tensor *x);
 void tensor_relu_backward(Tensor *x);
 void tensor_fill_with(Tensor *x, float v);
