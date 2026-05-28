@@ -86,7 +86,7 @@ Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {
 	Tensor *beta_exp = tensor_expand_rows(A, ln->beta, rows);
 	tensor_randomize_weights(gamma_exp);
 	tensor_randomize_weights(beta_exp);
-	Tensor *yhat = tensor_scalling(A, gamma_exp, out);
+	Tensor *yhat = tensor_element_wise_product(A, gamma_exp, out);
 
 	y = tensor_add(A, yhat, beta_exp);
 

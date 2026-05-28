@@ -37,7 +37,7 @@ typedef enum {
 	ROW_MAX,
 	EXP,
 	ROW_SUM,
-	SCALLED,
+	ELEMENT_WISE_PRODUCT,
 	SOFTMAX,
 	MEAN,
 	SQUARE,
@@ -94,7 +94,7 @@ Tensor *tensor_concat(Arena *A, Tensor **heads, int k);
 Tensor *tensor_relu(Arena *A, Tensor *x);
 Tensor *tensor_fill_val(Arena *A, Tensor *a, int val);
 Tensor *tensor_row_sum(Arena *A, Tensor *x);
-Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b);
+Tensor *tensor_element_wise_product(Arena *A, Tensor *a, Tensor *b);
 Tensor *tensor_square(Arena *A, Tensor *a);
 Tensor *tensor_div(Arena *A, Tensor *a, Tensor *b);
 Tensor *tensor_create(int ndim, int *shape);
@@ -152,6 +152,7 @@ void tensor_softmax_backward(Tensor *x);
 void tensor_relu_backward(Tensor *x);
 void tensor_fill_with(Tensor *x, float v);
 void tensor_slice_cols_backward(Tensor *x);
+void tensor_element_wise_product_backward(Arena *A, Tensor *o);
 Tensor *tensor_mean(Arena *A, Tensor *x);
 Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_shape);
 Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b);
