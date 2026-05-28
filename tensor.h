@@ -144,7 +144,7 @@ void tensor_matmul_backward(Arena *A, Tensor *currNode);
 void tensor_mean_backward(Arena *A, Tensor *x);
 void tensor_add_backward(Arena *A, Tensor *o);
 void tensor_square_backward(Arena *A, Tensor *o);
-void tensor_sqrt_backward(Tensor *x);
+void tensor_sqrt_backward(Arena *A, Tensor *o);
 void tensor_mse_backward(Tensor *x);
 void tensor_expand_cols_backward(Arena *A, Tensor *out);
 void tensor_expand_rows_backward(Tensor *out);

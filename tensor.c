@@ -1863,8 +1863,33 @@ void f_backward(Arena *A, Tensor *o) {
 	printf("[OK] <f_backward> done!\n");
 }
 
-void tensor_sqrt_backward(Tensor *x) {
-	// Will be implemented later IA
+void tensor_sqrt_backward(Arena *A, Tensor *x) {
+
+	if (!o || !o->grad || !o->parents[0]) return;
+
+    Tensor *x = o->parents[0];
+    
+    if (!x->grad) {
+        x->grad = tensor_create_new(A, x->ndim, x->shape);
+    }
+
+    int size = 1;
+    for (int i = 0; i < o->ndim; i++) size *= o->shape[i];
+
+    for (int i = 0; i < size; i++) {
+        float upstream_grad = o->grad->data[i];
+        float sqrt_val = o->data[i]; // This is already sqrt(x)
+        
+        // Handle potential division by zero if sqrt_val is 0
+        if (sqrt_val < 1e-7f && sqrt_val > -1e-7f) {
+            sqrt_val = 1e-7f; 
+        }
+
+        // dL/dX = upstream_grad * (1 / (2 * sqrt(X)))
+        x->grad->data[i] += upstream_grad * (1.0f / (2.0f * sqrt_val));
+    }
+		tensor_get_2d(x->grad);
+		printf("[OK] <tensor_sqrt_backward> done!\n"0;
 }
 
 void tensor_mse_backward(Tensor *x) {
@@ -2107,9 +2132,12 @@ void tensor_div_backward(Arena *A, Tensor *o) {
 		printf("Quitting.. \n");
 		return;
 	}
-	//printf("o->parents: %d\n", o->num_parents);
+	printf("o is here.. \n");
+	tensor_get_2d(o);
+	printf("o->parents: %d\n", o->num_parents);
 
 	assert(o->num_parents == 2);
+	
 
 	Tensor *x = o->parents[0];
 	Tensor *y = o->parents[1];
@@ -2118,17 +2146,17 @@ void tensor_div_backward(Arena *A, Tensor *o) {
 											// both are same
 	
 	//if (!x->grad || !y->grad) {
-	//	fprintf(stderr, "[Error] <tensor_add_backward>! Parents is NULL.\n");
+	//	fprintf(stderr, "[Error] <tensor_div_backward>! Parents is NULL.\n");
 	//	printf("Quitting.. \n");
 	//	return;
 	//}
 
 	if (!x->grad) {
-		x->grad = tensor_create_new(A, ndim, o->shape);
+		x->grad = tensor_create_new(A, ndim, x->shape);
 	}
 
 	if (!y->grad) {
-		y->grad = tensor_create_new(A, ndim, o->shape);
+		y->grad = tensor_create_new(A, ndim, y->shape);
 	}
 
 	int rows = x->shape[0];
@@ -2398,19 +2426,19 @@ int main() {
 	tensor_randomize_weights(target);
 	pred->requires_grad = true;
 	target->requires_grad = true;
+	pred->grad = tensor_create_new(A, ndim, pred->shape);
+	target->grad = tensor_create_new(A, ndim, target->shape);
 
-	//tensor_get_2d(pred);
-	//printf("\n");
-	//Tensor *sq = tensor_square(A, pred);
-	//tensor_get_2d(sq);
 
 	//Tensor *loss = tensor_mse_loss(A, pred, target);
-	Tensor *loss = tensor_div(A, pred, target);
+	Tensor *div = tensor_div(A, pred, target);
+	Tensor *loss = tensor_f(A, div);
+	
 	loss->grad->data[0] = 1.0f;
 
-	//run_graph_validation(A, loss, MAX_NODES);
+	run_graph_validation(A, loss, MAX_NODES);
 
-	backward(A, loss);
+	//backward(A, loss);
 
 	return 0;
 }
