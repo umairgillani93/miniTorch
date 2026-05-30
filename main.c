@@ -117,12 +117,12 @@
 //			printf("loss :\n");
 //			tensor_get_2d(loss);
 //			loss->grad->data[0] = 1.0;
+//			run_graph_validation(A, loss, MAX_NODES);
 //			backward(A, loss);
 //
 //			
 //			// Printing the Graph ...
 //			//bool *visited  = vislist();
-//			//run_graph_validation(A, loss, MAX_NODES);
 //			export_and_visualize_graph_new(loss, "graph_grad.dot", "graph_grad.png");
 //
 //			exit(1);

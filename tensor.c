@@ -1974,7 +1974,7 @@ void tensor_expand_cols_backward(Arena *A, Tensor *o) {
 			sum += (o->grad->data[r * o_cols + c]);
 			
 		}
-		sum /= o_cols;
+		//sum /= o_cols;
 		p->grad->data[r] = sum;
 	}
 	tensor_get_2d(p->grad);
@@ -2506,7 +2506,7 @@ int main() {
 
 	Tensor *out = layer_norm_forward(A, ln, x); // x is out MHA output
 	tensor_get_2d(pred);
-	Tensor *loss = tensor_mse_loss(A, out, target);
+	Tensor *loss = tensor_mse_loss(A, pred, target);
 	
 	loss->grad->data[0] = 1.0f;
 
@@ -2515,7 +2515,7 @@ int main() {
 
 
 	backward(A, loss);
-	export_and_visualize_graph_new(loss, "graph_test.dot", "graph_test.png");
+	//export_and_visualize_graph_new(loss, "graph_test.dot", "graph_test.png");
 
 	return 0;
 }
