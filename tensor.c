@@ -2139,6 +2139,52 @@ void tensor_add_backward(Arena *A, Tensor *o) {
 }
 
 
+void tensor_element_wise_product_backward(Arena *A, Tensor *o) {
+	
+	if (!o || !o->grad) {
+		fprintf(stderr, "out OR out->grad is NULL.\n");
+		return;
+	}
+
+	if (!o->parents) {
+		fprintf(stderr, "[Error] <tensor_subtract_backward>! Parents is NULL.\n");
+		printf("Quitting.. \n");
+		return;
+	}
+
+	assert(o->num_parents == 2);
+
+	Tensor *x = o->parents[0];
+	Tensor *y = o->parents[1];
+	int ndim = x->ndim;
+
+
+	if (!x->grad) {
+		x->grad = tensor_create_new(A, ndim, o->shape);
+	}
+
+	if (!y->grad) {
+		y->grad = tensor_create_new(A, ndim, o->shape);
+	}
+
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+
+	int size = tensor_size(x);
+
+	for (int i = 0; i < size; i++) {
+		float val = o->grad->data[i];
+		x->grad->data[i] += val * y->data[i];
+		y->grad->data[i] += val * x->data[i];
+	}
+
+	tensor_get_2d(x->grad);
+	printf("\n");
+	tensor_get_2d(y->grad);
+	printf("[OK] <tensor_element_wise_product_backward> done!\n");
+}
+
+
 void tensor_div_backward(Arena *A, Tensor *o) {
 	// if A/B = Z, then
 	// dZ/dA = up_stream_gradient (dL/dA) *  1/B;
@@ -2203,10 +2249,6 @@ void tensor_div_backward(Arena *A, Tensor *o) {
 	printf("[OK] <tensor_div_backward> done!\n");
 }
 
-
-void tensor_element_wise_product_backward(Arena *A, Tensor *x) {
-	// Will be implemented later. IA
-}
 
 void tensor_softmax_backward(Tensor *x) {
 	// Will be implemented later. IA
@@ -2506,7 +2548,7 @@ int main() {
 
 	Tensor *out = layer_norm_forward(A, ln, x); // x is out MHA output
 	tensor_get_2d(pred);
-	Tensor *loss = tensor_mse_loss(A, pred, target);
+	Tensor *loss = tensor_mse_loss(A, out, target);
 	
 	loss->grad->data[0] = 1.0f;
 
