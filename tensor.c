@@ -10,6 +10,7 @@
 #include "feed_forward_nn.h"
 #include "layer_norm.h"
 #include "arena.h"
+#include "graph_viz.h"
 #include "config.h"
 
 #include <stddef.h>
@@ -2386,6 +2387,47 @@ Tensor *tensor_slice_cols(Arena *A, Tensor *x, int k, int dk) {
 	return out;
 }
 
+Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b) {
+	assert(a->shape[0] == b->shape[0] && a->shape[1] == b->shape[1]);
+	int rows = a->shape[0];
+	int cols = a->shape[1];
+	int ndim = a->ndim;
+
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
+	out_shape[0] = rows;
+	out_shape[1] = cols;
+
+	Tensor *out = tensor_create_new(A, ndim, out_shape);
+
+	if (a->requires_grad || b->requires_grad) {
+		out->requires_grad = true;
+		out->num_parents = 2;
+		out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
+		if (a == NULL || b == NULL) {
+			fprintf(stderr, "Found parents NULL, graph broken!\n");
+		}
+		out->parents[0] = a;
+		out->parents[1] = b;
+		Op *op = arena_alloc(A, sizeof(Op));
+		op->type= SCALLED;
+		op->name = "OP_SCALED";
+		op->backward = tensor_square_backward;
+		out->operations = op;
+		out->grad = tensor_create_new(A, ndim, out_shape);
+	}
+
+	// IMPORTANT!!!
+	// row_offset = r * row_stride;
+	// col_offset = c * col_strid;
+	// index = row_offset + col_offset;
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			out->data[r * cols + c] = a->data[r * cols + c] * b->data[r * cols + c];
+		}
+	}
+	return out;
+}
+
 int main() {
 
 	/*
@@ -2454,8 +2496,9 @@ int main() {
 	Tensor *x = tensor_create_new(A, ndim, shape);
 	tensor_randomize_weights(x);
 	x->requires_grad = true;
+	x->grad = tensor_create_new(A, x->ndim, x->shape);
 
-	int features = 128;
+	int features = 32;
 
 	LayerNorm *ln = layer_norm_create_new(A, features);
 	printf("Iniitiazing parameters for Layer Norm:\n");
@@ -2463,13 +2506,16 @@ int main() {
 
 	Tensor *out = layer_norm_forward(A, ln, x); // x is out MHA output
 	tensor_get_2d(pred);
-	Tensor *loss = tensor_mse_loss(A, pred, target);
+	Tensor *loss = tensor_mse_loss(A, out, target);
 	
 	loss->grad->data[0] = 1.0f;
 
 	run_graph_validation(A, loss, MAX_NODES);
+	//export_and_visualize_graph(loss, "graph_test.dot", "graph_test.png");
 
-	//backward(A, loss);
+
+	backward(A, loss);
+	export_and_visualize_graph_new(loss, "graph_test.dot", "graph_test.png");
 
 	return 0;
 }
