@@ -1871,6 +1871,7 @@ void f_backward(Arena *A, Tensor *o) {
 
 void tensor_sqrt_backward(Arena *A, Tensor *o) {
 
+	//TODO: Need to fix this, I'ts breaking the backprop chain currently!
 	if (!o || !o->grad || !o->parents[0]) return;
 
     Tensor *x = o->parents[0];
@@ -2470,6 +2471,8 @@ Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b) {
 	return out;
 }
 
+
+
 int main() {
 
 	/*
@@ -2557,7 +2560,7 @@ int main() {
 
 
 	backward(A, loss);
-	//export_and_visualize_graph_new(loss, "graph_test.dot", "graph_test.png");
+	export_and_visualize_graph_new(loss, "graph_test.dot", "graph_test.png");
 
 	return 0;
 }
