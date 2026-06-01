@@ -65,6 +65,7 @@ Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {
 
 	Tensor *y = tensor_create_new(A, ndim, y_shape);
 	y->requires_grad = true;
+	y->grad = tensor_create_new(A, ndim, y_shape);
 	Tensor *mean = tensor_mean(A, x);
 	
 	// Docs reference: pytorch -> LINK HERE

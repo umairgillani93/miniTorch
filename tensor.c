@@ -264,7 +264,6 @@ void run_graph_validation(Arena *A, Tensor *output, int max_nodes) {
     memset(visited, 0, max_nodes * sizeof(bool));
 
     GraphReport rep = {0};
-			
 
     printf("\n========== GRAPH VALIDATION START ==========\n");
 
@@ -1169,7 +1168,13 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
 	t->operations = NULL;
 	t->grad = NULL;
 	t->num_parents = 0;
-	t->requires_grad = false;
+	t->requires_grad = true;
+
+	if ((t->requires_grad) && (t->grad == NULL)) {
+		int s = tensor_size(t);
+		t->grad = arena_alloc(A, s * sizeof(float)); 
+		memset(t->grad, 0, s * sizeof(float));
+	}
 	return t;
 }
 
@@ -1609,8 +1614,6 @@ Tensor *tensor_mean(Arena *A, Tensor *a) {
 		op->name = "OP_MEAN";
 		out->operations = op;
 		
-
-
 		// define gradients matrix
 		out->grad = tensor_create_new(A, ndim, out_shape);
 	}
@@ -1821,14 +1824,8 @@ void tensor_fill_like_backward(Arena *A, Tensor *o) {
 	Tensor *p = o->parents[0];
 	int ndim = o->ndim;
 
-	//if (!x->grad || !y->grad) {
-	//	fprintf(stderr, "[Error] <tensor_add_backward>! Parents is NULL.\n");
-	//	printf("Quitting.. \n");
-	//	return;
-	//}
-
 	if (!p->grad) {
-		p->grad = tensor_create_new(A, ndim, o->shape);
+		p->grad = tensor_create_new(A, ndim, p->shape);
 	}
 
 	int rows = p->shape[0];
@@ -1854,9 +1851,12 @@ void f_backward(Arena *A, Tensor *o) {
 	}
 
 	Tensor *p = o->parents[0];
-	float v = o->grad->data[0];
-	
+	if (!p->grad) {
+		p->grad = tensor_create_new(A, p->ndim, p->shape);
+	}
 
+
+	float v = o->grad->data[0];
 	int p_rows = p->shape[0];
 	int p_cols = p->shape[1];
 
@@ -1888,9 +1888,9 @@ void tensor_sqrt_backward(Arena *A, Tensor *o) {
         float sqrt_val = o->data[i]; // This is already sqrt(x)
         
         // Handle potential division by zero if sqrt_val is 0
-        if (sqrt_val < 1e-7f && sqrt_val > -1e-7f) {
-            sqrt_val = 1e-7f; 
-        }
+        //if (sqrt_val < 1e-7f && sqrt_val > -1e-7f) {
+        //    sqrt_val = 1e-7f; 
+        //}
 
         // dL/dX = upstream_grad * (1 / (2 * sqrt(X)))
         x->grad->data[i] += upstream_grad * (1.0f / (2.0f * sqrt_val));
@@ -1937,6 +1937,9 @@ void tensor_square_backward(Arena *A, Tensor *o) {
 	}
 
 	Tensor *p = o->parents[0];
+	if (!p->grad) {
+		p->grad = tensor_create_new(A, p->ndim, p->shape);
+	}
 
 	int rows = p->shape[0];
 	int cols = p->shape[1];
@@ -1965,6 +1968,11 @@ void tensor_expand_cols_backward(Arena *A, Tensor *o) {
 	}
 	
 	Tensor *p = o->parents[0]; // it's parent is tensor_mean operation
+
+	if (!p->grad) {
+		p->grad = tensor_create_new(A, p->ndim, p->shape);
+	}
+
 	int o_rows = o->shape[0];
 	int o_cols = o->shape[1];
 
@@ -2043,6 +2051,11 @@ void tensor_mean_backward(Arena *A, Tensor *o) {
 
 
 	Tensor *p = o->parents[0];
+
+	if (!p->grad) {
+		p->grad = tensor_create_new(A, p->ndim, p->shape);
+	}
+
 	int p_rows = p->shape[0];
 	int p_cols = p->shape[1];
 
@@ -2550,17 +2563,15 @@ int main() {
 	layer_norm_init_params(ln);
 
 	Tensor *out = layer_norm_forward(A, ln, x); // x is out MHA output
-	tensor_get_2d(pred);
 	Tensor *loss = tensor_mse_loss(A, out, target);
+	//Tensor *loss = tensor_f(A, out);
 	
 	loss->grad->data[0] = 1.0f;
 
 	run_graph_validation(A, loss, MAX_NODES);
-	//export_and_visualize_graph(loss, "graph_test.dot", "graph_test.png");
 
-
-	backward(A, loss);
-	export_and_visualize_graph_new(loss, "graph_test.dot", "graph_test.png");
+	//backward(A, loss);
+	//export_and_visualize_graph_new(loss, "graph_test.dot", "graph_test.png");
 
 	return 0;
 }
