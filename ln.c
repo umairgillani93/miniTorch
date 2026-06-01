@@ -98,8 +98,8 @@ Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {
 	printf("beta shape after expansion: \n");
 	tensor_shape_2d(ln->beta);
 	
-	tensor_randomize_weights(gamma_exp);
-	tensor_randomize_weights(beta_exp);
+	//tensor_randomize_weights(gamma_exp);
+	//tensor_randomize_weights(beta_exp);
 	Tensor *yhat = tensor_element_wise_product(A, gamma_exp, out);
 
 	y = tensor_add(A, yhat, beta_exp);
