@@ -21,131 +21,6 @@
 
 size_t GLOBAL_TENSOR_ID = 0;
 
-//void build_topology(Tensor *root, bool *visited, Tensor **topo, int *idx) {
-//	if (root == NULL || visited[root->id] == true) return;
-//	visited[root->id] = true;
-//
-//	if (root->parents != NULL) { 
-//	for (int p = 0; p < root->num_parents; p++) {
-//		build_topology(root->parents[p], visited, topo, idx);
-//		}
-//	}
-//	topo[(*idx)++] = root;
-//}
-//
-//
-//void backward(Arena *A, Tensor *root) {
-//	Tensor *topo[MAX_NODES]; // create a dynamic array of Tensor pointers and initialize it with
-//													 // MAX_NODES length
-//	bool visited[MAX_NODES] = {0}; // set all the visited indices = false
-//	int index = 0;
-//
-//	build_topology(root, visited, topo, &index);
-//	
-//	// iterate backward through the list
-//	for (int i = index - 1; i >= 0; i--) {
-//		Tensor *x = topo[i]; // get ith tensor
-//		if (!x) continue;
-//		if (x->operations && x->operations->backward) x->operations->backward(A, x);
-//	}
-//}
-
-
-void build_topology(Tensor *root, bool *visited, Tensor **topo, int *idx) {
-    if (root == NULL) return;
-
-    // If already visited, we skip it to prevent duplicating or processing early
-    if (visited[root->id]) return;
-    
-    // Temporarily mark as visited to prevent infinite cycles in the recursion
-    visited[root->id] = true;
-
-    // Recursively visit all parents first
-    if (root->parents != NULL) { 
-        for (int p = 0; p < root->num_parents; p++) {
-            build_topology(root->parents[p], visited, topo, idx);
-        }
-    }
-    
-    // Add ourselves to the topology list AFTER all our parents are added
-    topo[(*idx)++] = root;
-}
-
-void backward(Arena *A, Tensor *root) {
-    Tensor *topo[MAX_NODES] = {0}; 
-    bool visited[MAX_NODES] = {0}; 
-    int index = 0;
-
-    // 1. Build the forward topological order (Inputs -> ... -> Loss)
-    build_topology(root, visited, topo, &index);
-    
-    // 2. Because of how shared nodes filter through the DFS, we must ensure 
-    // we zero out gradients before running backprop, so accumulation works perfectly.
-    // (Ensure root has an initial upstream gradient of 1.0 if it's the Loss)
-    if (root->grad && root->grad->data) {
-        root->grad->data[0] = 1.0f; 
-    }
-
-    // 3. Iterate backward through the list (Loss -> ... -> Inputs)
-    // This perfectly reverses the dependency chain!
-    for (int i = index - 1; i >= 0; i--) {
-        Tensor *x = topo[i]; 
-        if (!x) continue;
-        
-        // Execute the backward operation
-        if (x->operations && x->operations->backward) {
-            x->operations->backward(A, x);
-        }
-    }
-}
-
-
-//void backward(Arena *A, Tensor *x, bool *visited, **Tensor topo, int index) {
-//	/*
-//* The way this should work is 
-//	 * first it takes a Tensor pointer *x
-//	 * then it sees whether it has operations or not
-//	 * if (x->operations) 
-//	 * if it has operation that means it's created throught some tensor operation, involving some parents 
-//	 * and we want to apply backward function traversing all the parents
-//	 * and this backward function has some notion of definition available
-//	 * 
-//	 */ 
-//
-//	if (!x) return;
-//	if (visited[x->id]) return;
-//	visited[x->id] = true;
-//
-//
-//	/*
-//	 * LOSS -> GRAD = 1
-//	 * WE TAKE THIS LOSS TO CALCULATE IT'S PARENT GRADIENT, WHICH IS TENSOR_EXPAND_COLS
-//	 * TENSOR_EXPAND_COLS -> GRAD = (16,32) ALL 1S
-//	 * TENSOR_EXPAND_COLS -> GRAD = (16,32), WILL CALCULATE IT'S PARENT GRADIENT WHICH IS TENSOR_MEAN HAVING SHAPE (16, 1)
-//	 * AND WE DO SO BY TAKING THE SUM OF ROW WHICH IS ALL ONES (1 + 1 + 1 + 1... TILL 31INDEX) / 32 = 32 / 32 = 1
-//	 * AND WE STORE TENSOR_MEAN -> GRAD = (16, 1) ALL 1S
-//	 * NOW WE USE THIS TO CALCULATE IT'S PARENT GRADIENT WHICH IS 
-//	 * 
-//	 */
-//
-//	if (x->operations && x->operations->backward) {
-//		x->operations->backward(A, x);
-//		printf("Operation Name: %s\n", x->operations->name);
-//		//tensor_get_2d(x->grad);
-//	}
-//
-//	if (x->parents) {
-//		int p = x->num_parents;
-//		printf("found x->parents: %d\n", x->num_parents);
-//		for (int i = 0; i < p; i++) {
-//			backward(A, x->parents[i], visited);
-//		}
-//	}
-//
-//	topo_list[&index]++;
-//	(&index)++;
-//}
-
 // Backpropagation Intuition:
  	// so can we say like
 	// if we have x @ y = z
@@ -163,6 +38,46 @@ void backward(Arena *A, Tensor *root) {
 // Some backward functions
 // We want to take local gradiens depending upons the operations for this backward funntion (PyTorch style)
 
+void build_topology(Tensor *root, Tensor **topo, int *idx, bool *added) {
+    if (!root) return;
+
+    if (added[root->id]) return;
+
+    // DO NOT mark visited before recursion
+    if (root->parents) {
+        for (int i = 0; i < root->num_parents; i++) {
+            build_topology(root->parents[i], topo, idx, added);
+        }
+    }
+
+    topo[(*idx)++] = root;
+    added[root->id] = true;
+}
+
+void backward(Arena *A, Tensor *root) {
+
+    Tensor *topo[MAX_NODES] = {0};
+    bool added[MAX_NODES] = {0};
+    int index = 0;
+
+    build_topology(root, topo, &index, added);
+
+    // initialize loss grad safely
+    if (!root->grad) {
+        root->grad = tensor_create_new(A, root->ndim, root->shape);
+    }
+
+    root->grad->data[0] = 1.0f;
+
+    for (int i = index - 1; i >= 0; i--) {
+        Tensor *x = topo[i];
+
+        if (!x || !x->operations || !x->operations->backward)
+            continue;
+
+        x->operations->backward(A, x);
+    }
+}
 
 bool *vislist() {
 	bool *visited = (bool *)malloc(MAX_NODES *sizeof(bool));
