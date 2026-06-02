@@ -2047,10 +2047,14 @@ void tensor_mean_backward(Arena *A, Tensor *o) {
 
     for (int r = 0; r < p_rows; r++) {
 
-        float val = o->grad->data[r];
-
-        for (int c = 0; c < p_cols; c++) {
+			float val = o->grad->data[r];
+			for (int c = 0; c < p_cols; c++) {
+						
             p->grad->data[r * p_cols + c] += val / (float)p_cols;
+						printf("val: %f\n", val);
+						printf("p_cols : %f\n", p_cols);
+						printf("p->grad->data: %f\n", p->grad->data[r * p_cols + c]);
+
         }
     }
 		tensor_get_2d(p->grad);
