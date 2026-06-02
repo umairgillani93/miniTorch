@@ -10,5 +10,5 @@ digraph TensorGraph {
   n8 -> n10 [penwidth=1.2];
   n8 [label="{Tensor_ID: 8 | Tensor_OP: OP_MEAN | Gradient: -32.0000}", color="red", fillcolor="#fff0f0"];
   n6 -> n8 [penwidth=1.2];
-  n6 [label="{Tensor_ID: 6 | Tensor_OP: NULL | Gradient: -1.0000}", color="red", fillcolor="#fff0f0"];
+  n6 [label="{Tensor_ID: 6 | Tensor_OP: NULL | Gradient: 0.0000}", color="black", fillcolor="white"];
 }

@@ -1219,11 +1219,11 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
 	t->num_parents = 0;
 	t->requires_grad = false;
 
-	if ((t->requires_grad) && (t->grad == NULL)) {
-		int s = tensor_size(t);
-		t->grad = arena_alloc(A, s * sizeof(float)); 
-		memset(t->grad, 0, s * sizeof(float));
-	}
+	//if ((t->requires_grad) && (t->grad == NULL)) {
+	//	int s = tensor_size(t);
+	//	t->grad = arena_alloc(A, s * sizeof(float)); 
+	//	memset(t->grad, 0, s * sizeof(float));
+	//}
 	return t;
 }
 
@@ -2011,38 +2011,50 @@ void tensor_square_backward(Arena *A, Tensor *o) {
 
 void tensor_expand_cols_backward(Arena *A, Tensor *o) {
 
-	if (!o || !o->grad) {
-		fprintf(stderr, "out OR out->grad is NULL.\n");
-		return;
-	}
+    if (!o) {
+        fprintf(stderr, "[Error] <tensor_expand_cols_backward> output is NULL\n");
+        return;
+    }
 
-	if (!o->parents) {
-		fprintf(stderr, "[Error] <tensor_expand_cols_backward>! Parents is NULL.\n");
-		return;
-	}
-	
-	Tensor *p = o->parents[0]; // it's parent is tensor_mean operation
+    if (!o->grad) {
+        printf("[Warning] output grad is NULL. Initializing\n");
+        o->grad = tensor_create_new(A, o->ndim, o->shape);
+        int size = o->shape[0] * o->shape[1];
+        memset(o->grad->data, 0, size * sizeof(float));
+    }
 
-	if (!p->grad) {
-		p->grad = tensor_create_new(A, p->ndim, p->shape);
-	}
+    if (!o->parents || !o->parents[0]) {
+        fprintf(stderr, "[Error] parent missing\n");
+        return;
+    }
 
-	int o_rows = o->shape[0];
-	int o_cols = o->shape[1];
+    Tensor *p = o->parents[0];
 
-	//float v = o->grad->data[0];
-	for (int r = 0; r < o_rows; r++) {
-		float sum = 0.0f;
-		for (int c = 0; c < o_cols; c++) {
-			sum += (o->grad->data[r * o_cols + c]);
-			
-		}
-		//sum /= o_cols;
-		p->grad->data[r] = sum;
-	}
-	tensor_get_2d(p->grad);
-	printf("[OK] <tensor_expand_cols_backward> done!\n");
+    if (!p->grad) {
+        printf("[Warning] parent grad is NULL. Initializing\n");
+        p->grad = tensor_create_new(A, p->ndim, p->shape);
+        int size = p->shape[0] * p->shape[1];
+        memset(p->grad->data, 0, size * sizeof(float));
+    }
+
+    int o_rows = o->shape[0];
+    int o_cols = o->shape[1];
+
+    for (int r = 0; r < o_rows; r++) {
+
+        float sum = 0.0f;
+
+        for (int c = 0; c < o_cols; c++) {
+            sum += o->grad->data[r * o_cols + c];
+        }
+
+        p->grad->data[r] += sum;
+    }
+
+		tensor_get_2d(p->grad);
+    printf("[OK] <tensor_expand_cols_backward> done!\n");
 }
+
 
 //void tensor_expand_cols_backward(Tensor *x) {
 //	// we have expanded the original tensor in columns direction
@@ -2093,44 +2105,44 @@ void tensor_expand_cols_backward(Arena *A, Tensor *o) {
 
 void tensor_mean_backward(Arena *A, Tensor *o) {
 
-	if (!o || !o->grad) {
-		fprintf(stderr, "out OR out->grad is NULL.\n");
-		return;
-	}
+    if (!o || !o->grad) {
+        fprintf(stderr, "[Error] output or output grad is NULL\n");
+        return;
+    }
 
-	if (!o->parents) {
-	}
+    if (!o->parents || !o->parents[0]) {
+        fprintf(stderr, "[Error] <tensor_mean_backward> parent missing\n");
+        return;
+    }
 
+    Tensor *p = o->parents[0];
 
-	Tensor *p = o->parents[0];
+    // Ensure parent gradient exists
+    if (!p->grad) {
+        p->grad = tensor_create_new(A, p->ndim, p->shape);
+        int p_size = p->shape[0] * p->shape[1];
+        memset(p->grad->data, 0, p_size * sizeof(float));
+    }
 
-	if (!p->grad) {
-		printf("No parent's grad found. Exiting ..\n");
-		return;
-		//p->grad = tensor_create_new(A, p->ndim, p->shape);
-		//memset(p->grad, 0, p->grad->shape[0] * p->grad->shape[1] * sizeof(float));
-	}
+    int p_rows = p->shape[0];
+    int p_cols = p->shape[1];
 
-	int p_rows = p->shape[0];
-	int p_cols = p->shape[1];
+    int o_rows = o->shape[0];
+    int o_cols = o->shape[1];
 
-	int o_rows = o->shape[0];
-	int o_cols = o->shape[1];
+    for (int r = 0; r < p_rows; r++) {
 
+        float val = o->grad->data[r];
 
-	for (int r = 0; r < p_rows; r++) {
-		float val = o->grad->data[r]; // upstream gradient
-		for (int c = 0; c < p_cols; c++) {
-			p->grad->data[r * p_cols + c] = (val / (float) p_cols);
-			//printf("p cols: %d\n", p_cols);
-			//printf("val: %f\n", val);
-			//printf("p->grad->data: %f\n", p->grad->data[r * p_cols + c]);
-		}
-	}
+        for (int c = 0; c < p_cols; c++) {
+            p->grad->data[r * p_cols + c] += val / (float)p_cols;
+        }
+    }
+		tensor_get_2d(p->grad);
 
-	tensor_get_2d(p->grad);
-	printf("[OK] <tensor_mean_backward> done!\n");
+    printf("[OK] <tensor_mean_backward> done!\n");
 }
+
 
 //void tensor_matmul_backward(Arena *A, Tensor *x, Tensor *y, Tensor *grad_prev) {
 //	// Take the gradients of tensor X and tensor Y, w.r.t. Loss using chain rule
@@ -2334,57 +2346,50 @@ void tensor_relu_backward(Tensor *x) {
 
 void tensor_subtract_backward(Arena *A, Tensor *o) {
 
-	if (!o || !o->grad) {
-		fprintf(stderr, "out OR out->grad is NULL.\n");
-		return;
-	}
+    if (!o || !o->grad) {
+        fprintf(stderr, "[Error] output or output grad is NULL\n");
+        return;
+    }
 
-	if (!o->parents) {
-		fprintf(stderr, "[Error] <tensor_subtract_backward>! Parents is NULL.\n");
-		printf("Quitting.. \n");
-		return;
-	}
-	printf("o->parents: %d\n", o->num_parents);
+    if (!o->parents || o->num_parents != 2) {
+        fprintf(stderr, "[Error] invalid parents in subtract\n");
+        return;
+    }
 
-	assert(o->num_parents == 2);
+    Tensor *x = o->parents[0];
+    Tensor *y = o->parents[1];
 
-	Tensor *x = o->parents[0];
-	Tensor *y = o->parents[1];
-	int ndim = x->ndim;
+    if (!x->grad) {
+        x->grad = tensor_create_new(A, x->ndim, x->shape);
+        int size = x->shape[0] * x->shape[1];
+        memset(x->grad->data, 0, size * sizeof(float));
+    }
 
-	//if (!x->grad || !y->grad) {
-	//	fprintf(stderr, "[Error] <tensor_subtract_backward>! Parents is NULL.\n");
-	//	printf("Quitting.. \n");
-	//	return;
-	//}
+    if (!y->grad) {
+        y->grad = tensor_create_new(A, y->ndim, y->shape);
+        int size = y->shape[0] * y->shape[1];
+        memset(y->grad->data, 0, size * sizeof(float));
+    }
 
-	if (!x->grad) {
-		return;
-		//x->grad = tensor_create_new(A, ndim, o->shape);
-		//memset(x->grad, 0, x->grad->shape[0] * x->grad->shape[1] * sizeof(float));
-	}
+    int rows = x->shape[0];
+    int cols = x->shape[1];
 
-	if (!y->grad) {
-		return;
-		//y->grad = tensor_create_new(A, ndim, o->shape);
-		//memset(y->grad, 0, y->grad->shape[0] * y->grad->shape[1] * sizeof(float));
-	}
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
 
-	int rows = x->shape[0];
-	int cols = x->shape[1];
+            float val = o->grad->data[r * cols + c];
 
-	for (int r = 0; r < rows; r++) {
-		for (int c = 0; c < cols; c++) {
-			x->grad->data[r * cols + c] += (o->grad->data[r * cols + c]);
-			y->grad->data[r * cols + c] -= (o->grad->data[r * cols + c]);
-		}
-	}
-	tensor_get_2d(x->grad);
-	printf("\n");
-	tensor_get_2d(y->grad);
-	printf("[OK] <tensor_subtract_backward> done!\n");
+            x->grad->data[r * cols + c] += val;
+            y->grad->data[r * cols + c] -= val;
+        }
+    }
 
+		tensor_get_2d(x->grad);
+		printf("\n");
+		tensor_get_2d(y->grad);
+    printf("[OK] <tensor_subtract_backward> done!\n");
 }
+
 
 void tensor_slice_cols_backward(Tensor *x) {
 	// Will be implemented later. IA
