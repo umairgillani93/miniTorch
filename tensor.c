@@ -2014,12 +2014,17 @@ void tensor_expand_cols_backward(Arena *A, Tensor *o) {
     int o_cols = o->shape[1];
 		int p_cols = p->shape[1];
 
+		printf("o shape: \n");
+		tensor_shape_2d(o);
+		printf("o->grad shape: \n");
+		tensor_shape_2d(o->grad);
+
+
+
     for (int r = 0; r < o_rows; r++) {
-
         float sum = 0.0f;
-
         for (int c = 0; c < o_cols; c++) {
-					sum += o->data[r * o_cols + c];
+					sum += o->grad->data[r * o_cols + c];
         }
 				p->grad->data[r] += sum;
     }
@@ -2668,14 +2673,14 @@ int main() {
 	Tensor *diff = tensor_subtract(A, x, mean_exp);
 	Tensor *sq = tensor_square(A, diff);
 	Tensor *var = tensor_mean(A, sq);
-	Tensor *var_exp = tensor_expand_cols(A, var, x->shape[1]);
+	//Tensor *var_exp = tensor_expand_cols(A, var, x->shape[1]);
 	//Tensor *eps = tensor_fill_like(A, var_exp, 1e-3);
 
 	//Tensor *var_eps = tensor_add(A, var_exp, eps);
 	//Tensor *std = tensor_sqrt(A, var_eps);
 	//Tensor *out = tensor_div(A, var_eps, std);
 
-	Tensor *loss = tensor_f(A, var_exp); // (1,1)
+	Tensor *loss = tensor_f(A, var); // (1,1)
 	
 	loss->grad->data[0] = 1.0f;
 
