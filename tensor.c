@@ -1874,14 +1874,15 @@ void f_backward(Arena *A, Tensor *o) {
 	}
 
 
-	float v = o->grad->data[0];
+	float prev = o->grad->data[0];
 	int p_rows = p->shape[0];
 	int p_cols = p->shape[1];
 
 	for (int r = 0; r < p_rows; r++) {
-		float prev = o->grad->data[r];
 		for (int c = 0; c < p_cols; c++) {
-			p->grad->data[r * p_cols + c] += (1 * prev);
+			//float prev = o->grad->data[r];
+			float curr = 1.0f;
+			p->grad->data[r * p_cols + c] += (curr * prev);
 		}
 	}
 	tensor_get_2d(p->grad);
@@ -1969,9 +1970,11 @@ void tensor_square_backward(Arena *A, Tensor *o) {
 	int cols = p->shape[1];
 
 	for (int r = 0; r < rows; r++) {
-		float up_stream = o->grad->data[r];
 		for (int c = 0; c < cols; c++) {
-			p->grad->data[r * cols + c] += ((2 * o->data[r * cols + c]) * up_stream);
+			int idx = r * cols + c;
+			float prev = o->grad->data[idx];
+			float curr = 2.0f * p->data[idx];
+			p->grad->data[r * cols + c] += (curr * prev);
 		}
 	}
 	tensor_get_2d(p->grad);
@@ -2016,10 +2019,11 @@ void tensor_expand_cols_backward(Arena *A, Tensor *o) {
         float sum = 0.0f;
 
         for (int c = 0; c < o_cols; c++) {
+						float prev = o->grad->data[r * o_cols + c];
             sum += o->grad->data[r * o_cols + c];
+						p->grad->data[r * o_cols * c] += (sum * prev);
         }
 
-        p->grad->data[r] += sum;
     }
 
 		tensor_get_2d(p->grad);
@@ -2102,16 +2106,14 @@ void tensor_mean_backward(Arena *A, Tensor *o) {
     int o_cols = o->shape[1];
 
     for (int r = 0; r < p_rows; r++) {
-
-			float val = o->grad->data[r];
+			float prev = o->grad->data[r];
 			for (int c = 0; c < p_cols; c++) {
-						
-            p->grad->data[r * p_cols + c] += val / (float)p_cols;
-						printf("val: %f\n", val);
-						printf("p_cols : %f\n", p_cols);
-						printf("p->grad->data: %f\n", p->grad->data[r * p_cols + c]);
+				p->grad->data[r * p_cols + c] += (prev * ((1.0f / (float)p_cols)));
+				printf("p_cols : %f\n", (float) p_cols);
+				printf("o->grad->data: %f\n", prev);
+				printf("p->grad->data: %f\n", p->grad->data[r * p_cols + c]);
 
-        }
+			}
     }
 		tensor_get_2d(p->grad);
 
@@ -2352,10 +2354,9 @@ void tensor_subtract_backward(Arena *A, Tensor *o) {
     for (int r = 0; r < rows; r++) {
         for (int c = 0; c < cols; c++) {
 
-            float val = o->grad->data[r * cols + c];
-
-            x->grad->data[r * cols + c] += val;
-            y->grad->data[r * cols + c] -= val;
+            float prev = o->grad->data[r * cols + c];
+            x->grad->data[r * cols + c] += prev;
+            y->grad->data[r * cols + c] -= prev;
         }
     }
 
@@ -2583,8 +2584,8 @@ int main() {
 	printf("Arena allocated\n");
 	int ndim = 2;
 	int *shape = arena_alloc(A, ndim * sizeof(int));
-	shape[0] = 16;
-	shape[1] = 32;
+	shape[0] = 4;
+	shape[1] = 4;
 
 	Tensor *pred = tensor_create_new(A, ndim, shape);
 	tensor_randomize_weights(pred);
@@ -2663,10 +2664,10 @@ int main() {
 	tensor_fill_zeros(x->grad);
 
 	//Tensor *out = layer_norm_forward(A, ln, x);
-	//Tensor *mean = tensor_mean(A, x);
+	Tensor *mean = tensor_mean(A, x);
 	
-	//Tensor *mean_exp = tensor_expand_cols(A, mean, x->shape[1]);
-	Tensor *diff = tensor_subtract(A, x, y);
+	Tensor *mean_exp = tensor_expand_cols(A, mean, x->shape[1]);
+	Tensor *diff = tensor_subtract(A, x, mean_exp);
 	Tensor *sq = tensor_square(A, diff);
 
 	Tensor *loss = tensor_f(A, sq); // (1,1)
