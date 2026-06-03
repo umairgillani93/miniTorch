@@ -87,6 +87,7 @@ void tensor_metadata(Tensor *x);
 void backward(Arena *A, Tensor *out);
 void f_backward(Arena *A, Tensor *out);
 void dfs(Arena *A, Tensor *root, bool *visited, Tensor **topo, int *size);
+Tensor *ensure_grad(Arena *A, Tensor *t); 
 Tensor *tensor_f(Arena *A, Tensor *x);
 Tensor *tensor_scaler_div(Arena *A, Tensor *x, float val);
 Tensor *tensor_slice_cols(Arena *A, Tensor *a, int num_heads, int dk);

@@ -37,6 +37,14 @@ size_t GLOBAL_TENSOR_ID = 0;
 
 // Some backward functions
 // We want to take local gradiens depending upons the operations for this backward funntion (PyTorch style)
+//
+
+Tensor *ensure_grad(Arena *A, Tensor *t) {
+    if (!t->grad) {
+        t->grad = tensor_create_new(A, t->ndim, t->shape);
+    }
+    return t->grad;
+}
 
 void build_topology(Tensor *root, Tensor **topo, int *idx, bool *added) {
     if (!root) return;
@@ -1124,7 +1132,7 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
 	}
 	// For autograd
 	t->data = arena_alloc(A, total * sizeof(float));
-	
+	memset(t->data, 0, total * sizeof(float));
 	t->parents = NULL;
 	t->operations = NULL;
 	t->is_leaf = true;
@@ -1135,11 +1143,6 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
 	t->num_parents = 0;
 	t->requires_grad = false;
 
-	//if ((t->requires_grad) && (t->grad == NULL)) {
-	//	int s = tensor_size(t);
-	//	t->grad = arena_alloc(A, s * sizeof(float)); 
-	//	memset(t->grad, 0, s * sizeof(float));
-	//}
 	return t;
 }
 
@@ -1724,7 +1727,6 @@ Tensor *tensor_sqrt(Arena *A, Tensor *a) {
 			out->data[r * cols + c] = sqrt(a->data[r * cols + c] + EPS); // Fixed: bacward = 1/2 * (x + EPS) ^ 1/2
 		}
 	}
-	Tensor *r = tensor_scaler_addition(A, 
 	return out;
 }
 
@@ -1857,7 +1859,7 @@ void tensor_sqrt_backward(Arena *A, Tensor *o) {
         float upstream_grad = o->grad->data[i];
         float sqrt_val = o->data[i]; // This is already sqrt(x)
         
-         Handle potential division by zero if sqrt_val is 0
+        // Handle potential division by zero if sqrt_val is 0
         if (sqrt_val < 1e-7f && sqrt_val > -1e-7f) {
             sqrt_val = 1e-7f; 
         }
