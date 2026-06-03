@@ -1124,6 +1124,7 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {
 	}
 	// For autograd
 	t->data = arena_alloc(A, total * sizeof(float));
+	
 	t->parents = NULL;
 	t->operations = NULL;
 	t->is_leaf = true;
@@ -1720,9 +1721,10 @@ Tensor *tensor_sqrt(Arena *A, Tensor *a) {
 	// index = row_offset + col_offset;
 	for (int r = 0; r < rows; r++) {
 		for (int c = 0; c < cols; c++) {
-			out->data[r * cols + c] = sqrt(a->data[r * cols + c] + EPS); // Need to CORRECT. Apply another tensor_add() here.
+			out->data[r * cols + c] = sqrt(a->data[r * cols + c] + EPS); // Fixed: bacward = 1/2 * (x + EPS) ^ 1/2
 		}
 	}
+	Tensor *r = tensor_scaler_addition(A, 
 	return out;
 }
 
@@ -1836,8 +1838,11 @@ void f_backward(Arena *A, Tensor *o) {
 
 void tensor_sqrt_backward(Arena *A, Tensor *o) {
 
-	//TODO: Need to fix this, I'ts breaking the backprop chain currently!
-	if (!o || !o->grad || !o->parents[0]) return;
+		// FIXED:
+		if (!o || !o->grad) {
+			fprintf(stderr, "Out OR Gradient is NULL.\n");
+			return;
+		}
 
     Tensor *x = o->parents[0];
     
@@ -1852,13 +1857,13 @@ void tensor_sqrt_backward(Arena *A, Tensor *o) {
         float upstream_grad = o->grad->data[i];
         float sqrt_val = o->data[i]; // This is already sqrt(x)
         
-        // Handle potential division by zero if sqrt_val is 0
-        //if (sqrt_val < 1e-7f && sqrt_val > -1e-7f) {
-        //    sqrt_val = 1e-7f; 
-        //}
+         Handle potential division by zero if sqrt_val is 0
+        if (sqrt_val < 1e-7f && sqrt_val > -1e-7f) {
+            sqrt_val = 1e-7f; 
+        }
 
-        // dL/dX = upstream_grad * (1 / (2 * sqrt(X)))
-        x->grad->data[i] += upstream_grad * (1.0f / (2.0f * sqrt_val));
+        // dL/dX = upstream_grad * (1 / (2 * sqrt(X + EPS)))
+        x->grad->data[i] += upstream_grad * (1.0f / (2.0f * (sqrt_val + EPS)));
     }
 		tensor_get_2d(x->grad);
 		printf("[OK] <tensor_sqrt_backward> done!\n");
@@ -2606,17 +2611,22 @@ int main() {
 	x->grad = tensor_create_new(A, x->ndim, x->shape);
 	tensor_fill_zeros(x->grad);
 
-	Tensor *mean = tensor_mean(A, x); // x is out MHA output // (16,32)
-	Tensor *exp_cols = tensor_expand_cols(A, mean, 32); // (16,32)
-	Tensor *sub = tensor_subtract(A, x, exp_cols); // (16,32) 
-	Tensor *loss = tensor_f(A, sub); // (1,1)
+	Tensor *out = layer_norm_forward(A, ln, x);
+	//Tensor *mean = tensor_mean(A, x);
+	//Tensor *mean_exp = tensor_expand_cols(A, mean, x->shape[1]);
+	//Tensor *diff = tensor_subtract(A, x, mean_exp);
+	//Tensor *sq = tensor_square(A, diff);
+
+	Tensor *loss = tensor_f(A, out); // (1,1)
 	
 	loss->grad->data[0] = 1.0f;
 
 	run_graph_validation(A, loss, MAX_NODES);
 
 	backward(A, loss);
-	export_and_visualize_graph_new(loss, "graph_new.dot", "graph_new.png");
+	//backward(A, loss);
+	//backward(A, loss);
+	export_and_visualize_graph_new(loss, "graph.dot", "graph.png");
 
 	return 0;
 }
