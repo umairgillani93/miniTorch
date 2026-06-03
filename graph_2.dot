@@ -5,9 +5,9 @@ digraph TensorGraph {
   n10 -> n12 [penwidth=1.2];
   n10 [label="{Tensor_ID: 10 | Tensor_OP: OP_SQUARE | Gradient: 1.0000}", color="red", fillcolor="#fff0f0"];
   n8 -> n10 [penwidth=1.2];
-  n8 [label="{Tensor_ID: 8 | Tensor_OP: OP_SUBTRACT | Gradient: 2.0000}", color="red", fillcolor="#fff0f0"];
+  n8 [label="{Tensor_ID: 8 | Tensor_OP: OP_SUBTRACT | Gradient: 1.2428}", color="red", fillcolor="#fff0f0"];
   n6 -> n8 [penwidth=1.2];
   n4 -> n8 [penwidth=1.2];
-  n4 [label="{Tensor_ID: 4 | Tensor_OP: NULL | Gradient: -2.0000}", color="red", fillcolor="#fff0f0"];
-  n6 [label="{Tensor_ID: 6 | Tensor_OP: NULL | Gradient: 2.0000}", color="red", fillcolor="#fff0f0"];
+  n4 [label="{Tensor_ID: 4 | Tensor_OP: NULL | Gradient: -1.2428}", color="red", fillcolor="#fff0f0"];
+  n6 [label="{Tensor_ID: 6 | Tensor_OP: NULL | Gradient: 1.2428}", color="red", fillcolor="#fff0f0"];
 }
