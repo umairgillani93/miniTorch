@@ -227,7 +227,7 @@ Tensor *mha_backward(Arena *A, MHA *m, Tensor *dx, Tensor *tokens) {
 
 
 
-Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {
+Tensor *ha_forward(Arena *A, Tensor *t, MHA *mha) {
 	// 1. tensor_slice_cols(a, tensor *x, int start_idx, int width);
 	// 2. tensor_concat(A, tensor *out, int heads)
 	//

@@ -421,45 +421,69 @@ void tensor_metadata(Tensor *x) {
 	
 
 
-void tensor_matmul_backward(Arena *A, Tensor *currNode) {
-	Tensor *x = currNode->parents[0];
-	Tensor *y = currNode->parents[1];
+void tensor_matmul_backward(Arena *A, Tensor *o) {
+    if (!o) {
+        fprintf(stderr, "[Error] <tensor_matmul_backward> Input is NULL\n");
+        return;
+    }
 
-	// dL/dx = grad_prev @ y.T
-	Tensor *yt = tensor_transpose(A, y);
+    if (!o->grad) {
+        printf("[Warning] <tensor_matmul_backward> Gradient is NULL. Initializing..\n");
+        o->grad = tensor_create_new(A, o->ndim, o->shape);
+        int grad_size = o->shape[0] * o->shape[1];
+        memset(o->grad->data, 0, grad_size * sizeof(float));
+    }
 
-	Tensor *dx = tensor_matmul(A, y, currNode->grad);
-	//Tensor *dxt = tensor_transpose(dx);
-	Tensor *dxt = tensor_transpose(A, dx);
+    if (!o->parents) {
+        fprintf(stderr, "[Error] <tensor_matmul_backward> Invalid parents in subtract\n");
+        return;
+    }
 
-	// Accumulate x now and first initilize 'x->grad'
-	x->grad = tensor_create_new(A, x->ndim, x->shape); 
-	tensor_randomize(x->grad);
+    Tensor *x = o->parents[0]; // first parent
+    Tensor *y = o->parents[1]; // second parent
 
-	int size_x = x->grad->shape[0] * x->grad->shape[1];
-	for (int i = 0; i < size_x; i++) {
-		x->grad->data[i] += dxt->data[i];
-	}
+    if (!x->grad) {
+        x->grad = tensor_create_new(A, x->ndim, x->shape);
+        int size = x->shape[0] * x->shape[1];
+        memset(x->grad->data, 0, size * sizeof(float));
+    }
 
-	// dL/dy = x.T @ grad_prev 
-	Tensor *xt = tensor_transpose(A, x);
-	Tensor *dy = tensor_matmul(A, currNode->grad, x);
+    if (!y->grad) {
+        y->grad = tensor_create_new(A, y->ndim, y->shape);
+        int size = y->shape[0] * y->shape[1];
+        memset(y->grad->data, 0, size * sizeof(float));
+    }
+		
+		int rows = x->shape[0];
+		int cols = x->shape[1];
 
-	printf("dy shape: \n");
-	tensor_shape_2d(dy);
+		/*
+		 * For matmul the derivative is as follows:
+		 * z = x @ y
+		 * dz/dx = up_stream_grad * y.T
+		 * dz/dy = x.T * up_stream_grad 
+		 */
+		
+		// dz/dz
+		for (int r = 0; r < rows; r++) {
+			for (int c = 0; c < cols; c++) {
+				int idx = r * cols + c;
+				float prev = o->grad->data[idx];
+				float curr = y->data[idx];
+				x->grad->data[idx] += (prev * curr);
+			}
+		}
+		
+		// dy/dz
+		for (int r = 0; r < rows; r++) {
+			for (int c = 0; c < cols; c++) {
+				int idx = r * cols + c;
+				float prev = o->grad->data[idx];
+				float curr = x->data[idx];
+				y->grad->data[idx] += (curr * prev);
+			}
+		}
 
-	// Accumulate y now and first initilize 'y->grad'
-	y->grad = tensor_create_new(A, y->ndim, y->shape); 
-	tensor_randomize(y->grad);
-	int size_y = y->grad->shape[0] * y->grad->shape[1];
-	for (int i = 0; i < size_y; i++) {
-		y->grad->data[i] += dy->data[i];
-	}
-	printf("y shape: \n");
-	tensor_shape_2d(y);
-
-	printf("y->grad shape: \n");
-	tensor_shape_2d(y->grad);
 }
 
 
@@ -2704,17 +2728,17 @@ int main() {
 	Tensor *out = layer_norm_forward(A, ln, x);
 	//Tensor *out = tensor_sqrt(A, x);
 
-	Tensor *loss = tensor_f(A, out); // (1,1)
+	Tensor *loss = tensor_mse_loss(A, out, y); // (1,1)
 	
 	loss->grad->data[0] = 1.0f;
 
 	run_graph_validation(A, loss, MAX_NODES);
 
 	backward(A, loss);
-	//backward(A, loss);
-	//backward(A, loss);
-	//backward(A, loss);
-	//backward(A, loss);
+	backward(A, loss);
+	backward(A, loss);
+	backward(A, loss);
+	backward(A, loss);
 	export_and_visualize_graph_new(loss, "graph.dot", "graph.png");
 
 	return 0;
