@@ -830,7 +830,7 @@ Tensor *tensor_element_wise_product(Arena *A, Tensor *a, Tensor *b) {
 	
 	printf("b shape: \n");
 	tensor_shape_2d(b);
-	assert(a->shape[0] == b->shape[0] && a->shape[1] == b->shape[1]);
+	assert((a->shape[0] == b->shape[0]) && (a->shape[1] == b->shape[1]));
 	int rows = a->shape[0];
 	int cols = a->shape[1];
 	int ndim = a->ndim;
@@ -1932,6 +1932,8 @@ void tensor_sqrt_backward(Arena *A, Tensor *o) {
 				int idx = r * cols + c;
 				float prev = o->grad->data[idx];
 				float curr = 1.0f / sqrt(p->data[idx]);
+				printf("sqrt prev: %f\n", prev);
+				printf("sqrt curr: %f\n", curr);
 				p->grad->data[idx] += (curr * prev);
 				printf("sqrt grad: %f\n", p->grad->data[idx]);
 			}
@@ -2270,64 +2272,59 @@ void tensor_div_backward(Arena *A, Tensor *o) {
 	// dZ/dB = up_stream_gradient (dL/dA) * (- A/B^2)
 	// this is what this function computes
 	
-	if (!o || !o->grad) {
-		fprintf(stderr, "out OR out->grad is NULL.\n");
-		return;
-	}
 
-	if (!o->parents) {
-		fprintf(stderr, "[Error] <tensor_div_backward>! Parents is NULL.\n");
-		printf("Quitting.. \n");
-		return;
-	}
-	printf("o is here.. \n");
-	tensor_get_2d(o);
-	printf("o->parents: %d\n", o->num_parents);
+    if (!o) {
+        fprintf(stderr, "[Error] <tensor_div_backward> Input is NULL\n");
+        return;
+    }
 
-	assert(o->num_parents == 2);
-	
+    if (!o->grad) {
+        printf("[Warning] <tensor_div_backward> Gradient is NULL. Initializing..\n");
+        o->grad = tensor_create_new(A, o->ndim, o->shape);
+        int grad_size = o->shape[0] * o->shape[1];
+        memset(o->grad->data, 0, grad_size * sizeof(float));
+    }
 
-	Tensor *x = o->parents[0];
-	Tensor *y = o->parents[1];
-	int ndim = x->ndim; // both 'x' and 'y' should have same dimension for 
-											// so no matter if you take ndim of 'x' or 'y' 
-											// both are same
-	
-	//if (!x->grad || !y->grad) {
-	//	fprintf(stderr, "[Error] <tensor_div_backward>! Parents is NULL.\n");
-	//	printf("Quitting.. \n");
-	//	return;
-	//}
+    if (!o->parents) {
+        fprintf(stderr, "[Error] <tensor_div_backward> Invalid parents in subtract\n");
+        return;
+    }
 
-	if (!x->grad) {
-		x->grad = tensor_create_new(A, ndim, x->shape);
-		memset(x->grad, 0, x->grad->shape[0] * x->grad->shape[1] * sizeof(float));
-	}
+    Tensor *x = o->parents[0];
+    Tensor *y = o->parents[1];
 
-	if (!y->grad) {
-		y->grad = tensor_create_new(A, ndim, y->shape);
-		memset(y->grad, 0, y->grad->shape[0] * y->grad->shape[1] * sizeof(float));
-	}
+    if (!x->grad) {
+        x->grad = tensor_create_new(A, x->ndim, x->shape);
+        int size = x->shape[0] * x->shape[1];
+        memset(x->grad->data, 0, size * sizeof(float));
+    }
 
-	int rows = x->shape[0];
-	int cols = x->shape[1];
-	
-	// for dZ/dB
-	for (int r = 0; r < rows;  r++) {
-		for (int c = 0; c < cols; c++) {
-			int idx = r * cols + c;
-			float up_grad = o->grad->data[idx];
-			float x_val = x->data[idx];
-			float y_val = y->data[idx];
+    if (!y->grad) {
+        y->grad = tensor_create_new(A, y->ndim, y->shape);
+        int size = y->shape[0] * y->shape[1];
+        memset(y->grad->data, 0, size * sizeof(float));
+    }
 
-			x->grad->data[idx] += up_grad * (1.0f / y_val);
-			y->grad->data[idx] += up_grad * (-x_val / (y_val * y_val));
+		int rows = x->shape[0];
+		int cols = x->shape[1];
+		
+		// for dZ/dB
+		for (int r = 0; r < rows;  r++) {
+			for (int c = 0; c < cols; c++) {
+				int idx = r * cols + c;
+				float prev = o->grad->data[idx];
+				float x_val = x->data[idx];
+				float y_val = y->data[idx];
+				printf("<tensor_div_back> prev: %f\n", prev);
+
+				x->grad->data[idx] += (prev * (1.0f / y_val));
+				y->grad->data[idx] += (prev * (-x_val / (y_val * y_val)));
+			}
 		}
-	}
-	tensor_get_2d(x->grad);
-	printf("\n");
-	tensor_get_2d(y->grad);
-	printf("[OK] <tensor_div_backward> done!\n");
+		tensor_get_2d(x->grad);
+		printf("\n");
+		tensor_get_2d(y->grad);
+		printf("[OK] <tensor_div_backward> done!\n");
 }
 
 
@@ -2341,13 +2338,20 @@ void tensor_relu_backward(Tensor *x) {
 
 void tensor_subtract_backward(Arena *A, Tensor *o) {
 
-    if (!o || !o->grad) {
-        fprintf(stderr, "[Error] output or output grad is NULL\n");
+    if (!o) {
+        fprintf(stderr, "[Error] <tensor_subtract_backward> Input is NULL\n");
         return;
     }
 
-    if (!o->parents || o->num_parents != 2) {
-        fprintf(stderr, "[Error] invalid parents in subtract\n");
+    if (!o->grad) {
+        printf("[Warning] <tensor_subtract_backward> Gradient is NULL. Initializing..\n");
+        o->grad = tensor_create_new(A, o->ndim, o->shape);
+        int grad_size = o->shape[0] * o->shape[1];
+        memset(o->grad->data, 0, grad_size * sizeof(float));
+    }
+
+    if (!o->parents) {
+        fprintf(stderr, "[Error] <tensor_subtract_backward> Invalid parents in subtract\n");
         return;
     }
 
@@ -2616,7 +2620,7 @@ int main() {
 	target->grad = tensor_create_new(A, ndim, target->shape);
 
 
-	int features = 32;
+	int features = 4;
 
 	LayerNorm *ln = layer_norm_create_new(A, features);
 	printf("Iniitiazing parameters for Layer Norm:\n");
@@ -2684,18 +2688,21 @@ int main() {
 
 	//Tensor *out = layer_norm_forward(A, ln, x);
 	
-	Tensor *mean = tensor_mean(A, x);
-	
-	Tensor *mean_exp = tensor_expand_cols(A, mean, x->shape[1]);
-	Tensor *diff = tensor_subtract(A, x, mean_exp);
-	Tensor *sq = tensor_square(A, diff);
-	Tensor *var = tensor_mean(A, sq);
-	Tensor *var_exp = tensor_expand_cols(A, var, x->shape[1]);
-	Tensor *eps = tensor_fill_like(A, sq, 1e-3);
+	//Tensor *mean = tensor_mean(A, x);
+	//
+	//Tensor *mean_exp = tensor_expand_cols(A, mean, x->shape[1]);
+	//Tensor *diff = tensor_subtract(A, x, mean_exp);
+	//Tensor *sq = tensor_square(A, diff);
+	//Tensor *var = tensor_mean(A, sq);
+	//Tensor *var_exp = tensor_expand_cols(A, var, x->shape[1]);
+	//Tensor *eps = tensor_fill_like(A, sq, 1e-3);
 
-	Tensor *var_eps = tensor_add(A, var_exp, eps);
-	Tensor *std = tensor_sqrt(A, var_eps);
-	Tensor *out = tensor_div(A, var_eps, std);
+	//Tensor *var_eps = tensor_add(A, var_exp, eps);
+	//Tensor *std = tensor_sqrt(A, var_eps);
+	//Tensor *out = tensor_div(A, var_eps, std);
+	
+	Tensor *out = layer_norm_forward(A, ln, x);
+	//Tensor *out = tensor_sqrt(A, x);
 
 	Tensor *loss = tensor_f(A, out); // (1,1)
 	
@@ -2704,10 +2711,10 @@ int main() {
 	run_graph_validation(A, loss, MAX_NODES);
 
 	backward(A, loss);
-	backward(A, loss);
-	backward(A, loss);
-	backward(A, loss);
-	backward(A, loss);
+	//backward(A, loss);
+	//backward(A, loss);
+	//backward(A, loss);
+	//backward(A, loss);
 	export_and_visualize_graph_new(loss, "graph.dot", "graph.png");
 
 	return 0;
