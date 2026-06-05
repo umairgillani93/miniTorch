@@ -1407,6 +1407,7 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 		op->type = MATMUL;
 		op->name = "OP_TIMES";
 		out->operations = op;
+		out->shared_dim = a_cols;
 	}
 
 	for (int r = 0; r < a_rows; r++) {
@@ -2423,9 +2424,24 @@ void tensor_subtract_backward(Arena *A, Tensor *o) {
     printf("[OK] <tensor_subtract_backward> done!\n");
 }
 
+void tensor_slice_cols_backward(Arena *A, Tensor *o) {
+	Tensor *x = o->parents[0];
 
-void tensor_slice_cols_backward(Tensor *x) {
-	// Will be implemented later. IA
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+
+	int dk = o->shape[1];
+
+	int k = o->shared_dim; // recovered from metadata
+
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < dk; c++) {
+			int out_idx = r * dk + c;
+			int x_idx = r * cols + k * dk + c;
+
+			x->grad->data[x_idx] += o->grad->data[out_idx];
+		}
+	}
 }
 
 void tensor_transpose_backward(Tensor *x) {
@@ -2661,12 +2677,13 @@ int main() {
 	tensor_fill_zeros(x->grad);
 
 	Tensor *out = tensor_matmul(A, x, y);
-
-	Tensor *loss = tensor_f(A, out); // (1,1)
+	tensor_get_2d(out);
+	Tensor *slice1 = tensor_slice_cols(A, out, 0, 2);
 	
+	Tensor *loss = tensor_f(A, slice1); // (1,1)
 	loss->grad->data[0] = 1.0f;
 
-	run_graph_validation(A, loss, 4);
+	run_graph_validation(A, loss, MAX_NODES);
 
 	backward(A, loss);
 	backward(A, loss);

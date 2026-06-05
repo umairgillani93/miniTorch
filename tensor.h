@@ -73,6 +73,9 @@ typedef struct Tensor {
 
 	// For concat columns
 	int cols;
+
+	// For matmul shared dimension
+	int shared_dim;
 } Tensor;
 
 
@@ -154,7 +157,7 @@ void tensor_expand_rows_backward(Arena *A, Tensor *o);
 void tensor_softmax_backward(Tensor *x);
 void tensor_relu_backward(Tensor *x);
 void tensor_fill_with(Tensor *x, float v);
-void tensor_slice_cols_backward(Tensor *x);
+void tensor_slice_cols_backward(Arena *A, Tensor *x);
 void tensor_element_wise_product_backward(Arena *A, Tensor *o);
 Tensor *tensor_mean(Arena *A, Tensor *x);
 Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_shape);
