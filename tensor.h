@@ -121,7 +121,7 @@ void tensor_accumulate(Tensor *a, Tensor *b);
 void tensor_relu_backward( Tensor *out);
 void tensor_subtract_backward(Arena *A, Tensor *x);
 void tensor_fill_like_backward(Arena *A, Tensor *o);
-void tensor_concat_backward(Tensor *out);
+void tensor_concat_backward(Arena *A, Tensor *o);
 void tensor_div_backward(Arena *A, Tensor *out);
 //void tensor_free(Tensor *t);
 void tensor_get_2d(Tensor *t);

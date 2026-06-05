@@ -2445,11 +2445,42 @@ void tensor_slice_cols_backward(Arena *A, Tensor *o) {
 }
 
 void tensor_transpose_backward(Tensor *x) {
-	// Will be implemented later. IA
+	Tensor *x = o->parents[0];
+
+	int rows = x->shape[0];
+	int cols = x->shape[1];
+
+	for (int r = 0; r < rows; r++) {
+			for (int c = 0; c < cols; c++) {
+
+					x->grad->data[r * cols + c] +=
+							o->grad->data[c * rows + r];  // just undo the indexs swaps to take the transpose again.
+																						// i.e dL/dt += transpose(o->grad)
+			}
+	}
 }
 
-void tensor_concat_backward(Tensor *x) {
-	// Will be implemented later. IA
+void tensor_concat_backward(Arena *A, Tensor *o) {
+	int rows = o->shape[0];
+	int out_cols = o->shape[1];
+
+	int num_heads = o->num_parents;
+	int cols = out_cols / num_heads;
+
+	for (int k = 0; k < num_heads; k++) {
+			Tensor *head = o->parents[k];
+
+			for (int r = 0; r < rows; r++) {
+					for (int c = 0; c < cols; c++) {
+
+							int out_idx  = r * out_cols + k * cols + c;
+							int head_idx = r * cols + c;
+
+							head->grad->data[head_idx] +=
+									o->grad->data[out_idx];
+					}
+			}
+	}
 }
 
 bool tensor_equal(Tensor *x, Tensor *y) {
@@ -2677,20 +2708,29 @@ int main() {
 	tensor_fill_zeros(x->grad);
 
 	Tensor *out = tensor_matmul(A, x, y);
-	tensor_get_2d(out);
 	Tensor *slice1 = tensor_slice_cols(A, out, 0, 2);
-	
-	Tensor *loss = tensor_f(A, slice1); // (1,1)
+	Tensor *slice2 = tensor_slice_cols(A, out, 1, 2);
+
+	struct Tensor **heads = arena_alloc(A, 2 * sizeof(Tensor *));
+	heads[0] = slice1;
+	heads[1] = slice2;
+
+	Tensor *concat = tensor_concat(A, heads, 2);
+	tensor_get_2d(concat);
+
+	Tensor *loss = tensor_f(A, concat); // (1,1)
 	loss->grad->data[0] = 1.0f;
 
 	run_graph_validation(A, loss, MAX_NODES);
 
-	backward(A, loss);
-	backward(A, loss);
-	backward(A, loss);
-	backward(A, loss);
-	backward(A, loss);
-	export_and_visualize_graph_new(loss, "graph_att.dot", "graph_att.png");
+	//backward(A, loss);
+	//backward(A, loss);
+	//backward(A, loss);
+	//backward(A, loss);
+	//backward(A, loss);
+	//export_and_visualize_graph_new(loss, "graph_att.dot", "graph_att.png");
+
+	//mha->out = tensor_concat(A, heads_arr, mha->num_heads);
 
 	return 0;
 }
