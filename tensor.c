@@ -454,8 +454,13 @@ void tensor_matmul_backward(Arena *A, Tensor *o) {
         memset(y->grad->data, 0, size * sizeof(float));
     }
 		
-		int rows = x->shape[0];
-		int cols = x->shape[1];
+		int x_rows = x->shape[0];
+		int x_cols = x->shape[1];
+
+		int y_rows = y->shape[0];
+		int y_cols = y->shape[1];
+
+		int o_cols = o->shape[1];
 
 		/*
 		 * For matmul the derivative is as follows:
@@ -465,27 +470,32 @@ void tensor_matmul_backward(Arena *A, Tensor *o) {
 		 */
 		
 		// dz/dz
-		for (int r = 0; r < rows; r++) {
-			for (int c = 0; c < cols; c++) {
-				int idx = r * cols + c;
-				float prev = o->grad->data[idx];
-				float curr = y->data[idx];
-				x->grad->data[idx] += (prev * curr);
+		for (int r = 0; r < x_rows; r++) {
+			for (int c = 0; c < x_cols; c++) {
+				float sum = 0.0f;
+				for (int k = 0; k < o_cols; k++) {
+					sum +=  (o->grad->data[r * o_cols + k] * y->data[c * o_cols + k]);
+				}
+				x->grad->data[r * x_cols + c] += sum;
 			}
 		}
 		
 		// dy/dz
-		for (int r = 0; r < rows; r++) {
-			for (int c = 0; c < cols; c++) {
-				int idx = r * cols + c;
-				float prev = o->grad->data[idx];
-				float curr = x->data[idx];
-				y->grad->data[idx] += (curr * prev);
+		for (int r = 0; r < y_rows; r++) {
+			for (int c = 0; c < y_cols; c++) {
+				float sum = 0.0f;
+				for (int k = 0; k < o_cols; k++) {
+					sum += (y->data[k * x_cols + r] * o->grad->data[k * o_cols + c]);
 			}
+			y->grad->data[r * y_cols + c] += sum;
 		}
 
+		printf("x->grad: \n");
+		tensor_get_2d(x->grad);
+		printf("y->grad: \n");
+		tensor_get_2d(y->grad);
+	}
 }
-
 
 Tensor *tensor_relu(Arena *A, Tensor *x) {
 	int rows = x->shape[0];
@@ -2630,116 +2640,40 @@ int main() {
 	arena_init(A, ARENA_SIZE);
 	printf("Arena allocated\n");
 	int ndim = 2;
-	int *shape = arena_alloc(A, ndim * sizeof(int));
-	shape[0] = 4;
-	shape[1] = 4;
+	int *shape_x = arena_alloc(A, ndim * sizeof(int));
+	int *shape_y = arena_alloc(A, ndim * sizeof(int));
+	shape_x[0] = 4;
+	shape_x[1] = 4;
 
-	Tensor *pred = tensor_create_new(A, ndim, shape);
-	tensor_randomize_weights(pred);
-	Tensor *target = tensor_create_new(A, ndim, shape);
-	tensor_randomize_weights(target);
-	pred->requires_grad = true;
-	target->requires_grad = true;
-	pred->grad = tensor_create_new(A, ndim, pred->shape);
-	target->grad = tensor_create_new(A, ndim, target->shape);
+	shape_y[0] = 4;
+	shape_y[1] = 2;
 
-
-	int features = 4;
-
-	LayerNorm *ln = layer_norm_create_new(A, features);
-	printf("Iniitiazing parameters for Layer Norm:\n");
-	layer_norm_init_params(ln);
-
-	/*
-	 *
-	Tensor *y = tensor_create_new(A, ndim, y_shape);
-	y->requires_grad = true;
-	y->grad = tensor_create_new(A, ndim, y_shape);
-	Tensor *mean = tensor_mean(A, x);
-	
-	// Docs reference: pytorch -> LINK HERE
-	Tensor *mean_exp = tensor_expand_cols(A, mean, x->shape[1]);
-	Tensor *diff = tensor_subtract(A, x, mean_exp);
-	Tensor *sq = tensor_square(A, diff);
-	Tensor *var = tensor_mean(A, sq);
-	Tensor *var_exp = tensor_expand_cols(A, var, x->shape[1]);
-	Tensor *eps = tensor_fill_like(A, var_exp, 1e-3);
-
-	Tensor *var_eps = tensor_add(A, var_exp, eps);
-	Tensor *std = tensor_sqrt(A, var_eps);
-	Tensor *out = tensor_div(A, var_eps, std);
-
-	printf("out shape: \n");
-	tensor_shape_2d(out);
-
-	ln->var = var;
-	ln->x_hat = out;
-
-	printf("gamma shape before expansion: \n");
-	tensor_shape_2d(ln->gamma);
-
-	Tensor *gamma_exp = tensor_expand_rows(A, ln->gamma, rows);
-
-	printf("gamma shape after expansion: \n");
-	tensor_shape_2d(gamma_exp);
-	Tensor *beta_exp = tensor_expand_rows(A, ln->beta, rows);
-
-	printf("beta shape after expansion: \n");
-	tensor_shape_2d(ln->beta);
-	
-	//tensor_randomize_weights(gamma_exp);
-	//tensor_randomize_weights(beta_exp);
-	Tensor *yhat = tensor_element_wise_product(A, gamma_exp, out);
-
-	y = tensor_add(A, yhat, beta_exp);
-
-	return y;
-	*/
-
-
-	Tensor *y = tensor_create_new(A, ndim, shape);
+	Tensor *y = tensor_create_new(A, ndim, shape_y);
 	tensor_randomize_weights(y);
 	y->requires_grad = true;
 	y->grad = tensor_create_new(A, y->ndim, y->shape);
 	tensor_fill_zeros(y->grad);
 
-
-	Tensor *x = tensor_create_new(A, ndim, shape);
+	Tensor *x = tensor_create_new(A, ndim, shape_x);
 	tensor_randomize_weights(x);
 	x->requires_grad = true;
 	x->grad = tensor_create_new(A, x->ndim, x->shape);
 	tensor_fill_zeros(x->grad);
 
-	//Tensor *out = layer_norm_forward(A, ln, x);
-	
-	//Tensor *mean = tensor_mean(A, x);
-	//
-	//Tensor *mean_exp = tensor_expand_cols(A, mean, x->shape[1]);
-	//Tensor *diff = tensor_subtract(A, x, mean_exp);
-	//Tensor *sq = tensor_square(A, diff);
-	//Tensor *var = tensor_mean(A, sq);
-	//Tensor *var_exp = tensor_expand_cols(A, var, x->shape[1]);
-	//Tensor *eps = tensor_fill_like(A, sq, 1e-3);
+	Tensor *out = tensor_matmul(A, x, y);
 
-	//Tensor *var_eps = tensor_add(A, var_exp, eps);
-	//Tensor *std = tensor_sqrt(A, var_eps);
-	//Tensor *out = tensor_div(A, var_eps, std);
-	
-	Tensor *out = layer_norm_forward(A, ln, x);
-	//Tensor *out = tensor_sqrt(A, x);
-
-	Tensor *loss = tensor_mse_loss(A, out, y); // (1,1)
+	Tensor *loss = tensor_f(A, out); // (1,1)
 	
 	loss->grad->data[0] = 1.0f;
 
-	run_graph_validation(A, loss, MAX_NODES);
+	run_graph_validation(A, loss, 4);
 
 	backward(A, loss);
 	backward(A, loss);
 	backward(A, loss);
 	backward(A, loss);
 	backward(A, loss);
-	export_and_visualize_graph_new(loss, "graph.dot", "graph.png");
+	export_and_visualize_graph_new(loss, "graph_att.dot", "graph_att.png");
 
 	return 0;
 }

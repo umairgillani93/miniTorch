@@ -1,0 +1,11 @@
+digraph TensorGraph {
+  rankdir=LR;
+  node [shape=record, style=filled, fillcolor=white, fontname="Courier"];
+  n6 [label="{Tensor_ID: 6 | Tensor_OP: OP_F | Gradient: 1.0000}", color="red", fillcolor="#fff0f0"];
+  n4 -> n6 [penwidth=1.2];
+  n4 [label="{Tensor_ID: 4 | Tensor_OP: OP_TIMES | Gradient: 5.0000}", color="red", fillcolor="#fff0f0"];
+  n2 -> n4 [penwidth=1.2];
+  n0 -> n4 [penwidth=1.2];
+  n0 [label="{Tensor_ID: 0 | Tensor_OP: NULL | Gradient: 18.3020}", color="red", fillcolor="#fff0f0"];
+  n2 [label="{Tensor_ID: 2 | Tensor_OP: NULL | Gradient: 13.1389}", color="red", fillcolor="#fff0f0"];
+}
