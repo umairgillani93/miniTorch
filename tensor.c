@@ -1773,7 +1773,7 @@ Tensor *tensor_sqrt(Arena *A, Tensor *a) {
 	// index = row_offset + col_offset;
 	for (int r = 0; r < rows; r++) {
 		for (int c = 0; c < cols; c++) {
-			out->data[r * cols + c] = sqrt(a->data[r * cols + c] + EPS); // Fixed: bacward = 1/2 * (x + EPS) ^ 1/2
+			out->data[r * cols + c] = sqrt(a->data[r * cols + c] + EPS); // Fixed: backward = 1/2 * (x + EPS) ^ 1/2
 		}
 	}
 	return out;
@@ -1891,33 +1891,53 @@ void f_backward(Arena *A, Tensor *o) {
 void tensor_sqrt_backward(Arena *A, Tensor *o) {
 
 		// FIXED:
-		if (!o || !o->grad) {
-			fprintf(stderr, "Out OR Gradient is NULL.\n");
+		if (!o) {
+			fprintf(stderr, "[Error] <tensor_sqrt_backward> input is NULL.\n");
 			return;
 		}
 
-    Tensor *x = o->parents[0];
+
+    if (!o->grad) {
+				printf("[Warning] <tensor_sqrt_backward>. Input Gradient is NULL, Initializing..\n");
+        o->grad = tensor_create_new(A, o->ndim, o->shape);
+				int grad_size = o->shape[0] * o->shape[1];
+				memset(o->grad->data, 0, grad_size * sizeof(float));
+    }
+		
+		// check if parents exists
+		if (!o->parents || !o->parents[0]) {
+			fprintf(stderr, "[Error] <tensor_sqrt_backward> Parents is NULL\n");
+			return;
+		}
     
-    if (!x->grad) {
-        x->grad = tensor_create_new(A, x->ndim, x->shape);
+    Tensor *p = o->parents[0];
+
+    if (!p->grad) {
+				printf("[Warning] <tensor_sqrt_backward>. Parent Gradient is NULL, Initializing..\n");
+        p->grad = tensor_create_new(A, p->ndim, p->shape);
+				int grad_size = p->shape[0] * p->shape[1];
+				memset(p->grad->data, 0, grad_size * sizeof(float));
     }
 
-    int size = 1;
-    for (int i = 0; i < o->ndim; i++) size *= o->shape[i];
+		/* Local Gradient of y = x^1/2 => y' =  1/2*x^2 
+		 * and Global gradient would be dL/ds = prev * y'
+		 */
 
-    for (int i = 0; i < size; i++) {
-        float upstream_grad = o->grad->data[i];
-        float sqrt_val = o->data[i]; // This is already sqrt(x)
-        
-        // Handle potential division by zero if sqrt_val is 0
-        if (sqrt_val < 1e-7f && sqrt_val > -1e-7f) {
-            sqrt_val = 1e-7f; 
-        }
+		int rows = p->shape[0];
+		int cols = p->shape[1]; // Here  'o' and it's parent will have same shapes  (row,  cols)
 
-        // dL/dX = upstream_grad * (1 / (2 * sqrt(X + EPS)))
-        x->grad->data[i] += upstream_grad * (1.0f / (2.0f * (sqrt_val + EPS)));
-    }
-		tensor_get_2d(x->grad);
+
+		for (int r = 0; r < rows; r++) {
+			for (int c = 0; c < cols; c++) {
+				int idx = r * cols + c;
+				float prev = o->grad->data[idx];
+				float curr = 1.0f / sqrt(p->data[idx]);
+				p->grad->data[idx] += (curr * prev);
+				printf("sqrt grad: %f\n", p->grad->data[idx]);
+			}
+		}
+
+		tensor_get_2d(p->grad);
 		printf("[OK] <tensor_sqrt_backward> done!\n");
 }
 
@@ -2017,10 +2037,10 @@ void tensor_expand_cols_backward(Arena *A, Tensor *o) {
     for (int r = 0; r < o_rows; r++) {
         float sum = 0.0f;
         for (int c = 0; c < o_cols; c++) {
-					printf("o->grad->data: %f\n", o->grad->data[r * o_cols + c]);
+					//printf("o->grad->data: %f\n", o->grad->data[r * o_cols + c]);
 					sum += o->grad->data[r * o_cols + c];
         }
-				printf("sum: %f\n",  sum);
+				//printf("sum: %f\n",  sum);
 				p->grad->data[r] += sum;
     }
 
@@ -2669,15 +2689,15 @@ int main() {
 	Tensor *mean_exp = tensor_expand_cols(A, mean, x->shape[1]);
 	Tensor *diff = tensor_subtract(A, x, mean_exp);
 	Tensor *sq = tensor_square(A, diff);
-	//Tensor *var = tensor_mean(A, sq);
-	//Tensor *var_exp = tensor_expand_cols(A, var, x->shape[1]);
+	Tensor *var = tensor_mean(A, sq);
+	Tensor *var_exp = tensor_expand_cols(A, var, x->shape[1]);
 	Tensor *eps = tensor_fill_like(A, sq, 1e-3);
 
-	//Tensor *var_eps = tensor_add(A, var_exp, eps);
-	//Tensor *std = tensor_sqrt(A, var_eps);
-	//Tensor *out = tensor_div(A, var_eps, std);
+	Tensor *var_eps = tensor_add(A, var_exp, eps);
+	Tensor *std = tensor_sqrt(A, var_eps);
+	Tensor *out = tensor_div(A, var_eps, std);
 
-	Tensor *loss = tensor_f(A, eps); // (1,1)
+	Tensor *loss = tensor_f(A, out); // (1,1)
 	
 	loss->grad->data[0] = 1.0f;
 

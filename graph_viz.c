@@ -62,7 +62,7 @@ void export_and_visualize_graph_new(Tensor *root,
         // { Top Section | Bottom Section }
         // \n is used for line breaks inside sections
         fprintf(f,
-            "  n%d [label=\"{Tensor_ID: %d | Tensor_OP: %s | Gradient: %.8f}\", color=\"%s\", fillcolor=\"%s\"];\n",
+            "  n%d [label=\"{Tensor_ID: %d | Tensor_OP: %s | Gradient: %.32f}\", color=\"%s\", fillcolor=\"%s\"];\n",
             t->id, t->id, op_name, g_val, color, fill
         );
 
