@@ -2006,7 +2006,7 @@ void tensor_expand_cols_backward(Arena *A, Tensor *o) {
     if (!p->grad) {
         printf("[Warning] parent grad is NULL. Initializing\n");
         p->grad = tensor_create_new(A, p->ndim, p->shape);
-        int size = p->shape[0] * p->shape[1];
+        int size = p->shape[0] * 1; // mean forward pass has shape (rows, 1);
         memset(p->grad->data, 0, size * sizeof(float));
     }
 
@@ -2014,18 +2014,13 @@ void tensor_expand_cols_backward(Arena *A, Tensor *o) {
     int o_cols = o->shape[1];
 		int p_cols = p->shape[1];
 
-		printf("o shape: \n");
-		tensor_shape_2d(o);
-		printf("o->grad shape: \n");
-		tensor_shape_2d(o->grad);
-
-
-
     for (int r = 0; r < o_rows; r++) {
         float sum = 0.0f;
         for (int c = 0; c < o_cols; c++) {
+					printf("o->grad->data: %f\n", o->grad->data[r * o_cols + c]);
 					sum += o->grad->data[r * o_cols + c];
         }
+				printf("sum: %f\n",  sum);
 				p->grad->data[r] += sum;
     }
 
@@ -2110,8 +2105,9 @@ void tensor_mean_backward(Arena *A, Tensor *o) {
 
     for (int r = 0; r < p_rows; r++) {
 			float prev = o->grad->data[r];
+			//printf("prev: %f\n", prev);
 			for (int c = 0; c < p_cols; c++) {
-				p->grad->data[r * p_cols + c] += (prev * ((1.0f / (float)p_cols)));
+				p->grad->data[r * p_cols + c] += (prev * (1.0f / (float)p_cols));
 				//printf("p_cols : %f\n", (float) p_cols);
 				//printf("o->grad->data: %f\n", prev);
 				//printf("p->grad->data: %f\n", p->grad->data[r * p_cols + c]);
@@ -2357,6 +2353,7 @@ void tensor_subtract_backward(Arena *A, Tensor *o) {
         for (int c = 0; c < cols; c++) {
 
             float prev = o->grad->data[r * cols + c];
+						//printf("prev: %f\n", prev);
             x->grad->data[r * cols + c] += prev;
             y->grad->data[r * cols + c] -= prev;
         }
@@ -2660,7 +2657,7 @@ int main() {
 
 
 	Tensor *x = tensor_create_new(A, ndim, shape);
-	tensor_randomize(x);
+	tensor_randomize_weights(x);
 	x->requires_grad = true;
 	x->grad = tensor_create_new(A, x->ndim, x->shape);
 	tensor_fill_zeros(x->grad);
@@ -2672,23 +2669,25 @@ int main() {
 	Tensor *mean_exp = tensor_expand_cols(A, mean, x->shape[1]);
 	Tensor *diff = tensor_subtract(A, x, mean_exp);
 	Tensor *sq = tensor_square(A, diff);
-	Tensor *var = tensor_mean(A, sq);
+	//Tensor *var = tensor_mean(A, sq);
 	//Tensor *var_exp = tensor_expand_cols(A, var, x->shape[1]);
-	//Tensor *eps = tensor_fill_like(A, var_exp, 1e-3);
+	Tensor *eps = tensor_fill_like(A, sq, 1e-3);
 
 	//Tensor *var_eps = tensor_add(A, var_exp, eps);
 	//Tensor *std = tensor_sqrt(A, var_eps);
 	//Tensor *out = tensor_div(A, var_eps, std);
 
-	Tensor *loss = tensor_f(A, var); // (1,1)
+	Tensor *loss = tensor_f(A, eps); // (1,1)
 	
 	loss->grad->data[0] = 1.0f;
 
 	run_graph_validation(A, loss, MAX_NODES);
 
 	backward(A, loss);
-	//backward(A, loss);
-	//backward(A, loss);
+	backward(A, loss);
+	backward(A, loss);
+	backward(A, loss);
+	backward(A, loss);
 	export_and_visualize_graph_new(loss, "graph.dot", "graph.png");
 
 	return 0;
