@@ -88,6 +88,7 @@ void run_graph_validation(Arena *A, Tensor *o, int max_nodes);
 void traverse_graph(Tensor *root, bool *visited);
 void tensor_metadata(Tensor *x);
 void backward(Arena *A, Tensor *out);
+void tensor_exp_backward(Arena *A, Tensor *o);
 void f_backward(Arena *A, Tensor *out);
 void dfs(Arena *A, Tensor *root, bool *visited, Tensor **topo, int *size);
 Tensor *ensure_grad(Arena *A, Tensor *t); 
@@ -145,7 +146,7 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape);
 
 
 // Autograd tensor methods
-void tensor_transpose_backward(Tensor *x);
+void tensor_transpose_backward(Arena *A, Tensor *x);
 void tensor_matmul_backward(Arena *A, Tensor *currNode);
 void tensor_mean_backward(Arena *A, Tensor *x);
 void tensor_add_backward(Arena *A, Tensor *o);
@@ -159,6 +160,8 @@ void tensor_relu_backward(Tensor *x);
 void tensor_fill_with(Tensor *x, float v);
 void tensor_slice_cols_backward(Arena *A, Tensor *x);
 void tensor_element_wise_product_backward(Arena *A, Tensor *o);
+void tensor_row_max_backward(Arena *A, Tensor *o);
+void tensor_row_sum_backward(Arena *A, Tensor *o);
 Tensor *tensor_mean(Arena *A, Tensor *x);
 Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_shape);
 Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b);
