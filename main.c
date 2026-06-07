@@ -99,12 +99,12 @@ int main() {
 
 			run_graph_validation(A, cost, MAX_NODES);
 
-			backward(A, cost);
+			//backward(A, cost);
+			//backward(A, cost);
 			//backward(A, loss);
 			//backward(A, loss);
 			//backward(A, loss);
-			//backward(A, loss);
-			export_and_visualize_graph_new(cost, "graph_att.dot", "graph_att.png");
+			//export_and_visualize_graph_new(cost, "graph_att.dot", "graph_att.png");
 
 			exit(1);
 

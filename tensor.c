@@ -1093,20 +1093,36 @@ Tensor *tensor_subtract(Arena *A, Tensor *a, Tensor *b) {
 	return out;
 }
 
-//Tensor *relu_backward(Tensor *da1, Tensor *h1) {
-//	Tensor *dh1 = tensor_create_weights(h1->ndim, h1->shape);
-//	int size = tensor_size(h1);
-//
-//	for (int i = 0; i < size; i++) {
-//		if (h1->data[i] > 0) {
-//			dh1->data[i] = da1->data[i];
-//		}
-//		else {
-//			dh1->data[i] = 0.0f;
-//		}
-//	}
-//	return dh1;
-//}
+Tensor *relu_backward(Arena *A, Tensor *o) {
+
+ if (!o || !o->parents || !o->grad) {
+		fprintf(stderr, "[Error] relu_backward invalid input\n");
+		return NULL;
+	}
+
+	Tensor *p = o->parents[0]; // considering relu has only one parent
+	if (!p->grad) {
+		printf("[Warning] <tensor_relu_backward> Parent Gradient is NULL. Initializing ..\n");
+		p->grad = tensor_create_new(A, p->ndim, p->shape);
+		int grad_size = p->shape[0] * p->shape[1];
+		memset(o->grad->data, 0, grad_size * sizeof(float));
+	}
+
+	int rows = o->shape[0];
+	int cols = o->shape[1];
+
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			int idx = r * cols + c;
+			float prev = o->grad->data[idx]; // grab up_stream gradient
+			float x = p->data[idx];
+
+			float mask = (x > 0) ? 1.0f : 0.0f;
+			p->grad->data[idx] += (mask * prev);
+		}
+	}
+	printf("[OK] <tensor_relu_backward> done\n");
+}
 
 float loss_value(Tensor *pred, Tensor *target) {
 	float squared_err = 0.0f;
