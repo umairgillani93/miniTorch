@@ -94,40 +94,29 @@ int main() {
 			Tensor *attn_score = mha_forward(A, batch_tensor, m_batch);
 			printf("attn score: \n");
 			tensor_get_2d(attn_score);
-			Tensor *cost = tensor_f(A, attn_score);
-			cost->grad->data[0] = 1.0f;
 
-			run_graph_validation(A, cost, MAX_NODES);
+			clip_gradient(attn_score);
+			tensor_check("attn_score_forward", attn_score);
 
-			//backward(A, cost);
-			//backward(A, cost);
-			//backward(A, loss);
-			//backward(A, loss);
-			//backward(A, loss);
-			//export_and_visualize_graph_new(cost, "graph_att.dot", "graph_att.png");
+			// Apply layer_norm
+			Tensor *ln1 = layer_norm_forward(A, L1, attn_score);
+			tensor_check("ln1_forward", ln1);
+			//printf("LayerNorm #1 ran successfully!\n");
 
+			// Create FFN feed-forward NN and run ffn_forward pass
+			Tensor *ffn_ln = ffn_forward(A, ln1, f);
+			tensor_check("ffn_ln_forward", ffn_ln);
+
+			
+
+			// Apply layer_norm
+			Tensor *ln2 = layer_norm_forward(A, L2, ffn_ln);
+			tensor_check("ln2_forward", ln2);
+			printf("shape ln2.\n");
+			tensor_shape_2d(ln2);
 			exit(1);
 
-			//clip_gradient(attn_score);
-			//tensor_check("attn_score_forward", attn_score);
-
-			//// Apply layer_norm
-			//Tensor *ln1 = layer_norm_forward(A, L1, attn_score);
-			//tensor_check("ln1_forward", ln1);
-			////printf("LayerNorm #1 ran successfully!\n");
-
-			//// Create FFN feed-forward NN and run ffn_forward pass
-			//Tensor *ffn_ln = ffn_forward(A, ln1, f);
-			//tensor_check("ffn_ln_forward", ffn_ln);
-
-			//
-
-			//// Apply layer_norm
-			//Tensor *ln2 = layer_norm_forward(A, L2, ffn_ln);
-			//tensor_check("ln2_forward", ln2);
-			////tensor_shape(ln2);
-
-			//Tensor *mse = tensor_mse_loss(A, ln2, target_batch);
+			Tensor *mse = tensor_mse_loss(A, ln2, target_batch);
 			//Tensor *loss = tensor_f(A, mse);
 
 			//printf("loss :\n");

@@ -1093,11 +1093,11 @@ Tensor *tensor_subtract(Arena *A, Tensor *a, Tensor *b) {
 	return out;
 }
 
-Tensor *relu_backward(Arena *A, Tensor *o) {
+void tensor_relu_backward(Arena *A, Tensor *o) {
 
  if (!o || !o->parents || !o->grad) {
 		fprintf(stderr, "[Error] relu_backward invalid input\n");
-		return NULL;
+		return;
 	}
 
 	Tensor *p = o->parents[0]; // considering relu has only one parent
@@ -1149,25 +1149,6 @@ Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target) {
 	Tensor *mu = tensor_mean(A, sq);
 	Tensor *exp = tensor_expand_cols(A, mu, cols);
 	Tensor *out = tensor_f(A, exp);
-
-	// Tensor graph metadata
-	//if (pred->requires_grad || target->requires_grad) {
-	//	out->requires_grad = true;
-	//	out->num_parents = 2;
-	//	out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
-	//	out->parents[0] = pred;
-	//	out->parents[1] = target;
-
-	//	// define out Operations
-	//	Op *op = arena_alloc(A, sizeof(Op));
-	//	op->backward = tensor_mse_backward;
-	//	op->type = MSE;
-	//	op->name = "OP_MSE";
-
-	//	// out grad
-	//	out->grad = tensor_create_new(A, ndim, out_shape);
-	//	out->cols = cols
-	//}
 
 	return out;
 
@@ -2452,10 +2433,6 @@ void tensor_div_backward(Arena *A, Tensor *o) {
 
 
 void tensor_softmax_backward(Tensor *x) {
-	// Will be implemented later. IA
-}
-
-void tensor_relu_backward(Tensor *x) {
 	// Will be implemented later. IA
 }
 
