@@ -160,6 +160,7 @@ void tensor_slice_cols_backward(Arena *A, Tensor *x);
 void tensor_element_wise_product_backward(Arena *A, Tensor *o);
 void tensor_row_max_backward(Arena *A, Tensor *o);
 void tensor_row_sum_backward(Arena *A, Tensor *o);
+void tensor_scaler_div_backward(Arena *A, Tensor *o);
 Tensor *tensor_mean(Arena *A, Tensor *x);
 Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_shape);
 Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b);

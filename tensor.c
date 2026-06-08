@@ -928,7 +928,7 @@ Tensor *tensor_scaler_div(Arena *A, Tensor *x, float val) {
 		Op *op = arena_alloc(A, sizeof(Op));
 		op->type= SCALER_DIV;
 		op->name = "OP_SCALER_DIV";
-		op->backward = tensor_softmax_backward;
+		op->backward = tensor_scaler_div_backward;
 		out->operations = op;
 		out->grad = tensor_create_new(A, ndim, out_shape);
 	}
@@ -1507,27 +1507,12 @@ Tensor *tensor_softmax(Arena *A, Tensor *x) {
 		int ndim = x->ndim;
 
     Tensor *row_max = tensor_row_max(A, x);
-    //Tensor *row_max_expanded = tensor_expand_cols(A, row_max, cols);
     Tensor *shifted = tensor_subtract(A, x, row_max);
     Tensor *exp = tensor_exp(A, shifted);
-
     Tensor *row_sum = tensor_row_sum(A, exp);
-
     Tensor *row_sum_expanded = tensor_expand_cols(A, row_sum, cols);
-    Tensor *out = tensor_div(A, exp, row_sum_expanded);
 
-		//if (x->requires_grad) {
-		//	out->requires_grad;
-		//	out->num_parents = 1;
-		//	out->parents = arena_alloc(A, out->num_parents * sizeof(Tensor *));
-		//	out->parents[0] = x;
-		//	Op *op = arena_alloc(A, sizeof(Op));
-		//	op->backward = tensor_softmax_backward;
-		//	op->type = SOFTMAX;
-		//	op->name = "OP_SOFTMAX";
-		//	out->operations = op;
-		//	out->grad = tensor_create_new(A, ndim, x->shape);
-		//}
+    Tensor *out = tensor_div(A, exp, row_sum_expanded);
 
     return out;
 }
@@ -1855,6 +1840,12 @@ Tensor *tensor_div(Arena *A, Tensor *a, Tensor *b) {
 
 
 // back methods
+
+
+void tensor_scaler_div_backward(Arena *A, Tensor *o) {
+	// Will implement this later IA.
+}
+
 
 void tensor_row_sum_backward(Arena *A, Tensor *o) {
     Tensor *x = o->parents[0];
@@ -2410,10 +2401,6 @@ void tensor_div_backward(Arena *A, Tensor *o) {
 }
 
 
-void tensor_softmax_backward(Tensor *x) {
-	// Will be implemented later. IA
-}
-
 void tensor_subtract_backward(Arena *A, Tensor *o) {
 
     if (!o) {
@@ -2750,22 +2737,35 @@ int main() {
 	x->grad = tensor_create_new(A, x->ndim, x->shape);
 	tensor_fill_zeros(x->grad);
 
-	LayerNorm *ln = layer_norm_create(32);
-	layer_norm_init_params(ln);
+	//LayerNorm *ln1 = layer_norm_create(32);
+	//layer_norm_init_params(ln1);
 
-	Tensor *out = layer_norm_forward(A, ln, x);
-	Tensor *loss = tensor_f(A, out);
+	//LayerNorm *ln2 = layer_norm_create(32);
+	//layer_norm_init_params(ln2);
+
+	//MHA *mha = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
+	//mha_init_params(mha);
+
+	//FFN *f = ffn_create(A, EMB_DIM, HIDDEN_DIM);
+	//ffn_init_params(f);
+
+
+	//Tensor *mha_out = mha_forward(A, x, mha);
+	Tensor *soft_out = tensor_softmax(A, x);
+
+	//Tensor *ffn_out = ffn_forward(A, ln1_out, f);
+	//Tensor *ln2_out= layer_norm_forward(A, ln2, ffn_out);
+	Tensor *loss = tensor_f(A, soft_out);
 	loss->grad->data[0] = 1.0f;
 
 	run_graph_validation(A, loss, MAX_NODES);
 
-	backward(A, loss);
 	//backward(A, loss);
 	//backward(A, loss);
 	//backward(A, loss);
 	//backward(A, loss);
-	export_and_visualize_graph_new(loss, "graph.dot", "graph.png");
-
+	//backward(A, loss);
+	//export_and_visualize_graph_new(loss, "graph.dot", "graph.png");
 
 	return 0;
 }
