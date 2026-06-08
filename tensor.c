@@ -39,6 +39,21 @@ size_t GLOBAL_TENSOR_ID = 0;
 // We want to take local gradiens depending upons the operations for this backward funntion (PyTorch style)
 //
 
+void tensor_zero_grad(Tensor *x) {
+	if (!x !! !x->grad) {
+		fprintf(stderr, "[Error] <tensor_zero_grad> Input in NULL.\n");
+		return;
+	}
+	int size = 1;
+	for (int i = 0; i < x->ndim; i++) size *= x->shape[i];
+	memset(x->grad->data, 0, size * sizeof(float));
+
+	for (int i = 0; i < x->num_parents; i++) {
+		tensor_zero_grad(x->parents[i]);
+	}
+}
+
+
 Tensor *ensure_grad(Arena *A, Tensor *t) {
     if (!t->grad) {
         t->grad = tensor_create_new(A, t->ndim, t->shape);
@@ -643,7 +658,7 @@ Tensor *tensor_row_max(Arena *A, Tensor *x) {
 	int ndim = x->ndim;
 	int *out_shape = arena_alloc(A, ndim * sizeof(int));
 	out_shape[0] = rows;
-	out_shape[1] = cols;
+	out_shape[1] = 1;
 
 	// Create output tensor
 	Tensor *out = tensor_create_new(A, ndim, out_shape);
@@ -665,10 +680,7 @@ Tensor *tensor_row_max(Arena *A, Tensor *x) {
 
 	for (int r = 0; r < rows; r++) {
 		float *row = x->data + r * cols;
-		float MX = max_element(row, cols);
-		for (int c = 0; c < cols; c++) {
-			out->data[r * cols + c] = MX;
-		}
+		out->data[r] = max_element(row,cols); // writes single value per row?
 	}
 	return out;
 }
@@ -710,7 +722,7 @@ Tensor *tensor_row_sum(Arena *A, Tensor *x) {
 	int rows = x->shape[0];
 	int cols = x->shape[1]; // row sum shrinks cols dimention
 	int ndim = x->ndim;
-	int *out_shape = arena_alloc(A, rows * sizeof(int));
+	int *out_shape = arena_alloc(A, ndim * sizeof(int));
 	out_shape[0] = rows;
 	out_shape[1] = 1;
 
@@ -1507,7 +1519,8 @@ Tensor *tensor_softmax(Arena *A, Tensor *x) {
 		int ndim = x->ndim;
 
     Tensor *row_max = tensor_row_max(A, x);
-    Tensor *shifted = tensor_subtract(A, x, row_max);
+		Tensor *row_max_exp = tensor_expand_cols(A, row_max, x->shape[1]);
+    Tensor *shifted = tensor_subtract(A, x, row_max_exp);
     Tensor *exp = tensor_exp(A, shifted);
     Tensor *row_sum = tensor_row_sum(A, exp);
     Tensor *row_sum_expanded = tensor_expand_cols(A, row_sum, cols);
@@ -1848,6 +1861,10 @@ void tensor_scaler_div_backward(Arena *A, Tensor *o) {
 
 
 void tensor_row_sum_backward(Arena *A, Tensor *o) {
+		if (!o || !o->grad || !o->parents) {
+			fprintf(stderr, "[Error] <tensor_row_sum_backward> Invalid inputs.\n");
+			return;
+		}
     Tensor *x = o->parents[0];
 
     int rows = x->shape[0];
@@ -1861,7 +1878,7 @@ void tensor_row_sum_backward(Arena *A, Tensor *o) {
 
     for (int r = 0; r < rows; r++) {
         float grad = o->grad->data[r];
-
+				//printf("row_sum prev: %f\n", grad);
         for (int c = 0; c < cols; c++) {
             x->grad->data[r * cols + c] += grad;
         }
@@ -1886,6 +1903,10 @@ void tensor_exp_backward(Arena *A, Tensor *o) {
 }
 
 void tensor_row_max_backward(Arena *A, Tensor *o) {
+	if (!o || !o->grad || !o->parents) {
+		fprintf(stderr, "[Error] <tensor_row_max_backward>. Invalid inputs.\n");
+		return;
+	}
 	Tensor *x = o->parents[0];
 
 	int rows = x->shape[0];
@@ -1911,13 +1932,10 @@ void tensor_row_max_backward(Arena *A, Tensor *o) {
 					}
 			}
 
-			float grad_sum = 0.0f;
-			for (int c = 0; c < cols; c++) {
-					grad_sum += o->grad->data[r * cols + c];
-			}
-
-			x->grad->data[r * cols + max_idx] += grad_sum;
+			x->grad->data[r * cols + max_idx] += o->grad->data[r];
 	}
+	tensor_get_2d(x->grad);
+	printf("[OK] <tensor_row_max_backward> done!\n");
 }
 
 void tensor_fill_like_backward(Arena *A, Tensor *o) {
@@ -2388,7 +2406,7 @@ void tensor_div_backward(Arena *A, Tensor *o) {
 				float prev = o->grad->data[idx];
 				float x_val = x->data[idx];
 				float y_val = y->data[idx];
-				printf("<tensor_div_back> prev: %f\n", prev);
+				//printf("<tensor_div_back> prev: %f\n", prev);
 
 				x->grad->data[idx] += (prev * (1.0f / y_val));
 				y->grad->data[idx] += (prev * (-x_val / (y_val * y_val)));
@@ -2759,13 +2777,22 @@ int main() {
 	loss->grad->data[0] = 1.0f;
 
 	run_graph_validation(A, loss, MAX_NODES);
+	/*
+    Tensor *row_max = tensor_row_max(A, x);
+    Tensor *shifted = tensor_subtract(A, x, row_max);
+    Tensor *exp = tensor_exp(A, shifted);
+    Tensor *row_sum = tensor_row_sum(A, exp);
+    Tensor *row_sum_expanded = tensor_expand_cols(A, row_sum, cols);
 
-	//backward(A, loss);
-	//backward(A, loss);
-	//backward(A, loss);
-	//backward(A, loss);
-	//backward(A, loss);
-	//export_and_visualize_graph_new(loss, "graph.dot", "graph.png");
+    Tensor *out = tensor_div(A, exp, row_sum_expanded);
+	*/
+
+	backward(A, loss);
+	backward(A, loss);
+	backward(A, loss);
+	backward(A, loss);
+	backward(A, loss);
+	export_and_visualize_graph_new(loss, "graph.dot", "graph.png");
 
 	return 0;
 }
