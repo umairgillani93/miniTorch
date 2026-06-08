@@ -80,28 +80,13 @@ Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {
 	Tensor *std = tensor_sqrt(A, var_eps);
 	Tensor *out = tensor_div(A, var_eps, std);
 
-	printf("out shape: \n");
-	tensor_shape_2d(out);
-
 	ln->var = var;
 	ln->x_hat = out;
 
-	printf("gamma shape before expansion: \n");
-	tensor_shape_2d(ln->gamma);
-
 	Tensor *gamma_exp = tensor_expand_rows(A, ln->gamma, rows);
-
-	printf("gamma shape after expansion: \n");
-	tensor_shape_2d(gamma_exp);
 	Tensor *beta_exp = tensor_expand_rows(A, ln->beta, rows);
-
-	printf("beta shape after expansion: \n");
-	tensor_shape_2d(ln->beta);
-	
-	//tensor_randomize_weights(gamma_exp);
-	//tensor_randomize_weights(beta_exp);
 	Tensor *yhat = tensor_element_wise_product(A, gamma_exp, out);
-
+	
 	y = tensor_add(A, yhat, beta_exp);
 
 	return y;

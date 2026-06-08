@@ -12,12 +12,12 @@
 #define LR         1e-3
 #define HEADS      8
 #define HEAD_DIM EMB_DIM / HEADS
-#define EPOCHS     3
+#define EPOCHS     2
 #define BETA      1e-9
 #define GEMMA     14-3
 #define EPS       1e-5
 #define ARENA_SIZE 1024 * 1024 * 1024
-#define MAX_NODES 10000
-#define MAX_PARENTS 100
+#define MAX_NODES 10000000
+#define MAX_PARENTS 10000000
 
 #endif
