@@ -18,12 +18,15 @@ typedef struct {
 } GraphReport;
 
 typedef enum {
+	F,
+	FILL_LIKE,
 	LEAF,
 	MSE,
 	ADD, 
 	MUL,
 	MATMUL,
 	RELU,
+	SCALLED,
 	SUB,
 	DIV,
 	LOG,
@@ -35,7 +38,7 @@ typedef enum {
 	ROW_MAX,
 	EXP,
 	ROW_SUM,
-	SCALLED,
+	ELEMENT_WISE_PRODUCT,
 	SOFTMAX,
 	MEAN,
 	SQUARE,
@@ -60,6 +63,7 @@ typedef struct Tensor {
 	float *data;
 	
 	// New parameters
+	bool is_leaf;	
 	Tensor *grad;
 	bool requires_grad;
 	Op *operations; // Added name, and type as well!
@@ -69,6 +73,9 @@ typedef struct Tensor {
 
 	// For concat columns
 	int cols;
+
+	// For matmul shared dimension
+	int shared_dim;
 } Tensor;
 
 
@@ -80,8 +87,12 @@ void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *r
 void run_graph_validation(Arena *A, Tensor *o, int max_nodes);
 void traverse_graph(Tensor *root, bool *visited);
 void tensor_metadata(Tensor *x);
-void backward(Arena *A, Tensor *loss, int MAX_NODES);
+void backward(Arena *A, Tensor *out);
+void tensor_exp_backward(Arena *A, Tensor *o);
+void f_backward(Arena *A, Tensor *out);
 void dfs(Arena *A, Tensor *root, bool *visited, Tensor **topo, int *size);
+Tensor *ensure_grad(Arena *A, Tensor *t); 
+Tensor *tensor_f(Arena *A, Tensor *x);
 Tensor *tensor_scaler_div(Arena *A, Tensor *x, float val);
 Tensor *tensor_slice_cols(Arena *A, Tensor *a, int num_heads, int dk);
 Tensor *tensor_fill_like(Arena *A, Tensor *a, double eps);
@@ -89,8 +100,8 @@ Tensor *tensor_concat(Arena *A, Tensor **heads, int k);
 Tensor *tensor_relu(Arena *A, Tensor *x);
 Tensor *tensor_fill_val(Arena *A, Tensor *a, int val);
 Tensor *tensor_row_sum(Arena *A, Tensor *x);
-Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b);
-Tensor *tensor_square(Arena *A, Tensor *a, Tensor *b);
+Tensor *tensor_element_wise_product(Arena *A, Tensor *a, Tensor *b);
+Tensor *tensor_square(Arena *A, Tensor *a);
 Tensor *tensor_div(Arena *A, Tensor *a, Tensor *b);
 Tensor *tensor_create(int ndim, int *shape);
 Tensor *tensor_create_new(Arena *A, int ndim, int *shape);
@@ -98,8 +109,8 @@ Tensor *tensor_create_weights_new(Arena *A, int ndim, int *shape);
 Tensor *tensor_create_weights(int ndim, int *shape);
 Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b);
 Tensor *tensor_softmax(Arena *A, Tensor *a);
+Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b);
 Tensor *tensor_transpose(Arena *A, Tensor *t);
-Tensor *relu_backward(Tensor *x, Tensor *y);
 Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target);
 Tensor *tensor_scaler_multiplication(Tensor *x, float a);
 Tensor *tensor_scaler_addition(Arena *A, Tensor *x, float a);
@@ -107,9 +118,10 @@ void tensor_fill_zeros(Tensor *a);
 void tensor_add_inplace(Tensor **a, Tensor **b);
 void tensor_fill_ones(Tensor *x);
 void tensor_accumulate(Tensor *a, Tensor *b);
-void tensor_relu_backward( Tensor *out);
-void tensor_subtract_backward(Tensor *x);
-void tensor_concat_backward(Tensor *out);
+void tensor_subtract_backward(Arena *A, Tensor *x);
+void tensor_fill_like_backward(Arena *A, Tensor *o);
+void tensor_concat_backward(Arena *A, Tensor *o);
+void tensor_div_backward(Arena *A, Tensor *out);
 //void tensor_free(Tensor *t);
 void tensor_get_2d(Tensor *t);
 void tensor_check(char *name, Tensor *x);
@@ -132,18 +144,22 @@ Tensor *tensor_create_new(Arena *A, int ndim, int *shape);
 
 
 // Autograd tensor methods
-void tensor_transpose_backward(Tensor *x);
+void tensor_transpose_backward(Arena *A, Tensor *x);
 void tensor_matmul_backward(Arena *A, Tensor *currNode);
-void tensor_mean_backward(Tensor *x);
-void tensor_add_backward(Arena *A, Tensor *x);
-void tensor_square_backward(Tensor *x);
-void tensor_sqrt_backward(Tensor *x);
+void tensor_mean_backward(Arena *A, Tensor *x);
+void tensor_add_backward(Arena *A, Tensor *o);
+void tensor_square_backward(Arena *A, Tensor *o);
+void tensor_sqrt_backward(Arena *A, Tensor *o);
 void tensor_mse_backward(Tensor *x);
-void tensor_expand_cols_backward(Tensor *x);
-void tensor_expand_rows_backward(Tensor *x);
+void tensor_expand_cols_backward(Arena *A, Tensor *out);
+void tensor_expand_rows_backward(Arena *A, Tensor *o);
 void tensor_softmax_backward(Tensor *x);
-void tensor_relu_backward(Tensor *x);
-void tensor_slice_cols_backward(Tensor *x);
+void tensor_relu_backward(Arena *A, Tensor *x);
+void tensor_fill_with(Tensor *x, float v);
+void tensor_slice_cols_backward(Arena *A, Tensor *x);
+void tensor_element_wise_product_backward(Arena *A, Tensor *o);
+void tensor_row_max_backward(Arena *A, Tensor *o);
+void tensor_row_sum_backward(Arena *A, Tensor *o);
 Tensor *tensor_mean(Arena *A, Tensor *x);
 Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_shape);
 Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b);

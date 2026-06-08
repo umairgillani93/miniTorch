@@ -65,12 +65,13 @@ Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {
 
 	Tensor *y = tensor_create_new(A, ndim, y_shape);
 	y->requires_grad = true;
+	y->grad = tensor_create_new(A, ndim, y_shape);
 	Tensor *mean = tensor_mean(A, x);
 	
 	// Docs reference: pytorch -> LINK HERE
 	Tensor *mean_exp = tensor_expand_cols(A, mean, x->shape[1]);
 	Tensor *diff = tensor_subtract(A, x, mean_exp);
-	Tensor *sq = tensor_square(A, diff, diff);
+	Tensor *sq = tensor_square(A, diff);
 	Tensor *var = tensor_mean(A, sq);
 	Tensor *var_exp = tensor_expand_cols(A, var, x->shape[1]);
 	Tensor *eps = tensor_fill_like(A, var_exp, 1e-3);
@@ -84,10 +85,8 @@ Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {
 
 	Tensor *gamma_exp = tensor_expand_rows(A, ln->gamma, rows);
 	Tensor *beta_exp = tensor_expand_rows(A, ln->beta, rows);
-	tensor_randomize_weights(gamma_exp);
-	tensor_randomize_weights(beta_exp);
-	Tensor *yhat = tensor_scalling(A, gamma_exp, out);
-
+	Tensor *yhat = tensor_element_wise_product(A, gamma_exp, out);
+	
 	y = tensor_add(A, yhat, beta_exp);
 
 	return y;
