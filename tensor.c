@@ -40,7 +40,7 @@ size_t GLOBAL_TENSOR_ID = 0;
 //
 
 void tensor_zero_grad(Tensor *x) {
-	if (!x !! !x->grad) {
+	if (!x || !x->grad) {
 		fprintf(stderr, "[Error] <tensor_zero_grad> Input in NULL.\n");
 		return;
 	}
@@ -724,7 +724,7 @@ Tensor *tensor_row_sum(Arena *A, Tensor *x) {
 	int ndim = x->ndim;
 	int *out_shape = arena_alloc(A, ndim * sizeof(int));
 	out_shape[0] = rows;
-	out_shape[1] = 1;
+	out_shape[1] = 1; // since it's outpul will have shape (rows, 1)
 
 	// Create output tensor
 	Tensor *out = tensor_create_new(A, ndim, out_shape);
@@ -1875,10 +1875,16 @@ void tensor_row_sum_backward(Arena *A, Tensor *o) {
 			int grad_size = x->shape[0] * x->shape[1];
 			memset(x->grad->data, 0, grad_size * sizeof(float)); 
     }
-
+		printf("row_sum_backward o->grad shape: [%d, %d]\n", o->grad->shape[0], o->grad->shape[1]);
+		for (int r = 0; r < rows; r++) {
+				printf("row_sum_backward o->grad->data[%d]: %f\n", r, o->grad->data[r]);
+		}
     for (int r = 0; r < rows; r++) {
         float grad = o->grad->data[r];
+				//printf("prev grad for row_sum_backward: %f\n", grad);
 				//printf("row_sum prev: %f\n", grad);
+				
+			
         for (int c = 0; c < cols; c++) {
             x->grad->data[r * cols + c] += grad;
         }
@@ -1886,8 +1892,11 @@ void tensor_row_sum_backward(Arena *A, Tensor *o) {
 }
 
 void tensor_exp_backward(Arena *A, Tensor *o) {
+		if (!o || !o->grad || !o->parents) {
+			fprintf(stderr, "[Error] <tensor_exp_backward> Input invalid.\n");
+			return;
+		}
     Tensor *x = o->parents[0];
-
     int rows = x->shape[0];
     int cols = x->shape[1];
 
@@ -1898,7 +1907,8 @@ void tensor_exp_backward(Arena *A, Tensor *o) {
     }
 
     for (int i = 0; i < rows * cols; i++) {
-        x->grad->data[i] += o->grad->data[i] * o->data[i];
+			x->grad->data[i] += (o->grad->data[i] * o->data[i]);
+
     }
 }
 
@@ -1931,10 +1941,10 @@ void tensor_row_max_backward(Arena *A, Tensor *o) {
 							max_idx = c;
 					}
 			}
-
 			x->grad->data[r * cols + max_idx] += o->grad->data[r];
+			
 	}
-	tensor_get_2d(x->grad);
+	//tensor_get_2d(x->grad);
 	printf("[OK] <tensor_row_max_backward> done!\n");
 }
 
@@ -2761,8 +2771,8 @@ int main() {
 	//LayerNorm *ln2 = layer_norm_create(32);
 	//layer_norm_init_params(ln2);
 
-	//MHA *mha = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
-	//mha_init_params(mha);
+	MHA *mha = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
+	mha_init_params(mha);
 
 	//FFN *f = ffn_create(A, EMB_DIM, HIDDEN_DIM);
 	//ffn_init_params(f);
@@ -2788,10 +2798,8 @@ int main() {
 	*/
 
 	backward(A, loss);
-	backward(A, loss);
-	backward(A, loss);
-	backward(A, loss);
-	backward(A, loss);
+	//backward(A, loss);
+	//backward(A, loss);
 	export_and_visualize_graph_new(loss, "graph.dot", "graph.png");
 
 	return 0;
