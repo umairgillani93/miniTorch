@@ -63,23 +63,42 @@ Tensor *ensure_grad(Arena *A, Tensor *t) {
 
 void build_topology(Tensor *root, bool *visited, Tensor **topo, int *idx) {
     if (root == NULL) return;
-
-    // If already visited, we skip it to prevent duplicating or processing early
     if (visited[root->id]) return;
     
-    // Temporarily mark as visited to prevent infinite cycles in the recursion
-    visited[root->id] = true;
-
-    // Recursively visit all parents first
+    // DON'T mark visited here yet
+    
     if (root->parents != NULL) { 
         for (int p = 0; p < root->num_parents; p++) {
             build_topology(root->parents[p], visited, topo, idx);
         }
     }
     
-    // Add ourselves to the topology list AFTER all our parents are added
-    topo[(*idx)++] = root;
+    // Mark visited and add ONLY after all parents processed
+    if (!visited[root->id]) {        // check again after recursion
+        visited[root->id] = true;
+        topo[(*idx)++] = root;
+    }
 }
+
+//void build_topology(Tensor *root, bool *visited, Tensor **topo, int *idx) {
+//    if (root == NULL) return;
+//
+//    // If already visited, we skip it to prevent duplicating or processing early
+//    if (visited[root->id]) return;
+//    
+//    // Temporarily mark as visited to prevent infinite cycles in the recursion
+//    visited[root->id] = true;
+//
+//    // Recursively visit all parents first
+//    if (root->parents != NULL) { 
+//        for (int p = 0; p < root->num_parents; p++) {
+//            build_topology(root->parents[p], visited, topo, idx);
+//        }
+//    }
+//    
+//    // Add ourselves to the topology list AFTER all our parents are added
+//    topo[(*idx)++] = root;
+//}
 
 void backward(Arena *A, Tensor *root) {
 		Tensor **topo = arena_alloc(A, MAX_NODES * sizeof(Tensor *));
@@ -1875,42 +1894,61 @@ void tensor_row_sum_backward(Arena *A, Tensor *o) {
 			int grad_size = x->shape[0] * x->shape[1];
 			memset(x->grad->data, 0, grad_size * sizeof(float)); 
     }
-		printf("row_sum_backward o->grad shape: [%d, %d]\n", o->grad->shape[0], o->grad->shape[1]);
-		for (int r = 0; r < rows; r++) {
-				printf("row_sum_backward o->grad->data[%d]: %f\n", r, o->grad->data[r]);
-		}
+		printf("shape: \n");
+		tensor_shape_2d(x->grad);
     for (int r = 0; r < rows; r++) {
         float grad = o->grad->data[r];
-				//printf("prev grad for row_sum_backward: %f\n", grad);
-				//printf("row_sum prev: %f\n", grad);
-				
-			
-        for (int c = 0; c < cols; c++) {
+        for (int c = 0; c < cols; c++) 
             x->grad->data[r * cols + c] += grad;
         }
     }
 }
 
 void tensor_exp_backward(Arena *A, Tensor *o) {
-		if (!o || !o->grad || !o->parents) {
-			fprintf(stderr, "[Error] <tensor_exp_backward> Input invalid.\n");
-			return;
-		}
+    if (!o || !o->grad || !o->parents) {
+        fprintf(stderr, "[Error] <tensor_exp_backward> Input invalid.\n");
+        return;
+    }
     Tensor *x = o->parents[0];
     int rows = x->shape[0];
     int cols = x->shape[1];
-
     if (!x->grad) {
-			x->grad = tensor_create_new(A, x->ndim, x->shape);
-			int grad_size = x->shape[0] * x->shape[1];
-			memset(x->grad->data, 0, grad_size * sizeof(float)); 
+        x->grad = tensor_create_new(A, x->ndim, x->shape);
+        int grad_size = x->shape[0] * x->shape[1];
+        memset(x->grad->data, 0, grad_size * sizeof(float)); 
     }
 
+    float grad_sum = 0.0f;
     for (int i = 0; i < rows * cols; i++) {
-			x->grad->data[i] += (o->grad->data[i] * o->data[i]);
-
+        x->grad->data[i] += (o->grad->data[i] * o->data[i]);
+        grad_sum += o->grad->data[i];
     }
 }
+
+
+//void tensor_exp_backward(Arena *A, Tensor *o) {
+//		if (!o || !o->grad || !o->parents) {
+//			fprintf(stderr, "[Error] <tensor_exp_backward> Input invalid.\n");
+//			return;
+//		}
+//    Tensor *x = o->parents[0];
+//    int rows = x->shape[0];
+//    int cols = x->shape[1];
+//
+//    if (!x->grad) {
+//			x->grad = tensor_create_new(A, x->ndim, x->shape);
+//			int grad_size = x->shape[0] * x->shape[1];
+//			memset(x->grad->data, 0, grad_size * sizeof(float)); 
+//    }
+//		printf("exp_backward o->grad shape: [%d, %d]\n", o->grad->shape[0], o->grad->shape[1]);
+//    printf("exp_backward o->grad->data[0]: %f\n", o->grad->data[0]);
+//    printf("exp_backward o->data[0]: %f\n", o->data[0]);
+//
+//    for (int i = 0; i < rows * cols; i++) {
+//			x->grad->data[i] += (o->grad->data[i] * o->data[i]);
+//			printf("exp_backward total grad sum: %f\n", grad_sum);
+//    }
+//}
 
 void tensor_row_max_backward(Arena *A, Tensor *o) {
 	if (!o || !o->grad || !o->parents) {

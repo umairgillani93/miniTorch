@@ -6,18 +6,18 @@ digraph TensorGraph {
   n16 [label="{Tensor_ID: 16 | Tensor_OP: OP_DIVISION | Gradient: 1.0000}", color="red", fillcolor="#fff0f0"];
   n10 -> n16 [penwidth=1.2];
   n14 -> n16 [penwidth=1.2];
-  n14 [label="{Tensor_ID: 14 | Tensor_OP: OP_EXPAND_COLS | Gradient: -0.0008}", color="red", fillcolor="#fff0f0"];
+  n14 [label="{Tensor_ID: 14 | Tensor_OP: OP_EXPAND_COLS | Gradient: -0.0011}", color="red", fillcolor="#fff0f0"];
   n12 -> n14 [penwidth=1.2];
-  n12 [label="{Tensor_ID: 12 | Tensor_OP: OP_ROW_SUM | Gradient: -0.0253}", color="red", fillcolor="#fff0f0"];
+  n12 [label="{Tensor_ID: 12 | Tensor_OP: OP_ROW_SUM | Gradient: -0.0391}", color="red", fillcolor="#fff0f0"];
   n10 -> n12 [penwidth=1.2];
-  n10 [label="{Tensor_ID: 10 | Tensor_OP: OP_EXPONENT | Gradient: -0.0000}", color="red", fillcolor="#fff0f0"];
+  n10 [label="{Tensor_ID: 10 | Tensor_OP: OP_EXPONENT | Gradient: -1955.3571}", color="red", fillcolor="#fff0f0"];
   n8 -> n10 [penwidth=1.2];
-  n8 [label="{Tensor_ID: 8 | Tensor_OP: OP_SUBTRACT | Gradient: -0.0000}", color="red", fillcolor="#fff0f0"];
+  n8 [label="{Tensor_ID: 8 | Tensor_OP: OP_SUBTRACT | Gradient: -1447.0563}", color="red", fillcolor="#fff0f0"];
   n2 -> n8 [penwidth=1.2];
   n6 -> n8 [penwidth=1.2];
-  n6 [label="{Tensor_ID: 6 | Tensor_OP: OP_EXPAND_COLS | Gradient: 0.0000}", color="red", fillcolor="#fff0f0"];
+  n6 [label="{Tensor_ID: 6 | Tensor_OP: OP_EXPAND_COLS | Gradient: 1447.0563}", color="red", fillcolor="#fff0f0"];
   n4 -> n6 [penwidth=1.2];
-  n4 [label="{Tensor_ID: 4 | Tensor_OP: OP_ROW_MAX | Gradient: 0.0000}", color="red", fillcolor="#fff0f0"];
+  n4 [label="{Tensor_ID: 4 | Tensor_OP: OP_ROW_MAX | Gradient: 49999.0078}", color="red", fillcolor="#fff0f0"];
   n2 -> n4 [penwidth=1.2];
-  n2 [label="{Tensor_ID: 2 | Tensor_OP: NULL | Gradient: -0.0000}", color="red", fillcolor="#fff0f0"];
+  n2 [label="{Tensor_ID: 2 | Tensor_OP: NULL | Gradient: -1447.0563}", color="red", fillcolor="#fff0f0"];
 }
