@@ -66,6 +66,10 @@ void build_topology(Tensor *root, bool *visited, Tensor **topo, int *idx) {
     if (visited[root->id]) return;
     
     // DON'T mark visited here yet
+		if (!root->grad) {
+			printf("[INFO] Found Node with Grad NULL <%s>\n", root->operations->name);
+		}
+		
     
     if (root->parents != NULL) { 
         for (int p = 0; p < root->num_parents; p++) {
@@ -877,7 +881,7 @@ Tensor *tensor_expand_rows(Arena *A, Tensor *m, int out_rows) {
 		op->name = "OP_EXPAND_ROWS";
 		out->operations = op;
 		out->grad = tensor_create_new(A, ndim, out_shape);
-		//out->cols = out_cols;
+		out->cols = out_cols;
 	}
 
 
@@ -2078,8 +2082,8 @@ void tensor_sqrt_backward(Arena *A, Tensor *o) {
 		int rows = p->shape[0];
 		int cols = p->shape[1]; // Here  'o' and it's parent will have same shapes  (row,  cols)
 
-		printf("inside sqrt: \n");
-		tensor_get_2d(o->grad);
+		//printf("inside sqrt: \n");
+		//tensor_get_2d(o->grad);
 
 		for (int r = 0; r < rows; r++) {
 			for (int c = 0; c < cols; c++) {
@@ -2326,38 +2330,39 @@ void tensor_add_backward(Arena *A, Tensor *o) {
 	// dz/da = 1;
 	// dz/db = 1;
 	
-	if (!o || !o->grad) {
-		fprintf(stderr, "out OR out->grad is NULL.\n");
+	if (!o) {
+		fprintf(stderr, "[Error] <tensor_add_backward> invalid inputs. \n");
 		return;
+	}
+	
+	if (!o->grad) {
+			printf("[Warning] <tensor_add_backward> Gradient is NULL. Initializing..\n");
+			o->grad = tensor_create_new(A, o->ndim, o->shape);
+			int grad_size = o->shape[0] * o->shape[1];
+			memset(o->grad->data, 0, grad_size * sizeof(float));
 	}
 
 	if (!o->parents) {
-		fprintf(stderr, "[Error] <tensor_subtract_backward>! Parents is NULL.\n");
-		printf("Quitting.. \n");
-		return;
+			fprintf(stderr, "[Error] <tensor_subtract_backward> Invalid parents in add\n");
+			return;
 	}
-	printf("o->parents: %d\n", o->num_parents);
 
-	assert(o->num_parents == 2);
-
-	Tensor *x = o->parents[0];
-	Tensor *y = o->parents[1];
-	int ndim = x->ndim;
-
-	//if (!x->grad || !y->grad) {
-	//	fprintf(stderr, "[Error] <tensor_add_backward>! Parents is NULL.\n");
-	//	printf("Quitting.. \n");
-	//	return;
-	//}
+	Tensor *x = o->parents[1];
+	Tensor *y = o->parents[0];
 
 	if (!x->grad) {
-		x->grad = tensor_create_new(A, ndim, o->shape);
+			x->grad = tensor_create_new(A, x->ndim, x->shape);
+			int size = x->shape[0] * x->shape[1];
+			memset(x->grad->data, 0, size * sizeof(float));
 	}
 
 	if (!y->grad) {
-		y->grad = tensor_create_new(A, ndim, o->shape);
+			y->grad = tensor_create_new(A, y->ndim, y->shape);
+			int size = y->shape[0] * y->shape[1];
+			memset(y->grad->data, 0, size * sizeof(float));
 	}
 
+	int ndim = x->ndim;
 	int rows = x->shape[0];
 	int cols = x->shape[1];
 
@@ -2368,7 +2373,6 @@ void tensor_add_backward(Arena *A, Tensor *o) {
 		}
 	}
 	//tensor_get_2d(x->grad);
-	printf("\n");
 	//tensor_get_2d(y->grad);
 	printf("[OK] <tensor_add_backward> done!\n");
 }
@@ -2806,45 +2810,39 @@ int main() {
 	x->grad = tensor_create_new(A, x->ndim, x->shape);
 	tensor_fill_zeros(x->grad);
 
+
+	//LayerNorm *ln2 = layer_norm_create(32);
+	//layer_norm_init_params(ln2);
+
+	//MHA *mha = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
+	//mha_init_params(mha);
+
+	//FFN *f = ffn_create(A, EMB_DIM, HIDDEN_DIM);
+	//ffn_init_params(f);
+	//
+
+	//Tensor *mha_out = mha_forward(A, x, mha);
+	//Tensor *ln1_out = layer_norm_forward(A, ln1, mha_out);
+	////Tensor *soft_out = tensor_softmax(A, x);
+
+	//Tensor *ffn_out = ffn_forward(A, ln1_out, f);
+	//Tensor *ln2_out= layer_norm_forward(A, ln2, ffn_out);
+	
+	
 	LayerNorm *ln1 = layer_norm_create(32);
 	layer_norm_init_params(ln1);
-
-	LayerNorm *ln2 = layer_norm_create(32);
-	layer_norm_init_params(ln2);
-
-	MHA *mha = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
-	mha_init_params(mha);
-
-	FFN *f = ffn_create(A, EMB_DIM, HIDDEN_DIM);
-	ffn_init_params(f);
+	Tensor *out = layer_norm_forward(A, ln1, x);
 	
-
-	Tensor *mha_out = mha_forward(A, x, mha);
-	Tensor *ln1_out = layer_norm_forward(A, ln1, mha_out);
-	//Tensor *soft_out = tensor_softmax(A, x);
-
-	Tensor *ffn_out = ffn_forward(A, ln1_out, f);
-	Tensor *ln2_out= layer_norm_forward(A, ln2, ffn_out);
-	Tensor *loss = tensor_f(A, ln2_out);
+	
+	Tensor *loss = tensor_f(A, out);
 
 	loss->grad->data[0] = 1.0f;
 
 	run_graph_validation(A, loss, MAX_NODES);
-	/*
-    Tensor *row_max = tensor_row_max(A, x);
-    Tensor *shifted = tensor_subtract(A, x, row_max);
-    Tensor *exp = tensor_exp(A, shifted);
-    Tensor *row_sum = tensor_row_sum(A, exp);
-    Tensor *row_sum_expanded = tensor_expand_cols(A, row_sum, cols);
-
-    Tensor *out = tensor_div(A, exp, row_sum_expanded);
-	*/
-
 	backward(A, loss);
 	free(A);
-	//backward(A, loss);
-	//backward(A, loss);
-	export_and_visualize_graph_new(loss, "mha_graph.dot", "mha_graph.png");
+	export_and_visualize_graph_new(loss, "ln_graph.dot", "ln_graph.png");
+	
 
 	return 0;
 }
