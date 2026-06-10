@@ -1894,14 +1894,16 @@ void tensor_row_sum_backward(Arena *A, Tensor *o) {
 			int grad_size = x->shape[0] * x->shape[1];
 			memset(x->grad->data, 0, grad_size * sizeof(float)); 
     }
-		printf("shape: \n");
-		tensor_shape_2d(x->grad);
+		//printf("shape: \n");
+		//tensor_shape_2d(x->grad);
     for (int r = 0; r < rows; r++) {
         float grad = o->grad->data[r];
-        for (int c = 0; c < cols; c++) 
+				printf("This should be broadcasted to exp: %f\n", grad);
+        for (int c = 0; c < cols; c++) {
             x->grad->data[r * cols + c] += grad;
-        }
-    }
+				}
+		}
+		printf("[OK] <tensor_row_sum_backward> done!\n");
 }
 
 void tensor_exp_backward(Arena *A, Tensor *o) {
@@ -1923,6 +1925,7 @@ void tensor_exp_backward(Arena *A, Tensor *o) {
         x->grad->data[i] += (o->grad->data[i] * o->data[i]);
         grad_sum += o->grad->data[i];
     }
+		printf("[OK] <tensor_exp_backward> done!\n");
 }
 
 
@@ -2803,25 +2806,27 @@ int main() {
 	x->grad = tensor_create_new(A, x->ndim, x->shape);
 	tensor_fill_zeros(x->grad);
 
-	//LayerNorm *ln1 = layer_norm_create(32);
-	//layer_norm_init_params(ln1);
+	LayerNorm *ln1 = layer_norm_create(32);
+	layer_norm_init_params(ln1);
 
-	//LayerNorm *ln2 = layer_norm_create(32);
-	//layer_norm_init_params(ln2);
+	LayerNorm *ln2 = layer_norm_create(32);
+	layer_norm_init_params(ln2);
 
 	MHA *mha = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
 	mha_init_params(mha);
 
-	//FFN *f = ffn_create(A, EMB_DIM, HIDDEN_DIM);
-	//ffn_init_params(f);
+	FFN *f = ffn_create(A, EMB_DIM, HIDDEN_DIM);
+	ffn_init_params(f);
+	
 
+	Tensor *mha_out = mha_forward(A, x, mha);
+	Tensor *ln1_out = layer_norm_forward(A, ln1, mha_out);
+	//Tensor *soft_out = tensor_softmax(A, x);
 
-	//Tensor *mha_out = mha_forward(A, x, mha);
-	Tensor *soft_out = tensor_softmax(A, x);
+	Tensor *ffn_out = ffn_forward(A, ln1_out, f);
+	Tensor *ln2_out= layer_norm_forward(A, ln2, ffn_out);
+	Tensor *loss = tensor_f(A, ln2_out);
 
-	//Tensor *ffn_out = ffn_forward(A, ln1_out, f);
-	//Tensor *ln2_out= layer_norm_forward(A, ln2, ffn_out);
-	Tensor *loss = tensor_f(A, soft_out);
 	loss->grad->data[0] = 1.0f;
 
 	run_graph_validation(A, loss, MAX_NODES);
@@ -2836,9 +2841,10 @@ int main() {
 	*/
 
 	backward(A, loss);
+	free(A);
 	//backward(A, loss);
 	//backward(A, loss);
-	export_and_visualize_graph_new(loss, "graph.dot", "graph.png");
+	export_and_visualize_graph_new(loss, "mha_graph.dot", "mha_graph.png");
 
 	return 0;
 }
