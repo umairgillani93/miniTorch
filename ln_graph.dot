@@ -6,9 +6,9 @@ digraph TensorGraph {
   n16 [label="{Tensor_ID: 16 | Tensor_OP: OP_DIVISION | Gradient: 1.00000000}", color="red", fillcolor="#fff0f0"];
   n10 -> n16 [penwidth=1.2];
   n14 -> n16 [penwidth=1.2];
-  n14 [label="{Tensor_ID: 14 | Tensor_OP: OP_EXPAND_COLS | Gradient: -0.09045494}", color="red", fillcolor="#fff0f0"];
+  n14 [label="{Tensor_ID: 14 | Tensor_OP: OP_EXPAND_COLS | Gradient: -0.10982288}", color="red", fillcolor="#fff0f0"];
   n12 -> n14 [penwidth=1.2];
-  n12 [label="{Tensor_ID: 12 | Tensor_OP: OP_ROW_SUM | Gradient: -0.31712973}", color="red", fillcolor="#fff0f0"];
+  n12 [label="{Tensor_ID: 12 | Tensor_OP: OP_ROW_SUM | Gradient: -0.35716721}", color="red", fillcolor="#fff0f0"];
   n10 -> n12 [penwidth=1.2];
   n10 [label="{Tensor_ID: 10 | Tensor_OP: OP_EXPONENT | Gradient: -0.00000003}", color="red", fillcolor="#fff0f0"];
   n8 -> n10 [penwidth=1.2];
