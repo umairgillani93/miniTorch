@@ -66,9 +66,9 @@ void build_topology(Tensor *root, bool *visited, Tensor **topo, int *idx) {
     if (visited[root->id]) return;
     
     // DON'T mark visited here yet
-		if (!root->grad) {
-			printf("[INFO] Found Node with Grad NULL <%s>\n", root->operations->name);
-		}
+		//if (!root->grad) {
+		//	printf("[INFO] Found Node with Grad NULL <%s>\n", root->operations->name);
+		//}
 		
     
     if (root->parents != NULL) { 
@@ -881,7 +881,7 @@ Tensor *tensor_expand_rows(Arena *A, Tensor *m, int out_rows) {
 		op->name = "OP_EXPAND_ROWS";
 		out->operations = op;
 		out->grad = tensor_create_new(A, ndim, out_shape);
-		out->cols = out_cols;
+		out->rows = out_rows;
 	}
 
 
@@ -1925,10 +1925,19 @@ void tensor_exp_backward(Arena *A, Tensor *o) {
     }
 
     float grad_sum = 0.0f;
-    for (int i = 0; i < rows * cols; i++) {
-        x->grad->data[i] += (o->grad->data[i] * o->data[i]);
-        grad_sum += o->grad->data[i];
-    }
+		int c = 0;
+		for (int r = 0; 4 < rows; r++) {
+			float prev = o->grad->data[r];
+			for (int c = 0; c < cols; c++) {
+				float	curr = o->data[r * cols + c];
+				printf("curr: %f, prev: %f\n", curr, prev);
+				x->grad->data[r*cols+c] += (curr * prev);
+			}
+		}
+    //for (int i = 0; i < rows * cols; i++) {
+    //    x->grad->data[i] += (o->grad->data[i] * o->data[i]);
+    //    grad_sum += o->grad->data[i];
+    //}
 		printf("[OK] <tensor_exp_backward> done!\n");
 }
 
@@ -2829,11 +2838,10 @@ int main() {
 	//Tensor *ln2_out= layer_norm_forward(A, ln2, ffn_out);
 	
 	
-	LayerNorm *ln1 = layer_norm_create(32);
-	layer_norm_init_params(ln1);
-	Tensor *out = layer_norm_forward(A, ln1, x);
+	//LayerNorm *ln1 = layer_norm_create(32);
+	//layer_norm_init_params(ln1);
 	
-	
+	Tensor *out = tensor_softmax(A, x);
 	Tensor *loss = tensor_f(A, out);
 
 	loss->grad->data[0] = 1.0f;

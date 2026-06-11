@@ -73,6 +73,7 @@ typedef struct Tensor {
 
 	// For concat columns
 	int cols;
+	int rows;
 
 	// For matmul shared dimension
 	int shared_dim;
