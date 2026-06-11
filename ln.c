@@ -35,7 +35,7 @@ void layer_norm_init_params(Arena *A, LayerNorm *ln) { // Pass Arena to allocate
     ln->beta->requires_grad = true;
     ln->gamma->requires_grad = true;
 
-    // IMPORTANT: Allocate the grad buffer for parameters
+		// Allocating gradient buffers for beta  and gemma
     int size = 1;
     for(int i=0; i < ln->beta->ndim; i++) size *= ln->beta->shape[i];
     

@@ -2081,27 +2081,67 @@ void tensor_mse_backward(Tensor *x) {
 	// Will be implemented later IA
 }
 
-void tensor_expand_rows_backward(Arena *A, Tensor *o) {
+//void tensor_expand_rows_backward(Arena *A, Tensor *o) {
+//
+//    if (!o || !o->grad || !o->parents[0]) return;
+//    Tensor *m = o->parents[0];
+//    
+//    if (!m->grad) {
+//        m->grad = tensor_create_new(A, m->ndim, m->shape);
+//				int grad_size = 1;
+//				for (int i = 0; i < m->ndim; i++) grad_size *= m->shape[i]; // find the size of gradient tensor
+//				memset(m->grad->data, 0, grad_size * sizeof(float));
+//    }
+//
+//    int out_rows = o->shape[0];
+//    int cols = o->shape[1];
+//
+//    for (int r = 0; r < out_rows; r++) {
+//        for (int c = 0; c < cols; c++) {
+//            m->grad->data[c] += o->grad->data[r * cols + c];
+//        }
+//    }
+//		//tensor_get_2d(m->grad);
+//		//printf("EXPAND_ROWS backward: tensor %zu grad=%p parent=%p\n",
+//    //   o->id, o->grad, m);
+//		printf("[OK] <tensor_expand_rows> done!\n");
+//}
 
-    if (!o || !o->grad || !o->parents[0]) return;
+void tensor_expand_rows_backward(Arena *A, Tensor *o) {
+    if (!o || !o->grad || !o->parents || !o->parents[0]) return;
     Tensor *m = o->parents[0];
     
+    // 1. Ensure CURRENT node's gradient data array exists
+    //if (!o->grad->data) {
+    //    int o_size = 1;
+    //    for (int i = 0; i < o->ndim; i++) o_size *= o->shape[i];
+    //    o->grad->data = arena_alloc(A, o_size * sizeof(float));
+    //    memset(o->grad->data, 0, o_size * sizeof(float));
+    //}
+
+    // 2. Ensure PARENT node's grad struct and data array exist
     if (!m->grad) {
         m->grad = tensor_create_new(A, m->ndim, m->shape);
+				
+    }
+    if (!m->grad->data) {
+        int m_size = 1;
+        for (int i = 0; i < m->ndim; i++) m_size *= m->shape[i];
+        m->grad->data = arena_alloc(A, m_size * sizeof(float));
+        memset(m->grad->data, 0, m_size * sizeof(float));
     }
 
     int out_rows = o->shape[0];
     int cols = o->shape[1];
 
+    // 3. This loop is now completely safe from NULL pointers!
     for (int r = 0; r < out_rows; r++) {
         for (int c = 0; c < cols; c++) {
             m->grad->data[c] += o->grad->data[r * cols + c];
         }
     }
-		//tensor_get_2d(m->grad);
-		//printf("EXPAND_ROWS backward: tensor %zu grad=%p parent=%p\n",
-    //   o->id, o->grad, m);
-		printf("[OK] <tensor_expand_rows> done!\n");
+    
+    printf("[OK] <tensor_expand_rows> backward done!\n");
 }
 
 void tensor_square_backward(Arena *A, Tensor *o) {
