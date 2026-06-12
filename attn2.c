@@ -61,25 +61,14 @@ void mha_init_params(Arena *A, MHA *m) {
 	tensor_xavier_init(m->wv, EMB_DIM, EMB_DIM);
 	tensor_xavier_init(m->wo, EMB_DIM, EMB_DIM);
 
-	// define gradient buffer for all the weights for MHA here
-	//int grad_size = 1;
-	//for (int i = 0; i < m->wq->ndim; i++) grad_size *= m->wq->shape[i];
+	m->wo->requires_grad = true;
 
-	//m->wq->grad = arena_alloc(A, grad_size * sizeof(float));
-	//m->wk->grad = arena_alloc(A, grad_size * sizeof(float));
-	//m->wv->grad = arena_alloc(A, grad_size * sizeof(float));
-	//m->wo->grad = arena_alloc(A, grad_size * sizeof(float));
-
-	//m->wq->requires_grad = true;
-	//m->wk->requires_grad = true;
-	//m->wv->requires_grad = true;
-	//m->wo->requires_grad = true;
-
-	//memset(m->wq->grad->data, 0, grad_size * sizeof(float));
-	//memset(m->wk->grad->data, 0, grad_size * sizeof(float));
-	//memset(m->wv->grad->data, 0, grad_size * sizeof(float));
-	//memset(m->wo->grad->data, 0, grad_size * sizeof(float));
-
+	// IMPORTANT: Ensure the gradient tensor is created for m->wo
+	// Backward doesn't use this param, so need to define here
+	m->wo->grad = tensor_create_new(A, m->wo->ndim, m->wo->shape);
+	int size = 1;
+	for (int i = 0; i < m->wo->ndim; i++) size *= m->wo->shape[i];
+	memset(m->wo->grad->data, 0, size * sizeof(float));
 }
 
 void mha_backward_temp_weights(Arena *AA, Tensor *dO, Tensor *A, Tensor *B, Tensor **dA, Tensor **dV) {
@@ -326,10 +315,10 @@ MHA *mha_create_new(Arena *A, int num_heads, int seq_len, int emb_dim) {
 	//mha->wo = tensor_create_weights_new(A, ndim, shape_weights); // output weights
 	
 	// define the tensor
-	mha->Q = tensor_create_weights_new(A, ndim, shape_tokens);
-	mha->K = tensor_create_weights_new(A, ndim, shape_tokens);
-	mha->V = tensor_create_weights_new(A, ndim, shape_tokens);
-	mha->out = tensor_create_weights_new(A, ndim, shape_tokens);
+	mha->Q = tensor_create_new(A, ndim, shape_tokens);
+	mha->K = tensor_create_new(A, ndim, shape_tokens);
+	mha->V = tensor_create_new(A, ndim, shape_tokens);
+	mha->out = tensor_create_new(A, ndim, shape_tokens);
 
 	mha->num_heads= num_heads;
 	mha->dk = emb_dim / mha->num_heads;

@@ -1,6 +1,7 @@
 // Copyright (C) 2026 Umair Gillani
 // https://www.linkedin.com/in/umairgillani93
 // https://www.github.com/umairgillani93
+//
 // This file is part of 'miniTorch' and licensed under GPLv3.
 
 #include <stddef.h>
@@ -16,33 +17,76 @@
 #include "config.h"
 #include "arena.h"
 
-void optimizer(MHA *m, FNN *f, LayerNorm *l1, LayerNorm *l2, float lr) {
-    // Assuming wq, wk, wv, wo are all (EMB_DIM * EMB_DIM)
-    int m_size = m->wq->size; 
-    for (int i = 0; i < m_size; i++) {
-        m->wq->data[i] -= lr * m->wq->grad->data[i];
-        m->wk->data[i] -= lr * m->wk->grad->data[i];
-        m->wv->data[i] -= lr * m->wv->grad->data[i];
-        m->wo->data[i] -= lr * m->wo->grad->data[i];
-    }
-    
-    // FFN Weights 
-    for (int i = 0; i < f->w1->size; i++) f->w1->data[i] -= lr * f->w1->grad->data[i];
-    for (int i = 0; i < f->w2->size; i++) f->w2->data[i] -= lr * f->w2->grad->data[i];
-    
-    // FFN Biases 
-    for (int i = 0; i < f->h1->size; i++) f->h1->data[i] -= lr * f->h1->grad->data[i];
-    for (int i = 0; i < f->a1->size; i++) f->a1->data[i] -= lr * f->a1->grad->data[i];
+void optimizer(MHA *m, FFN *f, LayerNorm *l1, LayerNorm *l2, float lr) {
+    // 1. Safety check: Ensure the struct pointers themselves aren't NULL
+    if (!m || !f || !l1 || !l2) return;
 
-    // LayerNorm
-    int ln_size = l1->gamma->size;
-    for (int i = 0; i < ln_size; i++) {
-        l1->beta->data[i]  -= lr * l1->beta->grad->data[i];
-        l1->gamma->data[i] -= lr * l1->gamma->grad->data[i];
-        l2->beta->data[i]  -= lr * l2->beta->grad->data[i];
-        l2->gamma->data[i] -= lr * l2->gamma->grad->data[i];
-    }
+    // Helper macro to safely update a tensor's data using its grad
+    // This checks if the tensor, its data, its grad, and its grad->data all exist.
+    #define SAFE_UPDATE(t) \
+        if ((t) && (t)->data && (t)->grad && (t)->grad->data) { \
+            int _sz = tensor_size(t); \
+            for (int i = 0; i < _sz; i++) { \
+                (t)->data[i] -= lr * (t)->grad->data[i]; \
+            } \
+        } else { \
+            printf("Optimizer Warning: Skipped update for " #t " (NULL detected)\n"); \
+        }
+
+    // --- MHA Parameters ---
+    SAFE_UPDATE(m->wq);
+    SAFE_UPDATE(m->wk);
+    SAFE_UPDATE(m->wv);
+    SAFE_UPDATE(m->wo);
+
+    // --- FFN Parameters ---
+    SAFE_UPDATE(f->w1);
+    SAFE_UPDATE(f->w2);
+    SAFE_UPDATE(f->h1); // Bias 1
+    SAFE_UPDATE(f->a1); // Bias 2
+
+    // --- LayerNorm 1 Parameters ---
+    SAFE_UPDATE(l1->beta);
+    SAFE_UPDATE(l1->gamma);
+
+    // --- LayerNorm 2 Parameters ---
+    SAFE_UPDATE(l2->beta);
+    SAFE_UPDATE(l2->gamma);
+
+    #undef SAFE_UPDATE
 }
+
+//void optimizer(MHA *m, FFN *f, LayerNorm *l1, LayerNorm *l2, float lr) {
+//    // Assuming wq, wk, wv, wo are all (EMB_DIM * EMB_DIM)
+//    int m_size = tensor_size(m->wq); 
+//    for (int i = 0; i < m_size; i++) {
+//        m->wq->data[i] -= lr * m->wq->grad->data[i];
+//        m->wk->data[i] -= lr * m->wk->grad->data[i];
+//        m->wv->data[i] -= lr * m->wv->grad->data[i];
+//        m->wo->data[i] -= lr * m->wo->grad->data[i];
+//    }
+//    
+//    // FFN Weights 
+//		int w1_size = f->w1->shape[0] * f->w1->shape[1];
+//		int w2_size = f->w2->shape[0] * f->w2->shape[1];
+//		int h1_size = f->h1->shape[0] * f->h1->shape[1];
+//		int a1_size = f->a1->shape[0] * f->a1->shape[1];
+//    for (int i = 0; i < w1_size; i++) f->w1->data[i] -= lr * f->w1->grad->data[i];
+//    for (int i = 0; i < w2_size; i++) f->w2->data[i] -= lr * f->w2->grad->data[i];
+//    
+//    // FFN Biases 
+//    for (int i = 0; i < h1_size; i++) f->h1->data[i] -= lr * f->h1->grad->data[i];
+//    for (int i = 0; i < a1_size; i++) f->a1->data[i] -= lr * f->a1->grad->data[i];
+//
+//    // LayerNorm
+//    int ln_size = l1->gamma->shape[0] * l1->gamma->shape[1];
+//    for (int i = 0; i < ln_size; i++) {
+//        l1->beta->data[i]  -= lr * l1->beta->grad->data[i];
+//        l1->gamma->data[i] -= lr * l1->gamma->grad->data[i];
+//        l2->beta->data[i]  -= lr * l2->beta->grad->data[i];
+//        l2->gamma->data[i] -= lr * l2->gamma->grad->data[i];
+//    }
+//}
 
 int main() {
 
@@ -153,7 +197,7 @@ int main() {
 			//backward(A, loss);
 			//backward(A, loss);
 			//export_and_visualize_graph_new(loss, "graph_main.dot", "graph_main.svg");
-			optimizer(A, m_batch, f, L1, L2, alpha);
+			optimizer(m_batch, f, L1, L2, alpha);
 		}
 	}
 	free(A);
