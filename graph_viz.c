@@ -82,7 +82,7 @@ void export_and_visualize_graph_new(Tensor *root,
 
     if (png_file) {
         char cmd[512];
-        snprintf(cmd, sizeof(cmd), "dot -Tpng %s -o %s", dot_file, png_file);
+        snprintf(cmd, sizeof(cmd), "dot -Tsvg %s -o %s", dot_file, png_file);
         if (system(cmd) == 0) printf("[GRAPH] PNG generated: %s\n", png_file);
     }
 }

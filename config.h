@@ -9,7 +9,7 @@
 #define BATCH_SIZE 16
 #define SEQ_LEN    16
 #define EMB_DIM    32
-#define LR         1e-3
+#define alpha      1e-3
 #define HEADS      8
 #define HEAD_DIM EMB_DIM / HEADS
 #define EPOCHS     1

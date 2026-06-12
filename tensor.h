@@ -1,7 +1,11 @@
 #include <stdbool.h>
+#include "layer_norm.h"
+#include "attention2.h"
+#include "feed_forward_nn.h"
 #ifndef TENSOR_H
 #define TENSOR_H
 #include <stddef.h>
+
 
 extern size_t GLOBAL_TENSOR_ID;
 
@@ -163,6 +167,7 @@ void tensor_row_max_backward(Arena *A, Tensor *o);
 void tensor_row_sum_backward(Arena *A, Tensor *o);
 void tensor_scaler_div_backward(Arena *A, Tensor *o);
 void tensor_zero_grad(Tensor *x);
+//void optimizer(MHA *m, FNN *f, LayerNorm *l1, LayerNorm *l2, float lr);
 Tensor *tensor_mean(Arena *A, Tensor *x);
 Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_shape);
 Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b);

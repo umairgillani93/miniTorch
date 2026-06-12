@@ -15,9 +15,9 @@
 
 #include <stddef.h>
 
-#define RAND_FLOAT  (float) rand() / (float) RAND_MAX
-#define EPS 1e-5
-#define MAX_NODES 10000
+//#define RAND_FLOAT  (float) rand() / (float) RAND_MAX
+//#define EPS 1e-5
+//#define MAX_NODES 10000
 
 size_t GLOBAL_TENSOR_ID = 0;
 
@@ -37,6 +37,34 @@ size_t GLOBAL_TENSOR_ID = 0;
 // Some backward functions
 // We want to take local gradiens depending upons the operations for this backward funntion (PyTorch style)
 //
+
+//void optimizer(MHA *m, FNN *f, LayerNorm *l1, LayerNorm *l2, float lr) {
+//    // Assuming wq, wk, wv, wo are all (EMB_DIM * EMB_DIM)
+//    int m_size = m->wq->size; 
+//    for (int i = 0; i < m_size; i++) {
+//        m->wq->data[i] -= lr * m->wq->grad->data[i];
+//        m->wk->data[i] -= lr * m->wk->grad->data[i];
+//        m->wv->data[i] -= lr * m->wv->grad->data[i];
+//        m->wo->data[i] -= lr * m->wo->grad->data[i];
+//    }
+//    
+//    // FFN Weights 
+//    for (int i = 0; i < f->w1->size; i++) f->w1->data[i] -= lr * f->w1->grad->data[i];
+//    for (int i = 0; i < f->w2->size; i++) f->w2->data[i] -= lr * f->w2->grad->data[i];
+//    
+//    // FFN Biases 
+//    for (int i = 0; i < f->h1->size; i++) f->h1->data[i] -= lr * f->h1->grad->data[i];
+//    for (int i = 0; i < f->a1->size; i++) f->a1->data[i] -= lr * f->a1->grad->data[i];
+//
+//    // LayerNorm
+//    int ln_size = l1->gamma->size;
+//    for (int i = 0; i < ln_size; i++) {
+//        l1->beta->data[i]  -= lr * l1->beta->grad->data[i];
+//        l1->gamma->data[i] -= lr * l1->gamma->grad->data[i];
+//        l2->beta->data[i]  -= lr * l2->beta->grad->data[i];
+//        l2->gamma->data[i] -= lr * l2->gamma->grad->data[i];
+//    }
+//}
 
 void tensor_zero_grad(Tensor *x) {
 	if (!x || !x->grad) {
@@ -2771,104 +2799,104 @@ Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b) {
 
 
 
-int main() {
-
-	/*
-	 * Tensor as nodes
-	 * Tensor operations as Nodes
-	 * X(Node)----|some opeartion| (NOde)----> Y(Node)
-	 * shape, stride, id, operations, name, backward function...
-	 */
-
-	/*Loss -> getting computed -> using some opeerations
-
-	Loss -> mean_squared_error ->  mean((pred - targer) ^ 2) / SIZE
-
-	1. diff -> tensor_subtract(pred - target)
-	2. Square -> tensor_square(diff) | square shape: (16, 32)
-	3.  Mean -> tensor_mean(square) -> mean | shape mean: (16, 32) -> (16, 1)
-	4. Expand_cols -> tensor_expand_cols(Mean) -> shape: (16, 32) 
-	6. Loss = output(Expand_cols_method)
-
-	// we need to start backpropagation from the end 
-	// Loss -> shape = (seq_len, emb_dim) -> my case -> (16,32)
-	//
-	// dLoss/Loss = 1 -> starting from Gradient tensor ->shape [16, 32] all 1s
-	// Tensor_expand_cols_backward;
-	// for tensor_expand_cols_forward  we have shape = (16, 32) this returns us a tensor with memeber called grad having shape equals (16,32)
-	// tensor_expand_cols_backward() this will give us shape (16, 1);
-	//
-	// If we expand the cols of some tensor
-	// the gradient is simply the accumulation OR sum acorss the dimentions
-	//
-	// forward returns T =  [1, 1, ,1]  -> this stores grad memeber dimension as (16, 32)
-	//                      [1, 1,  1]
-	//
-	//                 T' = [3] -> this has actual dimention after taking gradient as (16, 1)
-	//                      [3]
-	/*/
-
-	// so can we say like
-	// if we have x @ y = z
-	// and z + f = c 
-	// f(c) = L (loss)
-	// now dL/dc = grad_c
-	// dL/df = dL/dc * dc/df = grad_c * dc/df => dL/df = grad_f
-	// dL/dz = dL/dc * dc/dz = grad_c * dc/dz => dL/dz = grad_z
-	// dL/dx = dL/dc * dc/dz * dz/dx => grad_z * dz/dx
-	// dL/dy = dL/dc * dc/dz * dz/dy => grad_z * dz/dy
-	srand(time(NULL));
-	Arena *A = malloc(sizeof(Arena));
-	size_t SIZE = 1024 * 1024;
-	arena_init(A, ARENA_SIZE);
-	printf("Arena allocated\n");
-	int ndim = 2;
-	int *shape_x = arena_alloc(A, ndim * sizeof(int));
-	int *shape_y = arena_alloc(A, ndim * sizeof(int));
-	shape_x[0] = SEQ_LEN;
-	shape_x[1] = EMB_DIM;
-
-	shape_y[0] = SEQ_LEN;
-	shape_y[1] = EMB_DIM;
-
-	Tensor *y = tensor_create_new(A, ndim, shape_y);
-	tensor_randomize_weights(y);
-	y->requires_grad = true;
-	y->grad = tensor_create_new(A, y->ndim, y->shape);
-	tensor_fill_zeros(y->grad);
-
-	Tensor *x = tensor_create_new(A, ndim, shape_x);
-	tensor_randomize_weights(x);
-	x->requires_grad = true;
-	x->grad = tensor_create_new(A, x->ndim, x->shape);
-	tensor_fill_zeros(x->grad);
-
-	LayerNorm *ln1 = layer_norm_create_new(A, 32);
- 	layer_norm_init_params(A, ln1);
-
-	LayerNorm *ln2 = layer_norm_create(A, 32);
-	layer_norm_init_params(A, ln2);
-
-	MHA *mha = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
-	mha_init_params(A, mha);
-
-	FFN *f = ffn_create(A, EMB_DIM, HIDDEN_DIM);
-	ffn_init_params(f);
-
-	
-	Tensor *mha_out = mha_forward(A, x, mha);
-	Tensor *ln1_out = layer_norm_forward(A, ln1, mha_out);
-
-	Tensor *ffn_out = ffn_forward(A, ln1_out, f);
-	Tensor *ln2_out= layer_norm_forward(A, ln2, ffn_out);
-	
-	Tensor *loss = tensor_f(A, ln2_out);
-	loss->grad->data[0] = 1.0f;
-
-	run_graph_validation(A, loss, MAX_NODES);
-	backward(A, loss);
-	free(A);
-	export_and_visualize_graph_new(loss, "graph_final.dot", "graph_final.png");
-
-	return 0;
-}
+//int main() {
+//
+//	/*
+//	 * Tensor as nodes
+//	 * Tensor operations as Nodes
+//	 * X(Node)----|some opeartion| (NOde)----> Y(Node)
+//	 * shape, stride, id, operations, name, backward function...
+//	 */
+//
+//	/*Loss -> getting computed -> using some opeerations
+//
+//	Loss -> mean_squared_error ->  mean((pred - targer) ^ 2) / SIZE
+//
+//	1. diff -> tensor_subtract(pred - target)
+//	2. Square -> tensor_square(diff) | square shape: (16, 32)
+//	3.  Mean -> tensor_mean(square) -> mean | shape mean: (16, 32) -> (16, 1)
+//	4. Expand_cols -> tensor_expand_cols(Mean) -> shape: (16, 32) 
+//	6. Loss = output(Expand_cols_method)
+//
+//	// we need to start backpropagation from the end 
+//	// Loss -> shape = (seq_len, emb_dim) -> my case -> (16,32)
+//	//
+//	// dLoss/Loss = 1 -> starting from Gradient tensor ->shape [16, 32] all 1s
+//	// Tensor_expand_cols_backward;
+//	// for tensor_expand_cols_forward  we have shape = (16, 32) this returns us a tensor with memeber called grad having shape equals (16,32)
+//	// tensor_expand_cols_backward() this will give us shape (16, 1);
+//	//
+//	// If we expand the cols of some tensor
+//	// the gradient is simply the accumulation OR sum acorss the dimentions
+//	//
+//	// forward returns T =  [1, 1, ,1]  -> this stores grad memeber dimension as (16, 32)
+//	//                      [1, 1,  1]
+//	//
+//	//                 T' = [3] -> this has actual dimention after taking gradient as (16, 1)
+//	//                      [3]
+//	/*/
+//
+//	// so can we say like
+//	// if we have x @ y = z
+//	// and z + f = c 
+//	// f(c) = L (loss)
+//	// now dL/dc = grad_c
+//	// dL/df = dL/dc * dc/df = grad_c * dc/df => dL/df = grad_f
+//	// dL/dz = dL/dc * dc/dz = grad_c * dc/dz => dL/dz = grad_z
+//	// dL/dx = dL/dc * dc/dz * dz/dx => grad_z * dz/dx
+//	// dL/dy = dL/dc * dc/dz * dz/dy => grad_z * dz/dy
+//	srand(time(NULL));
+//	Arena *A = malloc(sizeof(Arena));
+//	size_t SIZE = 1024 * 1024;
+//	arena_init(A, ARENA_SIZE);
+//	printf("Arena allocated\n");
+//	int ndim = 2;
+//	int *shape_x = arena_alloc(A, ndim * sizeof(int));
+//	int *shape_y = arena_alloc(A, ndim * sizeof(int));
+//	shape_x[0] = SEQ_LEN;
+//	shape_x[1] = EMB_DIM;
+//
+//	shape_y[0] = SEQ_LEN;
+//	shape_y[1] = EMB_DIM;
+//
+//	Tensor *y = tensor_create_new(A, ndim, shape_y);
+//	tensor_randomize_weights(y);
+//	y->requires_grad = true;
+//	y->grad = tensor_create_new(A, y->ndim, y->shape);
+//	tensor_fill_zeros(y->grad);
+//
+//	Tensor *x = tensor_create_new(A, ndim, shape_x);
+//	tensor_randomize_weights(x);
+//	x->requires_grad = true;
+//	x->grad = tensor_create_new(A, x->ndim, x->shape);
+//	tensor_fill_zeros(x->grad);
+//
+//	LayerNorm *ln1 = layer_norm_create_new(A, 32);
+// 	layer_norm_init_params(A, ln1);
+//
+//	LayerNorm *ln2 = layer_norm_create(A, 32);
+//	layer_norm_init_params(A, ln2);
+//
+//	MHA *mha = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
+//	mha_init_params(A, mha);
+//
+//	FFN *f = ffn_create(A, EMB_DIM, HIDDEN_DIM);
+//	ffn_init_params(f);
+//
+//	
+//	Tensor *mha_out = mha_forward(A, x, mha);
+//	Tensor *ln1_out = layer_norm_forward(A, ln1, mha_out);
+//
+//	Tensor *ffn_out = ffn_forward(A, ln1_out, f);
+//	Tensor *ln2_out= layer_norm_forward(A, ln2, ffn_out);
+//	
+//	Tensor *loss = tensor_f(A, ln2_out);
+//	loss->grad->data[0] = 1.0f;
+//
+//	run_graph_validation(A, loss, MAX_NODES);
+//	backward(A, loss);
+//	free(A);
+//	export_and_visualize_graph_new(loss, "graph_final.dot", "graph_final.png");
+//
+//	return 0;
+//}
