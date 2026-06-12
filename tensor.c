@@ -52,6 +52,16 @@ void tensor_zero_grad(Tensor *x) {
 	}
 }
 
+void tensor_xavier_init(Tensor *x, int f_in, int f_out) {
+	// f_in = f_out = embedding dimension
+	float limit = sqrtf(6.0f / (float)(f_in + f_out));
+	int size = tensor_size(x);
+	for (int i = 0; i < size; i++) {
+		// generate random float numbers b/w -limit -> +limit
+		float r = RAND_FLOAT; // defined in config
+		x->data[i] = -limit + r * (2.0f * limit);
+	}
+}
 
 Tensor *ensure_grad(Arena *A, Tensor *t) {
     if (!t->grad) {

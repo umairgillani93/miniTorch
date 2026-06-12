@@ -82,7 +82,7 @@ typedef struct Tensor {
 
 // prototypes definition
 
-
+void tensor_xavier_init(Tensor *x, int f_in, int f_out);
 bool *vislist();
 void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *rep, int max_tensors);
 void run_graph_validation(Arena *A, Tensor *o, int max_nodes);

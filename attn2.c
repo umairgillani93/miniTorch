@@ -56,10 +56,10 @@ Tensor *softmax_gradient(Tensor *A, Tensor *dA) {
 
 void mha_init_params(Arena *A, MHA *m) {
 	// fill weight tensor's data with zeros initially
-	tensor_fill_zeros(m->wq);
-	tensor_fill_zeros(m->wk);
-	tensor_fill_zeros(m->wv);
-	tensor_fill_zeros(m->wo);
+	tensor_xavier_init(m->wq, EMB_DIM, EMB_DIM);
+	tensor_xavier_init(m->wk, EMB_DIM, EMB_DIM);
+	tensor_xavier_init(m->wv, EMB_DIM, EMB_DIM);
+	tensor_xavier_init(m->wo, EMB_DIM, EMB_DIM);
 
 	// define gradient buffer for all the weights for MHA here
 	//int grad_size = 1;
