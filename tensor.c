@@ -2870,6 +2870,5 @@ int main() {
 	free(A);
 	export_and_visualize_graph_new(loss, "graph_final.dot", "graph_final.png");
 
-
 	return 0;
 }
