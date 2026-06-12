@@ -2843,36 +2843,32 @@ int main() {
 	x->grad = tensor_create_new(A, x->ndim, x->shape);
 	tensor_fill_zeros(x->grad);
 
+	LayerNorm *ln1 = layer_norm_create_new(A, 32);
+ 	layer_norm_init_params(A, ln1);
 
-	//LayerNorm *ln2 = layer_norm_create(32);
-	//uayer_norm_init_params(ln2);
+	LayerNorm *ln2 = layer_norm_create(A, 32);
+	layer_norm_init_params(A, ln2);
 
 	MHA *mha = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
 	mha_init_params(A, mha);
 
-	//FFN *f = ffn_create(A, EMB_DIM, HIDDEN_DIM);
-	//ffn_init_params(f);
-	//
+	FFN *f = ffn_create(A, EMB_DIM, HIDDEN_DIM);
+	ffn_init_params(f);
 
-	//Tensor *mha_out = mha_forward(A, x, mha);
-	//Tensor *ln1_out = layer_norm_forward(A, ln1, mha_out);
-	////Tensor *soft_out = tensor_softmax(A, x);
+	
+	Tensor *mha_out = mha_forward(A, x, mha);
+	Tensor *ln1_out = layer_norm_forward(A, ln1, mha_out);
 
-	//Tensor *ffn_out = ffn_forward(A, ln1_out, f);
-	//Tensor *ln2_out= layer_norm_forward(A, ln2, ffn_out);
+	Tensor *ffn_out = ffn_forward(A, ln1_out, f);
+	Tensor *ln2_out= layer_norm_forward(A, ln2, ffn_out);
 	
-	
-	LayerNorm *ln1 = layer_norm_create_new(A, 32);
-	layer_norm_init_params(A, ln1);
-	Tensor *out = mha_forward(A, x, mha);
-	Tensor *ln = layer_norm_forward(A, ln1, out);
-	Tensor *loss = tensor_f(A, ln);
+	Tensor *loss = tensor_f(A, ln2_out);
 	loss->grad->data[0] = 1.0f;
 
 	run_graph_validation(A, loss, MAX_NODES);
 	backward(A, loss);
 	free(A);
-	export_and_visualize_graph_new(loss, "test.dot", "test.png");
+	export_and_visualize_graph_new(loss, "graph_final.dot", "graph_final.png");
 
 
 	return 0;
