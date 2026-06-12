@@ -2835,10 +2835,10 @@ int main() {
 
 
 	//LayerNorm *ln2 = layer_norm_create(32);
-	//layer_norm_init_params(ln2);
+	//uayer_norm_init_params(ln2);
 
-	//MHA *mha = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
-	//mha_init_params(mha);
+	MHA *mha = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
+	mha_init_params(A, mha);
 
 	//FFN *f = ffn_create(A, EMB_DIM, HIDDEN_DIM);
 	//ffn_init_params(f);
@@ -2854,11 +2854,9 @@ int main() {
 	
 	LayerNorm *ln1 = layer_norm_create_new(A, 32);
 	layer_norm_init_params(A, ln1);
-	
-	Tensor *out = layer_norm_forward(A, ln1, x);
-	
-	Tensor *loss = tensor_f(A, out);
-
+	Tensor *out = mha_forward(A, x, mha);
+	Tensor *ln = layer_norm_forward(A, ln1, out);
+	Tensor *loss = tensor_f(A, ln);
 	loss->grad->data[0] = 1.0f;
 
 	run_graph_validation(A, loss, MAX_NODES);
