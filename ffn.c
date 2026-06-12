@@ -71,8 +71,8 @@ void sgd_optimizer(Tensor *w, Tensor *dw, float lr) {
 //}
 	
 void ffn_init_params(FFN *F) {
-	tensor_randomize_weights(F->w1);
-	tensor_randomize_weights(F->w2);
+	tensor_xavier_init(F->w1, EMB_DIM, EMB_DIM);
+	tensor_xavier_init(F->w2, EMB_DIM, EMB_DIM);
 }
 
 Tensor *ffn_backward(Arena *A, FFN *f, Tensor *x, Tensor *dout) {
@@ -99,8 +99,8 @@ FFN *ffn_create(Arena *A, int input_dim, int hidden_dim) {
 
 
 	FFN *f = arena_alloc(A, sizeof(FFN));
-	f->w1 = tensor_create_weights_new(A, ndim, shape1);
-	f->w2 = tensor_create_weights_new(A, ndim, shape2);
+	f->w1 = tensor_create_new(A, ndim, shape1);
+	f->w2 = tensor_create_new(A, ndim, shape2);
 	//f->inputs = tensor_create_new(A, ndim, shape1);
 
 	return f;

@@ -73,6 +73,7 @@ typedef struct Tensor {
 
 	// For concat columns
 	int cols;
+	int rows;
 
 	// For matmul shared dimension
 	int shared_dim;
@@ -81,7 +82,7 @@ typedef struct Tensor {
 
 // prototypes definition
 
-
+void tensor_xavier_init(Tensor *x, int f_in, int f_out);
 bool *vislist();
 void validate_tensor_graph(Arena *A, Tensor *root, bool *visited, GraphReport *rep, int max_tensors);
 void run_graph_validation(Arena *A, Tensor *o, int max_nodes);
@@ -91,6 +92,7 @@ void backward(Arena *A, Tensor *out);
 void tensor_exp_backward(Arena *A, Tensor *o);
 void f_backward(Arena *A, Tensor *out);
 void dfs(Arena *A, Tensor *root, bool *visited, Tensor **topo, int *size);
+void tensor_softmax_backward(Arena *A, Tensor *o);
 Tensor *ensure_grad(Arena *A, Tensor *t); 
 Tensor *tensor_f(Arena *A, Tensor *x);
 Tensor *tensor_scaler_div(Arena *A, Tensor *x, float val);
@@ -153,13 +155,14 @@ void tensor_sqrt_backward(Arena *A, Tensor *o);
 void tensor_mse_backward(Tensor *x);
 void tensor_expand_cols_backward(Arena *A, Tensor *out);
 void tensor_expand_rows_backward(Arena *A, Tensor *o);
-void tensor_softmax_backward(Tensor *x);
 void tensor_relu_backward(Arena *A, Tensor *x);
 void tensor_fill_with(Tensor *x, float v);
 void tensor_slice_cols_backward(Arena *A, Tensor *x);
 void tensor_element_wise_product_backward(Arena *A, Tensor *o);
 void tensor_row_max_backward(Arena *A, Tensor *o);
 void tensor_row_sum_backward(Arena *A, Tensor *o);
+void tensor_scaler_div_backward(Arena *A, Tensor *o);
+void tensor_zero_grad(Tensor *x);
 Tensor *tensor_mean(Arena *A, Tensor *x);
 Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_shape);
 Tensor *tensor_add(Arena *A, Tensor *a, Tensor *b);

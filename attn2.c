@@ -54,15 +54,32 @@ Tensor *softmax_gradient(Tensor *A, Tensor *dA) {
 	return dS;
 }
 
-void mha_init_params(MHA *m) {
-	tensor_randomize_weights(m->wq);
-	tensor_randomize_weights(m->wk);
-	tensor_randomize_weights(m->wv);
-	tensor_randomize_weights(m->wo);
-	m->wq->requires_grad = true;
-	m->wk->requires_grad = true;
-	m->wv->requires_grad = true;
-	m->wo->requires_grad = true;
+void mha_init_params(Arena *A, MHA *m) {
+	// fill weight tensor's data with zeros initially
+	tensor_xavier_init(m->wq, EMB_DIM, EMB_DIM);
+	tensor_xavier_init(m->wk, EMB_DIM, EMB_DIM);
+	tensor_xavier_init(m->wv, EMB_DIM, EMB_DIM);
+	tensor_xavier_init(m->wo, EMB_DIM, EMB_DIM);
+
+	// define gradient buffer for all the weights for MHA here
+	//int grad_size = 1;
+	//for (int i = 0; i < m->wq->ndim; i++) grad_size *= m->wq->shape[i];
+
+	//m->wq->grad = arena_alloc(A, grad_size * sizeof(float));
+	//m->wk->grad = arena_alloc(A, grad_size * sizeof(float));
+	//m->wv->grad = arena_alloc(A, grad_size * sizeof(float));
+	//m->wo->grad = arena_alloc(A, grad_size * sizeof(float));
+
+	//m->wq->requires_grad = true;
+	//m->wk->requires_grad = true;
+	//m->wv->requires_grad = true;
+	//m->wo->requires_grad = true;
+
+	//memset(m->wq->grad->data, 0, grad_size * sizeof(float));
+	//memset(m->wk->grad->data, 0, grad_size * sizeof(float));
+	//memset(m->wv->grad->data, 0, grad_size * sizeof(float));
+	//memset(m->wo->grad->data, 0, grad_size * sizeof(float));
+
 }
 
 void mha_backward_temp_weights(Arena *AA, Tensor *dO, Tensor *A, Tensor *B, Tensor **dA, Tensor **dV) {
@@ -298,10 +315,15 @@ MHA *mha_create_new(Arena *A, int num_heads, int seq_len, int emb_dim) {
 	shape_tokens[0] = seq_len;
 	shape_tokens[1] = emb_dim;
 
-	mha->wq = tensor_create_weights_new(A, ndim, shape_weights);
-	mha->wk = tensor_create_weights_new(A, ndim, shape_weights);
-	mha->wv = tensor_create_weights_new(A, ndim, shape_weights);
-	mha->wo = tensor_create_weights_new(A, ndim, shape_weights); // output weights
+	mha->wq = tensor_create_new(A, ndim, shape_weights);
+	mha->wk = tensor_create_new(A, ndim, shape_weights);
+	mha->wv = tensor_create_new(A, ndim, shape_weights);
+	mha->wo = tensor_create_new(A, ndim, shape_weights); // output weights
+
+	//mha->wq = tensor_create_weights_new(A, ndim, shape_weights);
+	//mha->wk = tensor_create_weights_new(A, ndim, shape_weights);
+	//mha->wv = tensor_create_weights_new(A, ndim, shape_weights);
+	//mha->wo = tensor_create_weights_new(A, ndim, shape_weights); // output weights
 	
 	// define the tensor
 	mha->Q = tensor_create_weights_new(A, ndim, shape_tokens);

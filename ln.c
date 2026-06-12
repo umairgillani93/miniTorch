@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include "tensor.h"
 #include "attention2.h"
@@ -26,18 +27,41 @@ float mean(float *arr, int size) {
 //	return var;
 //}	
 
-void layer_norm_init_params(LayerNorm *ln) {
-	tensor_randomize_weights(ln->beta);
-	tensor_randomize_weights(ln->gamma);
-	tensor_randomize_weights(ln->d_beta);
-	tensor_randomize_weights(ln->d_gamma);
 
-	ln->beta->requires_grad = true;
-	ln->gamma->requires_grad = true;
-	ln->d_beta->requires_grad = true;
-	ln->d_gamma->requires_grad = true;
-	
+void layer_norm_init_params(Arena *A, LayerNorm *ln) { // Pass Arena to allocate
+    tensor_fill_zeros(ln->beta);
+    tensor_fill_ones(ln->gamma);
+
+    ln->beta->requires_grad = true;
+    ln->gamma->requires_grad = true;
+
+		// Allocating gradient buffers for beta  and gemma
+    int size = 1;
+    for(int i=0; i < ln->beta->ndim; i++) size *= ln->beta->shape[i];
+    
+    ln->beta->grad = arena_alloc(A, size * sizeof(float));
+    ln->gamma->grad = arena_alloc(A, size * sizeof(float));
+    
+    // Initialize gradients to zero
+    memset(ln->beta->grad, 0, size * sizeof(float));
+    memset(ln->gamma->grad, 0, size * sizeof(float));
 }
+
+//void layer_norm_init_params(LayerNorm *ln) {
+//	tensor_fill_zeros(ln->beta);
+//	tensor_fill_ones(ln->gamma);
+//	tensor_fill_zeros(ln->d_beta);
+//	tensor_fill_zeros(ln->d_gamma);
+//	//tensor_randomize_weights(ln->x_hat);
+//	//tensor_randomize_weights(ln->var);
+//
+//	ln->beta->requires_grad = true;
+//	ln->gamma->requires_grad = true;
+//	//ln->d_beta->requires_grad = true;
+//	//ln->d_gamma->requires_grad = true;
+//	//ln->var->requires_grad = true;
+//	//ln->x_hat->requires_grad = true;
+//}
 
 Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {
 
@@ -175,7 +199,7 @@ Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {
 //	return t;
 //}
 
-LayerNorm *layer_norm_create(int features) {
+LayerNorm *layer_norm_create(Arena *A, int features) {
 	LayerNorm *ln = malloc(sizeof(LayerNorm));
 	if (!ln) {
 		fprintf(stderr, "Allocation failed\n");
@@ -184,11 +208,11 @@ LayerNorm *layer_norm_create(int features) {
 	ln->features = features;
 	int ndim = 2;
 	int shape[2] = {1, features};
-	ln->beta = tensor_create_weights(ndim, shape);
-	ln->gamma = tensor_create_weights(ndim, shape);
-	ln->d_gamma = tensor_create_weights(ndim, shape);
-	ln->d_beta = tensor_create_weights(ndim, shape);
-	ln->x_hat = NULL;
+
+	ln->beta = tensor_create_new(A, ndim, shape);
+	ln->gamma = tensor_create_new(A, ndim, shape);
+	ln->d_gamma = tensor_create_new(A, ndim, shape);
+	ln->d_beta = tensor_create_new(A, ndim, shape); ln->x_hat = NULL;
 	ln->var = NULL; // forward activations cache initially NULL
 	
 	return ln;
@@ -206,13 +230,14 @@ LayerNorm *layer_norm_create_new(Arena *A, int features) {
 	shape[0] = 1;
 	shape[1] = features;
 
-	ln->beta = tensor_create_weights_new(A, ndim, shape);
-	ln->gamma = tensor_create_weights_new(A, ndim, shape);
-	ln->d_gamma = tensor_create_weights_new(A, ndim, shape);
-	ln->d_beta = tensor_create_weights_new(A, ndim, shape);
-	ln->x_hat = tensor_create_weights_new(A, ndim, shape);
-	ln->var = tensor_create_weights_new(A, ndim, shape);
-	
+
+	ln->beta = tensor_create_new(A, ndim, shape);
+	ln->gamma = tensor_create_new(A, ndim, shape);
+	ln->d_gamma = tensor_create_new(A, ndim, shape);
+	ln->d_beta = tensor_create_new(A, ndim, shape); 
+	ln->var = tensor_create_new(A, ndim, shape);  
+	ln->x_hat = tensor_create_new(A, ndim, shape); 
+
 	return ln;
 }
 
