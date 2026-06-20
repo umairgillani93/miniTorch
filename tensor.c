@@ -66,6 +66,37 @@ size_t GLOBAL_TENSOR_ID = 0;
 //    }
 //}
 
+Tensor *tensor_create_view(Arena *A, Tensor *source, float *data_ptr, int ndim, int *shape) {
+    // Allocate ONLY the small Tensor struct metadata, NOT the underlying data buffer
+    Tensor *view = arena_alloc(A, sizeof(Tensor));
+    
+    view->ndim = ndim;
+    view->shape = arena_alloc(A, ndim * sizeof(int));
+    for (int i = 0; i < ndim; i++) {
+        view->shape[i] = shape[i];
+    }
+    
+    // Crucial: Point directly into the source tensor's data matrix
+    view->data = data_ptr; 
+    
+    // Allocate a separate gradient structure for the batch node if your autograd needs it
+    view->requires_grad = source->requires_grad;
+    if (view->requires_grad) {
+        view->grad = arena_alloc(A, sizeof(Tensor));
+        view->grad->ndim = ndim;
+        view->grad->shape = view->shape; // Share shape metadata
+        // If your backward pass writes to input gradients, allocate a temporary buffer for it
+        // representationally matching the batch size, or map it to a grad slice.
+        view->grad->data = arena_alloc(A, tensor_size(view) * sizeof(float)); 
+        memset(view->grad->data, 0, tensor_size(view) * sizeof(float));
+    } else {
+        view->grad = NULL;
+    }
+    
+    return view;
+}
+
+
 void tensor_zero_grad(Tensor *x) {
 	if (!x || !x->grad) {
 		fprintf(stderr, "[Error] <tensor_zero_grad> Input in NULL.\n");

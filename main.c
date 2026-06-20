@@ -88,6 +88,10 @@ int main() {
 	arena_init(A, ARENA_SIZE);
 	printf("Arena initilized\n");
 
+	Arena *Sandbox = malloc(sizeof(Arena));
+	arena_init(Sandbox, ARENA_SIZE);
+	printf("Sandbox initilized\n");
+
 	int ndim = 2;
 	int *shape_input = arena_alloc(A, ndim * sizeof(int));
 	shape_input[0] = SEQ_LEN;
@@ -138,47 +142,64 @@ int main() {
 		for (int b = 0; b < num_chunks; b++) {
 
 			zero_grad(m_batch, f, L1, L2);
-			arena_reset(A);
+			//arena_reset(A);
 			float *batch_ptr = T->data + b * BATCH_SIZE * EMB_DIM;
 			float *target_ptr = target->data + b * BATCH_SIZE * EMB_DIM;
 
-			int *shape_local = arena_alloc(A, ndim * sizeof(int));
+			int *shape_local = arena_alloc(Sandbox, ndim * sizeof(int));
 			shape_local[0] = BATCH_SIZE;
 			shape_local[1] = EMB_DIM;
 
-			Tensor *batch_tensor = tensor_create_new(A, 2, shape_local);
-			Tensor *target_batch = tensor_create_new(A, 2, shape_local);
+			Tensor *batch_tensor = tensor_create_new(Sandbox, 2, shape_local);
+			Tensor *target_batch = tensor_create_new(Sandbox, 2, shape_local);
 			
 			memcpy(batch_tensor->data, batch_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 			memcpy(target_batch->data, target_ptr, BATCH_SIZE * EMB_DIM * sizeof(float));
 
 			batch_tensor->requires_grad = true;
-			Tensor *attn_score = mha_forward(A, batch_tensor, m_batch);
+			Tensor *attn_score = mha_forward(Sandbox, batch_tensor, m_batch);
 			tensor_check("attn_score_forward", attn_score);
 			//clip_data(attn_score);
 
-			Tensor *ln1 = layer_norm_forward(A, L1, attn_score);
+			Tensor *ln1 = layer_norm_forward(Sandbox, L1, attn_score);
 			tensor_check("ln1_forward", ln1);
 			//clip_data(ln1);
 			//printf("LayerNorm #1 ran successfully!\n");
 
 			// Create FFN feed-forward NN and run ffn_forward pass
-			Tensor *ffn_ln = ffn_forward(A, ln1, f);
+			Tensor *ffn_ln = ffn_forward(Sandbox, ln1, f);
 			tensor_check("ffn_ln_forward", ffn_ln);
 			//clip_data(ffn_ln);
 
 			// Apply layer_norm
-			Tensor *ln2 = layer_norm_forward(A, L2, ffn_ln);
+			Tensor *ln2 = layer_norm_forward(Sandbox, L2, ffn_ln);
 			tensor_check("ln2_forward", ln2);
 			//clip_data(ln2);
 
-			Tensor *loss = tensor_mse_loss(A, ln2, target_batch);
+			Tensor *loss = tensor_mse_loss(Sandbox, ln2, target_batch);
 			tensor_get_2d(loss);
 			loss->grad->data[0] = 1.0f; // set the entry point for backward 
 																	//
 			//run_graph_validation(A, loss, MAX_NODES);
 			
-			backward(A, loss);
+			backward(Sandbox, loss);
+
+#define ENSURE_GRAD_IN_A(t) \
+				if ((t) && ((t)->grad == NULL || (t)->grad->data == NULL || (t)->grad->data < Sandbox->base + Sandbox->size)) { \
+					int _sz = tensor_size(t); \
+					if (!(t)->grad) (t)->grad = arena_alloc(A, sizeof(Tensor)); \
+					(t)->grad->data = arena_alloc(A, _sz * sizeof(float)); \
+				}
+
+			// Force parameter gradients to reside safely in A before we touch them
+			ENSURE_GRAD_IN_A(m_batch->wq); ENSURE_GRAD_IN_A(m_batch->wk);
+			ENSURE_GRAD_IN_A(m_batch->wv); ENSURE_GRAD_IN_A(m_batch->wo);
+			ENSURE_GRAD_IN_A(f->w1);       ENSURE_GRAD_IN_A(f->w2);
+			ENSURE_GRAD_IN_A(L1->gamma);   ENSURE_GRAD_IN_A(L1->beta);
+			ENSURE_GRAD_IN_A(L2->gamma);   ENSURE_GRAD_IN_A(L2->beta);
+			#undef ENSURE_GRAD_IN_A
+
+
 			clip_gradient(m_batch->wq);
 			clip_gradient(m_batch->wk);
 			clip_gradient(m_batch->wv);
@@ -197,10 +218,12 @@ int main() {
 			//backward(A, loss);
 			//export_and_visualize_graph_new(loss, "graph_main.dot", "graph_main.svg");
 			optimizer(m_batch, f, L1, L2, alpha);
-			printf("loss:%f after batch: %d\n", loss->data[0], b);
+			printf("loss:%f after epoch: %d and batch: %d\n", loss->data[0], e, b);
+			arena_reset(Sandbox);
 		}
 	}
 	free(A);
+	free(Sandbox);
 	printf("Traning finished!\n");
 	//tensor_shape(T);
 
