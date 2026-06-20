@@ -20,21 +20,16 @@
 void zero_grad(MHA *m, FFN *f, LayerNorm *l1, LayerNorm *l2) {
     if (!m || !f || !l1 || !l2) return;
 
-    // Helper macro to safely zero out a tensor's gradient
     #define SAFE_ZERO(t) \
         if ((t) && (t)->grad && (t)->grad->data) { \
 						int sz = tensor_size(t); \
             memset((t)->grad->data, 0, sz * sizeof(float)); \
         }
 
-    // Zero MHA
-    SAFE_ZERO(m->wq); SAFE_ZERO(m->wk); SAFE_ZERO(m->wv); SAFE_ZERO(m->wo);
 
-    // Zero FFN
     SAFE_ZERO(f->w1); SAFE_ZERO(f->w2);
     SAFE_ZERO(f->h1); SAFE_ZERO(f->a1);
 
-    // Zero LayerNorms
     SAFE_ZERO(l1->beta); SAFE_ZERO(l1->gamma);
     SAFE_ZERO(l2->beta); SAFE_ZERO(l2->gamma);
 
@@ -42,7 +37,6 @@ void zero_grad(MHA *m, FFN *f, LayerNorm *l1, LayerNorm *l2) {
 }
 
 void optimizer(MHA *m, FFN *f, LayerNorm *l1, LayerNorm *l2, float lr) {
-    // 1. Safety check: Ensure the struct pointers themselves aren't NULL
     if (!m || !f || !l1 || !l2) return;
 
     // Helper macro to safely update a tensor's data using its grad
@@ -57,7 +51,6 @@ void optimizer(MHA *m, FFN *f, LayerNorm *l1, LayerNorm *l2, float lr) {
             printf("Optimizer Warning: Skipped update for " #t " (NULL detected)\n"); \
         }
 
-    // --- MHA Parameters ---
     SAFE_UPDATE(m->wq);
     SAFE_UPDATE(m->wk);
     SAFE_UPDATE(m->wv);
@@ -66,14 +59,12 @@ void optimizer(MHA *m, FFN *f, LayerNorm *l1, LayerNorm *l2, float lr) {
     // --- FFN Parameters ---
     SAFE_UPDATE(f->w1);
     SAFE_UPDATE(f->w2);
-    SAFE_UPDATE(f->h1); // Bias 1
-    SAFE_UPDATE(f->a1); // Bias 2
+    SAFE_UPDATE(f->h1); 
+    SAFE_UPDATE(f->a1); 
 
-    // --- LayerNorm 1 Parameters ---
     SAFE_UPDATE(l1->beta);
     SAFE_UPDATE(l1->gamma);
 
-    // --- LayerNorm 2 Parameters ---
     SAFE_UPDATE(l2->beta);
     SAFE_UPDATE(l2->gamma);
 
@@ -111,7 +102,7 @@ int main() {
 
     int num_chunks = SEQ_LEN / BATCH_SIZE;
 
-    // --- MASTER PARAMETERS (Stored safely in A) ---
+    // MASTER PARAMETERS Stored safely in A 
     MHA *m_master = mha_create_new(A, HEADS, BATCH_SIZE, EMB_DIM);
     mha_init_params(A, m_master);
 
@@ -135,10 +126,8 @@ int main() {
     for (int e = 1; e <= EPOCHS; e++) {
         for (int b = 0; b < num_chunks; b++) {
 
-            // 1. FRESH CANVAS: Clear everything from the previous batch completely
             arena_reset(Sandbox);
 
-            // 2. Instantiate clean batch layers inside Sandbox
             MHA *m_batch = mha_create_new(Sandbox, HEADS, BATCH_SIZE, EMB_DIM);
             mha_init_params(Sandbox, m_batch);
 
@@ -151,7 +140,7 @@ int main() {
             LayerNorm *L2 = layer_norm_create_new(Sandbox, EMB_DIM);
             layer_norm_init_params(Sandbox, L2);
 
-            // 3. Copy weights from Master (A) -> Batch (Sandbox)
+            // Copy weights from Master A -> Batch Sandbox
             SYNC_DATA(m_batch->wq, m_master->wq); SYNC_DATA(m_batch->wk, m_master->wk);
             SYNC_DATA(m_batch->wv, m_master->wv); SYNC_DATA(m_batch->wo, m_master->wo);
             SYNC_DATA(f->w1, f_master->w1);       SYNC_DATA(f->w2, f_master->w2);
