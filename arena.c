@@ -31,8 +31,8 @@ void *arena_alloc(Arena *A, size_t size) {
 										 //
 	if (A->offset + size > A->size) {
 		printf("ARENA OUT OF MEMORY!\n");
+		return NULL;
 	}	
-										 
 	return ptr;
 }	
 

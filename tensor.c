@@ -652,7 +652,7 @@ void tensor_fill_with(Tensor *x, float v) {
 	}
 }
 
-void clip_gradient(Tensor *x) {
+void clip_data(Tensor *x) {
     int size = tensor_size(x);
     float threshold = 1.0f;
     float MX = 0.0f;
@@ -683,6 +683,40 @@ void clip_gradient(Tensor *x) {
         float scale = threshold / MX;   // compute once
         for (int i = 0; i < size; i++)
             x->data[i] *= scale;
+    }
+}
+
+void clip_gradient(Tensor *x) {
+    int size = tensor_size(x);
+    float threshold = 1.0f;
+    float MX = 0.0f;
+    bool has_bad = false;
+
+    // Pass 1 — detect NaN/Inf and find max abs gradient
+    for (int i = 0; i < size; i++) {
+        float g = x->grad->data[i];
+
+        if (!isfinite(g)) {
+            has_bad = true;
+            break;
+        }
+
+        float v = fabsf(g);
+        if (v > MX) MX = v;
+    }
+
+    // If NaN/Inf found → zero gradients and STOP
+    if (has_bad) {
+        for (int i = 0; i < size; i++)
+            x->grad->data[i] = 0.0f;
+        return;
+    }
+
+    // Pass 2 — clip if too large
+    if (MX > threshold) {
+        float scale = threshold / MX;   // compute once
+        for (int i = 0; i < size; i++)
+            x->grad->data[i] *= scale;
     }
 }
 
@@ -1200,7 +1234,7 @@ void tensor_relu_backward(Arena *A, Tensor *o) {
 			p->grad->data[idx] += (mask * prev);
 		}
 	}
-	printf("[OK] <tensor_relu_backward> done\n");
+	//printf("[OK] <tensor_relu_backward> done\n");
 }
 
 float loss_value(Tensor *pred, Tensor *target) {
@@ -1863,7 +1897,7 @@ void tensor_row_sum_backward(Arena *A, Tensor *o) {
     Tensor *x = o->parents[0];
 
 		if (x->operations) {
-			printf("Gradient going to: %s\n", x->operations->name);
+			//printf("Gradient going to: %s\n", x->operations->name);
 		}
 
     int rows = x->shape[0];
@@ -1876,12 +1910,11 @@ void tensor_row_sum_backward(Arena *A, Tensor *o) {
     }
     for (int r = 0; r < rows; r++) {
         float grad = o->grad->data[r];
-				printf("This should be broadcasted to exp: %f\n", grad);
         for (int c = 0; c < cols; c++) {
             x->grad->data[r * cols + c] += grad;
 				}
 		}
-		printf("[OK] <tensor_row_sum_backward> done!\n");
+		//printf("[OK] <tensor_row_sum_backward> done!\n");
 }
 
 void tensor_exp_backward(Arena *A, Tensor *o) {
@@ -1899,7 +1932,7 @@ void tensor_exp_backward(Arena *A, Tensor *o) {
         memset(x->grad->data, 0, rows * cols * sizeof(float));
     }
 
-		printf("exp grad data: o->data: %f\n", o->grad->data[0]);
+		//printf("exp grad data: o->data: %f\n", o->grad->data[0]);
 			
     for (int r = 0; r < rows; r++) {
         float prev = o->grad->data[r];   // (rows,1)
@@ -1984,7 +2017,7 @@ void tensor_row_max_backward(Arena *A, Tensor *o) {
 			int grad_size = x->shape[0] * x->shape[1];
 			memset(x->grad->data, 0, grad_size * sizeof(float)); 
 	}
-	printf("before: o->grad=%f\n", o->grad->data[0]);
+	//printf("before: o->grad=%f\n", o->grad->data[0]);
 	for (int r = 0; r < rows; r++) {
 			float *x_row = x->data + r * cols;
 			int max_idx = 0;
@@ -2001,9 +2034,9 @@ void tensor_row_max_backward(Arena *A, Tensor *o) {
 			x->grad->data[r * cols + max_idx] += o->grad->data[r];
 			
 	}
-	printf("parent grad=%f\n", x->grad->data[0]);
+	//printf("parent grad=%f\n", x->grad->data[0]);
 	//tensor_get_2d(x->grad);
-	printf("[OK] <tensor_row_max_backward> done!\n");
+	//printf("[OK] <tensor_row_max_backward> done!\n");
 }
 
 void tensor_fill_like_backward(Arena *A, Tensor *o) {
@@ -2037,7 +2070,7 @@ void tensor_fill_like_backward(Arena *A, Tensor *o) {
 		}
 	}
 	//tensor_get_2d(p->grad);
-	printf("[OK] <tensor_fill_like_backward> done!\n");
+	//printf("[OK] <tensor_fill_like_backward> done!\n");
 }
 
 void f_backward(Arena *A, Tensor *o) {
@@ -2068,7 +2101,7 @@ void f_backward(Arena *A, Tensor *o) {
 		}
 	}
 	//tensor_get_2d(p->grad);
-	printf("[OK] <f_backward> done!\n");
+	//printf("[OK] <f_backward> done!\n");
 }
 
 void tensor_sqrt_backward(Arena *A, Tensor *o) {
@@ -2112,7 +2145,7 @@ void tensor_sqrt_backward(Arena *A, Tensor *o) {
 		}
 
 		//tensor_get_2d(p->grad);
-		printf("[OK] <tensor_sqrt_backward> done!\n");
+		//printf("[OK] <tensor_sqrt_backward> done!\n");
 }
 
 void tensor_mse_backward(Tensor *x) {
@@ -2179,7 +2212,7 @@ void tensor_expand_rows_backward(Arena *A, Tensor *o) {
         }
     }
     
-    printf("[OK] <tensor_expand_rows> backward done!\n");
+    //printf("[OK] <tensor_expand_rows> backward done!\n");
 }
 
 void tensor_square_backward(Arena *A, Tensor *o) {
@@ -2211,8 +2244,8 @@ void tensor_square_backward(Arena *A, Tensor *o) {
 		}
 	}
 	//tensor_get_2d(p->grad);
-	printf("\n");
-	printf("[OK] <tensor_square_backward> done!\n");
+	//printf("\n");
+	//printf("[OK] <tensor_square_backward> done!\n");
 
 }
 
@@ -2259,7 +2292,7 @@ void tensor_expand_cols_backward(Arena *A, Tensor *o) {
     }
 
 		//tensor_get_2d(p->grad);
-    printf("[OK] <tensor_expand_cols_backward> done!\n");
+    //printf("[OK] <tensor_expand_cols_backward> done!\n");
 }
 
 
@@ -2349,7 +2382,7 @@ void tensor_mean_backward(Arena *A, Tensor *o) {
     }
 		//tensor_get_2d(p->grad);
 
-    printf("[OK] <tensor_mean_backward> done!\n");
+    //printf("[OK] <tensor_mean_backward> done!\n");
 }
 
 
@@ -2428,7 +2461,7 @@ void tensor_add_backward(Arena *A, Tensor *o) {
 	}
 	//tensor_get_2d(x->grad);
 	//tensor_get_2d(y->grad);
-	printf("[OK] <tensor_add_backward> done!\n");
+	//printf("[OK] <tensor_add_backward> done!\n");
 }
 
 
@@ -2472,9 +2505,9 @@ void tensor_element_wise_product_backward(Arena *A, Tensor *o) {
 	}
 
 	//tensor_get_2d(x->grad);
-	printf("\n");
+	//printf("\n");
 	//tensor_get_2d(y->grad);
-	printf("[OK] <tensor_element_wise_product_backward> done!\n");
+	//printf("[OK] <tensor_element_wise_product_backward> done!\n");
 }
 
 
@@ -2493,13 +2526,6 @@ void tensor_div_backward(Arena *A, Tensor *o) {
     Tensor *x = o->parents[0];
     Tensor *y = o->parents[1];
 
-		if (x->operations) {
-			printf("Gradient going to: %s\n", x->operations->name);
-		}
-
-		if (y->operations) {
-			printf("Gradient going to: %s\n", y->operations->name);
-		}
 
     if (!x->grad) {
         x->grad = tensor_create_new(A, x->ndim, x->shape);
@@ -2532,7 +2558,7 @@ void tensor_div_backward(Arena *A, Tensor *o) {
 		//tensor_get_2d(x->grad);
 		//printf("\n");
 		//tensor_get_2d(y->grad);
-		printf("[OK] <tensor_div_backward> done!\n");
+		//printf("[OK] <tensor_div_backward> done!\n");
 }
 
 void tensor_subtract_backward(Arena *A, Tensor *o) {
@@ -2585,7 +2611,7 @@ void tensor_subtract_backward(Arena *A, Tensor *o) {
 		//tensor_get_2d(x->grad);
 		//printf("\n");
 		//tensor_get_2d(y->grad);
-    printf("[OK] <tensor_subtract_backward> done!\n");
+    //printf("[OK] <tensor_subtract_backward> done!\n");
 }
 
 void tensor_slice_cols_backward(Arena *A, Tensor *o) {

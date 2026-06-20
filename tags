@@ -1954,7 +1954,6 @@ ELEMENT_WISE_PRODUCT	tensor.h	/^	ELEMENT_WISE_PRODUCT,$/;"	e	enum:__anonf138f896
 EMB_DIM	config.h	/^#define EMB_DIM /;"	d
 EPOCHS	config.h	/^#define EPOCHS /;"	d
 EPS	config.h	/^#define EPS /;"	d
-EPS	tensor.c	/^#define EPS /;"	d	file:
 ET	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
 EXP	tensor.h	/^	EXP,$/;"	e	enum:__anonf138f8960203
 EXP	test.c	/^	EXP,$/;"	e	enum:__anon1dda1bf60203	file:
@@ -2013,7 +2012,6 @@ LC	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"
 LEAF	tensor.h	/^	LEAF,$/;"	e	enum:__anonf138f8960203
 LOG	tensor.h	/^	LOG,$/;"	e	enum:__anonf138f8960203
 LOG	test.c	/^	LOG$/;"	e	enum:__anon1dda1bf60203	file:
-LR	config.h	/^#define LR /;"	d
 LS	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
 LayerNorm	layer_norm.h	/^} LayerNorm;$/;"	t	typeref:struct:__anon3463cb330108
 License	README.md	/^## License$/;"	s	chapter:📊 Computational Graph Execution
@@ -2030,7 +2028,6 @@ MAX	dsa/max_subarray_sum.c	/^#define MAX(/;"	d	file:
 MAX	dsa/max_sum_array_with_size_k.c	/^#define MAX(/;"	d	file:
 MAX	dsa/prefix_sum_k_elements.c	/^#define MAX(/;"	d	file:
 MAX_NODES	config.h	/^#define MAX_NODES /;"	d
-MAX_NODES	tensor.c	/^#define MAX_NODES /;"	d	file:
 MAX_PARENTS	config.h	/^#define MAX_PARENTS /;"	d
 MAX_TENSORS	graph_viz.c	/^#define MAX_TENSORS /;"	d	file:
 MC	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
@@ -2082,7 +2079,6 @@ Qx	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"
 Qy	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
 RAND_FLOAT	config.h	/^#define RAND_FLOAT /;"	d
 RAND_FLOAT	model.c	/^#define RAND_FLOAT /;"	d	file:
-RAND_FLOAT	tensor.c	/^#define RAND_FLOAT /;"	d	file:
 RE	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
 RELU	tensor.h	/^	RELU,$/;"	e	enum:__anonf138f8960203
 RELU	test.c	/^	RELU,$/;"	e	enum:__anon1dda1bf60203	file:
@@ -2096,6 +2092,8 @@ Rv	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"
 Rx	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
 Ry	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
 S	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f	function:AnonymousFunction9fada3b71ff00
+SAFE_UPDATE	main.c	/^    #define SAFE_UPDATE(/;"	d	file:
+SAFE_ZERO	main.c	/^    #define SAFE_ZERO(/;"	d	file:
 SCALER_DIV	tensor.h	/^	SCALER_DIV$/;"	e	enum:__anonf138f8960203
 SCALLED	tensor.h	/^	SCALLED,$/;"	e	enum:__anonf138f8960203
 SE	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
@@ -2181,6 +2179,7 @@ addEdge	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof expor
 addNode	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b765f00.t.defaultOptions
 adj_list	dag.c	/^	Node **adj_list;$/;"	m	struct:__anon0f477fc20108	typeref:typename:Node **	file:
 align	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:defaultOptions.font
+alpha	config.h	/^#define alpha /;"	d
 alt	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	c	class:s
 am	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
 angle	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b742100.AnonymousFunction9fada3b743200.n
@@ -2524,31 +2523,246 @@ e	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"u
 eC	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
 eO	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
 eT	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
+edge1	graph_main.svg	/^<g id="edge1" class="edge">$/;"	i
 edge1	graph_test.svg	/^<g id="edge1" class="edge">$/;"	i
+edge10	graph_main.svg	/^<g id="edge10" class="edge">$/;"	i
 edge10	graph_test.svg	/^<g id="edge10" class="edge">$/;"	i
+edge100	graph_main.svg	/^<g id="edge100" class="edge">$/;"	i
+edge101	graph_main.svg	/^<g id="edge101" class="edge">$/;"	i
+edge102	graph_main.svg	/^<g id="edge102" class="edge">$/;"	i
+edge103	graph_main.svg	/^<g id="edge103" class="edge">$/;"	i
+edge104	graph_main.svg	/^<g id="edge104" class="edge">$/;"	i
+edge105	graph_main.svg	/^<g id="edge105" class="edge">$/;"	i
+edge106	graph_main.svg	/^<g id="edge106" class="edge">$/;"	i
+edge107	graph_main.svg	/^<g id="edge107" class="edge">$/;"	i
+edge108	graph_main.svg	/^<g id="edge108" class="edge">$/;"	i
+edge109	graph_main.svg	/^<g id="edge109" class="edge">$/;"	i
+edge11	graph_main.svg	/^<g id="edge11" class="edge">$/;"	i
 edge11	graph_test.svg	/^<g id="edge11" class="edge">$/;"	i
+edge110	graph_main.svg	/^<g id="edge110" class="edge">$/;"	i
+edge111	graph_main.svg	/^<g id="edge111" class="edge">$/;"	i
+edge112	graph_main.svg	/^<g id="edge112" class="edge">$/;"	i
+edge113	graph_main.svg	/^<g id="edge113" class="edge">$/;"	i
+edge114	graph_main.svg	/^<g id="edge114" class="edge">$/;"	i
+edge115	graph_main.svg	/^<g id="edge115" class="edge">$/;"	i
+edge116	graph_main.svg	/^<g id="edge116" class="edge">$/;"	i
+edge117	graph_main.svg	/^<g id="edge117" class="edge">$/;"	i
+edge118	graph_main.svg	/^<g id="edge118" class="edge">$/;"	i
+edge119	graph_main.svg	/^<g id="edge119" class="edge">$/;"	i
+edge12	graph_main.svg	/^<g id="edge12" class="edge">$/;"	i
 edge12	graph_test.svg	/^<g id="edge12" class="edge">$/;"	i
+edge120	graph_main.svg	/^<g id="edge120" class="edge">$/;"	i
+edge121	graph_main.svg	/^<g id="edge121" class="edge">$/;"	i
+edge122	graph_main.svg	/^<g id="edge122" class="edge">$/;"	i
+edge123	graph_main.svg	/^<g id="edge123" class="edge">$/;"	i
+edge124	graph_main.svg	/^<g id="edge124" class="edge">$/;"	i
+edge125	graph_main.svg	/^<g id="edge125" class="edge">$/;"	i
+edge126	graph_main.svg	/^<g id="edge126" class="edge">$/;"	i
+edge127	graph_main.svg	/^<g id="edge127" class="edge">$/;"	i
+edge128	graph_main.svg	/^<g id="edge128" class="edge">$/;"	i
+edge129	graph_main.svg	/^<g id="edge129" class="edge">$/;"	i
+edge13	graph_main.svg	/^<g id="edge13" class="edge">$/;"	i
 edge13	graph_test.svg	/^<g id="edge13" class="edge">$/;"	i
+edge130	graph_main.svg	/^<g id="edge130" class="edge">$/;"	i
+edge131	graph_main.svg	/^<g id="edge131" class="edge">$/;"	i
+edge132	graph_main.svg	/^<g id="edge132" class="edge">$/;"	i
+edge133	graph_main.svg	/^<g id="edge133" class="edge">$/;"	i
+edge134	graph_main.svg	/^<g id="edge134" class="edge">$/;"	i
+edge135	graph_main.svg	/^<g id="edge135" class="edge">$/;"	i
+edge136	graph_main.svg	/^<g id="edge136" class="edge">$/;"	i
+edge137	graph_main.svg	/^<g id="edge137" class="edge">$/;"	i
+edge138	graph_main.svg	/^<g id="edge138" class="edge">$/;"	i
+edge139	graph_main.svg	/^<g id="edge139" class="edge">$/;"	i
+edge14	graph_main.svg	/^<g id="edge14" class="edge">$/;"	i
 edge14	graph_test.svg	/^<g id="edge14" class="edge">$/;"	i
+edge140	graph_main.svg	/^<g id="edge140" class="edge">$/;"	i
+edge141	graph_main.svg	/^<g id="edge141" class="edge">$/;"	i
+edge142	graph_main.svg	/^<g id="edge142" class="edge">$/;"	i
+edge143	graph_main.svg	/^<g id="edge143" class="edge">$/;"	i
+edge144	graph_main.svg	/^<g id="edge144" class="edge">$/;"	i
+edge145	graph_main.svg	/^<g id="edge145" class="edge">$/;"	i
+edge146	graph_main.svg	/^<g id="edge146" class="edge">$/;"	i
+edge147	graph_main.svg	/^<g id="edge147" class="edge">$/;"	i
+edge148	graph_main.svg	/^<g id="edge148" class="edge">$/;"	i
+edge149	graph_main.svg	/^<g id="edge149" class="edge">$/;"	i
+edge15	graph_main.svg	/^<g id="edge15" class="edge">$/;"	i
 edge15	graph_test.svg	/^<g id="edge15" class="edge">$/;"	i
+edge150	graph_main.svg	/^<g id="edge150" class="edge">$/;"	i
+edge151	graph_main.svg	/^<g id="edge151" class="edge">$/;"	i
+edge152	graph_main.svg	/^<g id="edge152" class="edge">$/;"	i
+edge153	graph_main.svg	/^<g id="edge153" class="edge">$/;"	i
+edge154	graph_main.svg	/^<g id="edge154" class="edge">$/;"	i
+edge155	graph_main.svg	/^<g id="edge155" class="edge">$/;"	i
+edge156	graph_main.svg	/^<g id="edge156" class="edge">$/;"	i
+edge157	graph_main.svg	/^<g id="edge157" class="edge">$/;"	i
+edge158	graph_main.svg	/^<g id="edge158" class="edge">$/;"	i
+edge159	graph_main.svg	/^<g id="edge159" class="edge">$/;"	i
+edge16	graph_main.svg	/^<g id="edge16" class="edge">$/;"	i
 edge16	graph_test.svg	/^<g id="edge16" class="edge">$/;"	i
+edge160	graph_main.svg	/^<g id="edge160" class="edge">$/;"	i
+edge161	graph_main.svg	/^<g id="edge161" class="edge">$/;"	i
+edge162	graph_main.svg	/^<g id="edge162" class="edge">$/;"	i
+edge163	graph_main.svg	/^<g id="edge163" class="edge">$/;"	i
+edge164	graph_main.svg	/^<g id="edge164" class="edge">$/;"	i
+edge165	graph_main.svg	/^<g id="edge165" class="edge">$/;"	i
+edge166	graph_main.svg	/^<g id="edge166" class="edge">$/;"	i
+edge167	graph_main.svg	/^<g id="edge167" class="edge">$/;"	i
+edge168	graph_main.svg	/^<g id="edge168" class="edge">$/;"	i
+edge169	graph_main.svg	/^<g id="edge169" class="edge">$/;"	i
+edge17	graph_main.svg	/^<g id="edge17" class="edge">$/;"	i
 edge17	graph_test.svg	/^<g id="edge17" class="edge">$/;"	i
+edge170	graph_main.svg	/^<g id="edge170" class="edge">$/;"	i
+edge171	graph_main.svg	/^<g id="edge171" class="edge">$/;"	i
+edge172	graph_main.svg	/^<g id="edge172" class="edge">$/;"	i
+edge173	graph_main.svg	/^<g id="edge173" class="edge">$/;"	i
+edge174	graph_main.svg	/^<g id="edge174" class="edge">$/;"	i
+edge175	graph_main.svg	/^<g id="edge175" class="edge">$/;"	i
+edge176	graph_main.svg	/^<g id="edge176" class="edge">$/;"	i
+edge177	graph_main.svg	/^<g id="edge177" class="edge">$/;"	i
+edge178	graph_main.svg	/^<g id="edge178" class="edge">$/;"	i
+edge179	graph_main.svg	/^<g id="edge179" class="edge">$/;"	i
+edge18	graph_main.svg	/^<g id="edge18" class="edge">$/;"	i
 edge18	graph_test.svg	/^<g id="edge18" class="edge">$/;"	i
+edge180	graph_main.svg	/^<g id="edge180" class="edge">$/;"	i
+edge181	graph_main.svg	/^<g id="edge181" class="edge">$/;"	i
+edge182	graph_main.svg	/^<g id="edge182" class="edge">$/;"	i
+edge183	graph_main.svg	/^<g id="edge183" class="edge">$/;"	i
+edge184	graph_main.svg	/^<g id="edge184" class="edge">$/;"	i
+edge185	graph_main.svg	/^<g id="edge185" class="edge">$/;"	i
+edge186	graph_main.svg	/^<g id="edge186" class="edge">$/;"	i
+edge187	graph_main.svg	/^<g id="edge187" class="edge">$/;"	i
+edge188	graph_main.svg	/^<g id="edge188" class="edge">$/;"	i
+edge189	graph_main.svg	/^<g id="edge189" class="edge">$/;"	i
+edge19	graph_main.svg	/^<g id="edge19" class="edge">$/;"	i
 edge19	graph_test.svg	/^<g id="edge19" class="edge">$/;"	i
+edge190	graph_main.svg	/^<g id="edge190" class="edge">$/;"	i
+edge191	graph_main.svg	/^<g id="edge191" class="edge">$/;"	i
+edge192	graph_main.svg	/^<g id="edge192" class="edge">$/;"	i
+edge193	graph_main.svg	/^<g id="edge193" class="edge">$/;"	i
+edge194	graph_main.svg	/^<g id="edge194" class="edge">$/;"	i
+edge195	graph_main.svg	/^<g id="edge195" class="edge">$/;"	i
+edge196	graph_main.svg	/^<g id="edge196" class="edge">$/;"	i
+edge197	graph_main.svg	/^<g id="edge197" class="edge">$/;"	i
+edge198	graph_main.svg	/^<g id="edge198" class="edge">$/;"	i
+edge199	graph_main.svg	/^<g id="edge199" class="edge">$/;"	i
+edge2	graph_main.svg	/^<g id="edge2" class="edge">$/;"	i
 edge2	graph_test.svg	/^<g id="edge2" class="edge">$/;"	i
+edge20	graph_main.svg	/^<g id="edge20" class="edge">$/;"	i
 edge20	graph_test.svg	/^<g id="edge20" class="edge">$/;"	i
+edge200	graph_main.svg	/^<g id="edge200" class="edge">$/;"	i
+edge201	graph_main.svg	/^<g id="edge201" class="edge">$/;"	i
+edge202	graph_main.svg	/^<g id="edge202" class="edge">$/;"	i
+edge203	graph_main.svg	/^<g id="edge203" class="edge">$/;"	i
+edge204	graph_main.svg	/^<g id="edge204" class="edge">$/;"	i
+edge205	graph_main.svg	/^<g id="edge205" class="edge">$/;"	i
+edge206	graph_main.svg	/^<g id="edge206" class="edge">$/;"	i
+edge207	graph_main.svg	/^<g id="edge207" class="edge">$/;"	i
+edge208	graph_main.svg	/^<g id="edge208" class="edge">$/;"	i
+edge209	graph_main.svg	/^<g id="edge209" class="edge">$/;"	i
+edge21	graph_main.svg	/^<g id="edge21" class="edge">$/;"	i
 edge21	graph_test.svg	/^<g id="edge21" class="edge">$/;"	i
+edge210	graph_main.svg	/^<g id="edge210" class="edge">$/;"	i
+edge211	graph_main.svg	/^<g id="edge211" class="edge">$/;"	i
+edge212	graph_main.svg	/^<g id="edge212" class="edge">$/;"	i
+edge213	graph_main.svg	/^<g id="edge213" class="edge">$/;"	i
+edge214	graph_main.svg	/^<g id="edge214" class="edge">$/;"	i
+edge215	graph_main.svg	/^<g id="edge215" class="edge">$/;"	i
+edge22	graph_main.svg	/^<g id="edge22" class="edge">$/;"	i
 edge22	graph_test.svg	/^<g id="edge22" class="edge">$/;"	i
+edge23	graph_main.svg	/^<g id="edge23" class="edge">$/;"	i
 edge23	graph_test.svg	/^<g id="edge23" class="edge">$/;"	i
+edge24	graph_main.svg	/^<g id="edge24" class="edge">$/;"	i
 edge24	graph_test.svg	/^<g id="edge24" class="edge">$/;"	i
+edge25	graph_main.svg	/^<g id="edge25" class="edge">$/;"	i
 edge25	graph_test.svg	/^<g id="edge25" class="edge">$/;"	i
+edge26	graph_main.svg	/^<g id="edge26" class="edge">$/;"	i
+edge27	graph_main.svg	/^<g id="edge27" class="edge">$/;"	i
+edge28	graph_main.svg	/^<g id="edge28" class="edge">$/;"	i
+edge29	graph_main.svg	/^<g id="edge29" class="edge">$/;"	i
+edge3	graph_main.svg	/^<g id="edge3" class="edge">$/;"	i
 edge3	graph_test.svg	/^<g id="edge3" class="edge">$/;"	i
+edge30	graph_main.svg	/^<g id="edge30" class="edge">$/;"	i
+edge31	graph_main.svg	/^<g id="edge31" class="edge">$/;"	i
+edge32	graph_main.svg	/^<g id="edge32" class="edge">$/;"	i
+edge33	graph_main.svg	/^<g id="edge33" class="edge">$/;"	i
+edge34	graph_main.svg	/^<g id="edge34" class="edge">$/;"	i
+edge35	graph_main.svg	/^<g id="edge35" class="edge">$/;"	i
+edge36	graph_main.svg	/^<g id="edge36" class="edge">$/;"	i
+edge37	graph_main.svg	/^<g id="edge37" class="edge">$/;"	i
+edge38	graph_main.svg	/^<g id="edge38" class="edge">$/;"	i
+edge39	graph_main.svg	/^<g id="edge39" class="edge">$/;"	i
+edge4	graph_main.svg	/^<g id="edge4" class="edge">$/;"	i
 edge4	graph_test.svg	/^<g id="edge4" class="edge">$/;"	i
+edge40	graph_main.svg	/^<g id="edge40" class="edge">$/;"	i
+edge41	graph_main.svg	/^<g id="edge41" class="edge">$/;"	i
+edge42	graph_main.svg	/^<g id="edge42" class="edge">$/;"	i
+edge43	graph_main.svg	/^<g id="edge43" class="edge">$/;"	i
+edge44	graph_main.svg	/^<g id="edge44" class="edge">$/;"	i
+edge45	graph_main.svg	/^<g id="edge45" class="edge">$/;"	i
+edge46	graph_main.svg	/^<g id="edge46" class="edge">$/;"	i
+edge47	graph_main.svg	/^<g id="edge47" class="edge">$/;"	i
+edge48	graph_main.svg	/^<g id="edge48" class="edge">$/;"	i
+edge49	graph_main.svg	/^<g id="edge49" class="edge">$/;"	i
+edge5	graph_main.svg	/^<g id="edge5" class="edge">$/;"	i
 edge5	graph_test.svg	/^<g id="edge5" class="edge">$/;"	i
+edge50	graph_main.svg	/^<g id="edge50" class="edge">$/;"	i
+edge51	graph_main.svg	/^<g id="edge51" class="edge">$/;"	i
+edge52	graph_main.svg	/^<g id="edge52" class="edge">$/;"	i
+edge53	graph_main.svg	/^<g id="edge53" class="edge">$/;"	i
+edge54	graph_main.svg	/^<g id="edge54" class="edge">$/;"	i
+edge55	graph_main.svg	/^<g id="edge55" class="edge">$/;"	i
+edge56	graph_main.svg	/^<g id="edge56" class="edge">$/;"	i
+edge57	graph_main.svg	/^<g id="edge57" class="edge">$/;"	i
+edge58	graph_main.svg	/^<g id="edge58" class="edge">$/;"	i
+edge59	graph_main.svg	/^<g id="edge59" class="edge">$/;"	i
+edge6	graph_main.svg	/^<g id="edge6" class="edge">$/;"	i
 edge6	graph_test.svg	/^<g id="edge6" class="edge">$/;"	i
+edge60	graph_main.svg	/^<g id="edge60" class="edge">$/;"	i
+edge61	graph_main.svg	/^<g id="edge61" class="edge">$/;"	i
+edge62	graph_main.svg	/^<g id="edge62" class="edge">$/;"	i
+edge63	graph_main.svg	/^<g id="edge63" class="edge">$/;"	i
+edge64	graph_main.svg	/^<g id="edge64" class="edge">$/;"	i
+edge65	graph_main.svg	/^<g id="edge65" class="edge">$/;"	i
+edge66	graph_main.svg	/^<g id="edge66" class="edge">$/;"	i
+edge67	graph_main.svg	/^<g id="edge67" class="edge">$/;"	i
+edge68	graph_main.svg	/^<g id="edge68" class="edge">$/;"	i
+edge69	graph_main.svg	/^<g id="edge69" class="edge">$/;"	i
+edge7	graph_main.svg	/^<g id="edge7" class="edge">$/;"	i
 edge7	graph_test.svg	/^<g id="edge7" class="edge">$/;"	i
+edge70	graph_main.svg	/^<g id="edge70" class="edge">$/;"	i
+edge71	graph_main.svg	/^<g id="edge71" class="edge">$/;"	i
+edge72	graph_main.svg	/^<g id="edge72" class="edge">$/;"	i
+edge73	graph_main.svg	/^<g id="edge73" class="edge">$/;"	i
+edge74	graph_main.svg	/^<g id="edge74" class="edge">$/;"	i
+edge75	graph_main.svg	/^<g id="edge75" class="edge">$/;"	i
+edge76	graph_main.svg	/^<g id="edge76" class="edge">$/;"	i
+edge77	graph_main.svg	/^<g id="edge77" class="edge">$/;"	i
+edge78	graph_main.svg	/^<g id="edge78" class="edge">$/;"	i
+edge79	graph_main.svg	/^<g id="edge79" class="edge">$/;"	i
+edge8	graph_main.svg	/^<g id="edge8" class="edge">$/;"	i
 edge8	graph_test.svg	/^<g id="edge8" class="edge">$/;"	i
+edge80	graph_main.svg	/^<g id="edge80" class="edge">$/;"	i
+edge81	graph_main.svg	/^<g id="edge81" class="edge">$/;"	i
+edge82	graph_main.svg	/^<g id="edge82" class="edge">$/;"	i
+edge83	graph_main.svg	/^<g id="edge83" class="edge">$/;"	i
+edge84	graph_main.svg	/^<g id="edge84" class="edge">$/;"	i
+edge85	graph_main.svg	/^<g id="edge85" class="edge">$/;"	i
+edge86	graph_main.svg	/^<g id="edge86" class="edge">$/;"	i
+edge87	graph_main.svg	/^<g id="edge87" class="edge">$/;"	i
+edge88	graph_main.svg	/^<g id="edge88" class="edge">$/;"	i
+edge89	graph_main.svg	/^<g id="edge89" class="edge">$/;"	i
+edge9	graph_main.svg	/^<g id="edge9" class="edge">$/;"	i
 edge9	graph_test.svg	/^<g id="edge9" class="edge">$/;"	i
+edge90	graph_main.svg	/^<g id="edge90" class="edge">$/;"	i
+edge91	graph_main.svg	/^<g id="edge91" class="edge">$/;"	i
+edge92	graph_main.svg	/^<g id="edge92" class="edge">$/;"	i
+edge93	graph_main.svg	/^<g id="edge93" class="edge">$/;"	i
+edge94	graph_main.svg	/^<g id="edge94" class="edge">$/;"	i
+edge95	graph_main.svg	/^<g id="edge95" class="edge">$/;"	i
+edge96	graph_main.svg	/^<g id="edge96" class="edge">$/;"	i
+edge97	graph_main.svg	/^<g id="edge97" class="edge">$/;"	i
+edge98	graph_main.svg	/^<g id="edge98" class="edge">$/;"	i
+edge99	graph_main.svg	/^<g id="edge99" class="edge">$/;"	i
 edgeIndices	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:xT.body
 edgeMinimization	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b761b00.t.defaultOptions.hierarchical
 edges	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	c	class:Cb.n
@@ -2594,6 +2808,7 @@ enabled	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof expor
 enabled	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:t.edges.smooth
 end	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	c	class:xT.body.selectionBox.position
 endPointOffset	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	c	class:defaultOptions
+ensure_grad	tensor.c	/^Tensor *ensure_grad(Arena *A, Tensor *t) {$/;"	f	typeref:typename:Tensor *
 enter	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	c	class:s
 esc	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	c	class:s
 evTarget	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	m	class:e
@@ -2667,6 +2882,7 @@ global	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof export
 gm	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
 grad	tensor.h	/^	Tensor *grad;$/;"	m	struct:Tensor	typeref:typename:Tensor *
 grad	test.c	/^	Tensor *grad;$/;"	m	struct:Tensor	typeref:typename:Tensor *	file:
+graph0	graph_main.svg	/^<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 1063.42)">$/;"	i
 graph0	graph_test.svg	/^<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 230)">$/;"	i
 graph_create	dag.c	/^Graph *graph_create(int nodes) {$/;"	f	typeref:typename:Graph *
 graph_edge	dag.c	/^void graph_edge(Graph *g, int A, int B) {$/;"	f	typeref:typename:void
@@ -2837,10 +3053,10 @@ label	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports
 label	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b765f00.AnonymousFunction9fada3b769700.n
 label	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:defaultOptions
 labelHighlightBold	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:defaultOptions
-layer_norm_create	ln.c	/^LayerNorm *layer_norm_create(int features) {$/;"	f	typeref:typename:LayerNorm *
+layer_norm_create	ln.c	/^LayerNorm *layer_norm_create(Arena *A, int features) {$/;"	f	typeref:typename:LayerNorm *
 layer_norm_create_new	ln.c	/^LayerNorm *layer_norm_create_new(Arena *A, int features) {$/;"	f	typeref:typename:LayerNorm *
 layer_norm_forward	ln.c	/^Tensor *layer_norm_forward(Arena *A, LayerNorm *ln, Tensor *x) {$/;"	f	typeref:typename:Tensor *
-layer_norm_init_params	ln.c	/^void layer_norm_init_params(LayerNorm *ln) {$/;"	f	typeref:typename:void
+layer_norm_init_params	ln.c	/^void layer_norm_init_params(Arena *A, LayerNorm *ln) { \/\/ Pass Arena to allocate$/;"	f	typeref:typename:void
 layout	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b76a700.i
 lb	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
 left	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	c	class:s
@@ -2863,6 +3079,7 @@ loaded	lib/tom-select/tom-select.complete.min.js	/^class J extends(function(e){r
 locale	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:xT.defaultOptions
 locales	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:xT.defaultOptions
 loss	.ipynb_checkpoints/main-checkpoint.py	/^loss = y.sum()$/;"	v
+loss	example.py	/^loss = torch.sum(o)$/;"	v
 loss_value	tensor.c	/^float loss_value(Tensor *pred, Tensor *target) {$/;"	f	typeref:typename:float
 m	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f	function:AnonymousFunction9fada3b71ff00
 m	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f	function:AnonymousFunction9fada3b74ad00.AnonymousFunction9fada3b74b300.AnonymousFunction9fada3b74b400
@@ -2876,8 +3093,8 @@ main	dsa/max_subarray_sum.c	/^int main() {$/;"	f	typeref:typename:int
 main	dsa/max_sum_array_with_size_k.c	/^int main() {$/;"	f	typeref:typename:int
 main	dsa/prefix_sum_k_elements.c	/^int main() {$/;"	f	typeref:typename:int
 main	dsa/t.c	/^int main() {$/;"	f	typeref:typename:int
+main	main.c	/^int main() {$/;"	f	typeref:typename:int
 main	t.c	/^int main() {$/;"	f	typeref:typename:int
-main	tensor.c	/^int main() {$/;"	f	typeref:typename:int
 main	test.c	/^int main() {$/;"	f	typeref:typename:int
 manipulation	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b76a700.i
 mass	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b745200.AnonymousFunction9fada3b745800.y.root
@@ -2909,7 +3126,7 @@ mha_backward_temp_weights	attn2.c	/^void mha_backward_temp_weights(Arena *AA, Te
 mha_create	attn2.c	/^MHA *mha_create(int num_heads, int seq_len, int emb_dim) {$/;"	f	typeref:typename:MHA *
 mha_create_new	attn2.c	/^MHA *mha_create_new(Arena *A, int num_heads, int seq_len, int emb_dim) {$/;"	f	typeref:typename:MHA *
 mha_forward	attn2.c	/^Tensor *mha_forward(Arena *A, Tensor *t, MHA *mha) {$/;"	f	typeref:typename:Tensor *
-mha_init_params	attn2.c	/^void mha_init_params(MHA *m) {$/;"	f	typeref:typename:void
+mha_init_params	attn2.c	/^void mha_init_params(Arena *A, MHA *m) {$/;"	f	typeref:typename:void
 middle	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	c	class:defaultOptions.arrows
 middleArrow	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b742100.AnonymousFunction9fada3b742300.o
 middleArrowImageHeight	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b742100.AnonymousFunction9fada3b742300.o
@@ -2974,28 +3191,199 @@ nm	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"
 nn	.ipynb_checkpoints/test-checkpoint.py	/^import torch.nn as nn $/;"	I	nameref:module:torch.nn
 nn	test.py	/^import torch.nn as nn $/;"	I	nameref:module:torch.nn
 node	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b756c00.AnonymousFunction9fada3b757900.s
+node1	graph_main.svg	/^<g id="node1" class="node">$/;"	i
 node1	graph_test.svg	/^<g id="node1" class="node">$/;"	i
+node10	graph_main.svg	/^<g id="node10" class="node">$/;"	i
 node10	graph_test.svg	/^<g id="node10" class="node">$/;"	i
+node100	graph_main.svg	/^<g id="node100" class="node">$/;"	i
+node101	graph_main.svg	/^<g id="node101" class="node">$/;"	i
+node102	graph_main.svg	/^<g id="node102" class="node">$/;"	i
+node103	graph_main.svg	/^<g id="node103" class="node">$/;"	i
+node104	graph_main.svg	/^<g id="node104" class="node">$/;"	i
+node105	graph_main.svg	/^<g id="node105" class="node">$/;"	i
+node106	graph_main.svg	/^<g id="node106" class="node">$/;"	i
+node107	graph_main.svg	/^<g id="node107" class="node">$/;"	i
+node108	graph_main.svg	/^<g id="node108" class="node">$/;"	i
+node109	graph_main.svg	/^<g id="node109" class="node">$/;"	i
+node11	graph_main.svg	/^<g id="node11" class="node">$/;"	i
 node11	graph_test.svg	/^<g id="node11" class="node">$/;"	i
+node110	graph_main.svg	/^<g id="node110" class="node">$/;"	i
+node111	graph_main.svg	/^<g id="node111" class="node">$/;"	i
+node112	graph_main.svg	/^<g id="node112" class="node">$/;"	i
+node113	graph_main.svg	/^<g id="node113" class="node">$/;"	i
+node114	graph_main.svg	/^<g id="node114" class="node">$/;"	i
+node115	graph_main.svg	/^<g id="node115" class="node">$/;"	i
+node116	graph_main.svg	/^<g id="node116" class="node">$/;"	i
+node117	graph_main.svg	/^<g id="node117" class="node">$/;"	i
+node118	graph_main.svg	/^<g id="node118" class="node">$/;"	i
+node119	graph_main.svg	/^<g id="node119" class="node">$/;"	i
+node12	graph_main.svg	/^<g id="node12" class="node">$/;"	i
 node12	graph_test.svg	/^<g id="node12" class="node">$/;"	i
+node120	graph_main.svg	/^<g id="node120" class="node">$/;"	i
+node121	graph_main.svg	/^<g id="node121" class="node">$/;"	i
+node122	graph_main.svg	/^<g id="node122" class="node">$/;"	i
+node123	graph_main.svg	/^<g id="node123" class="node">$/;"	i
+node124	graph_main.svg	/^<g id="node124" class="node">$/;"	i
+node125	graph_main.svg	/^<g id="node125" class="node">$/;"	i
+node126	graph_main.svg	/^<g id="node126" class="node">$/;"	i
+node127	graph_main.svg	/^<g id="node127" class="node">$/;"	i
+node128	graph_main.svg	/^<g id="node128" class="node">$/;"	i
+node129	graph_main.svg	/^<g id="node129" class="node">$/;"	i
+node13	graph_main.svg	/^<g id="node13" class="node">$/;"	i
 node13	graph_test.svg	/^<g id="node13" class="node">$/;"	i
+node130	graph_main.svg	/^<g id="node130" class="node">$/;"	i
+node131	graph_main.svg	/^<g id="node131" class="node">$/;"	i
+node132	graph_main.svg	/^<g id="node132" class="node">$/;"	i
+node133	graph_main.svg	/^<g id="node133" class="node">$/;"	i
+node134	graph_main.svg	/^<g id="node134" class="node">$/;"	i
+node135	graph_main.svg	/^<g id="node135" class="node">$/;"	i
+node136	graph_main.svg	/^<g id="node136" class="node">$/;"	i
+node137	graph_main.svg	/^<g id="node137" class="node">$/;"	i
+node138	graph_main.svg	/^<g id="node138" class="node">$/;"	i
+node139	graph_main.svg	/^<g id="node139" class="node">$/;"	i
+node14	graph_main.svg	/^<g id="node14" class="node">$/;"	i
 node14	graph_test.svg	/^<g id="node14" class="node">$/;"	i
+node140	graph_main.svg	/^<g id="node140" class="node">$/;"	i
+node141	graph_main.svg	/^<g id="node141" class="node">$/;"	i
+node142	graph_main.svg	/^<g id="node142" class="node">$/;"	i
+node143	graph_main.svg	/^<g id="node143" class="node">$/;"	i
+node144	graph_main.svg	/^<g id="node144" class="node">$/;"	i
+node145	graph_main.svg	/^<g id="node145" class="node">$/;"	i
+node146	graph_main.svg	/^<g id="node146" class="node">$/;"	i
+node147	graph_main.svg	/^<g id="node147" class="node">$/;"	i
+node148	graph_main.svg	/^<g id="node148" class="node">$/;"	i
+node149	graph_main.svg	/^<g id="node149" class="node">$/;"	i
+node15	graph_main.svg	/^<g id="node15" class="node">$/;"	i
 node15	graph_test.svg	/^<g id="node15" class="node">$/;"	i
+node150	graph_main.svg	/^<g id="node150" class="node">$/;"	i
+node151	graph_main.svg	/^<g id="node151" class="node">$/;"	i
+node152	graph_main.svg	/^<g id="node152" class="node">$/;"	i
+node153	graph_main.svg	/^<g id="node153" class="node">$/;"	i
+node154	graph_main.svg	/^<g id="node154" class="node">$/;"	i
+node155	graph_main.svg	/^<g id="node155" class="node">$/;"	i
+node156	graph_main.svg	/^<g id="node156" class="node">$/;"	i
+node157	graph_main.svg	/^<g id="node157" class="node">$/;"	i
+node158	graph_main.svg	/^<g id="node158" class="node">$/;"	i
+node159	graph_main.svg	/^<g id="node159" class="node">$/;"	i
+node16	graph_main.svg	/^<g id="node16" class="node">$/;"	i
 node16	graph_test.svg	/^<g id="node16" class="node">$/;"	i
+node160	graph_main.svg	/^<g id="node160" class="node">$/;"	i
+node161	graph_main.svg	/^<g id="node161" class="node">$/;"	i
+node162	graph_main.svg	/^<g id="node162" class="node">$/;"	i
+node163	graph_main.svg	/^<g id="node163" class="node">$/;"	i
+node164	graph_main.svg	/^<g id="node164" class="node">$/;"	i
+node165	graph_main.svg	/^<g id="node165" class="node">$/;"	i
+node166	graph_main.svg	/^<g id="node166" class="node">$/;"	i
+node167	graph_main.svg	/^<g id="node167" class="node">$/;"	i
+node168	graph_main.svg	/^<g id="node168" class="node">$/;"	i
+node169	graph_main.svg	/^<g id="node169" class="node">$/;"	i
+node17	graph_main.svg	/^<g id="node17" class="node">$/;"	i
 node17	graph_test.svg	/^<g id="node17" class="node">$/;"	i
+node170	graph_main.svg	/^<g id="node170" class="node">$/;"	i
+node171	graph_main.svg	/^<g id="node171" class="node">$/;"	i
+node18	graph_main.svg	/^<g id="node18" class="node">$/;"	i
 node18	graph_test.svg	/^<g id="node18" class="node">$/;"	i
+node19	graph_main.svg	/^<g id="node19" class="node">$/;"	i
 node19	graph_test.svg	/^<g id="node19" class="node">$/;"	i
+node2	graph_main.svg	/^<g id="node2" class="node">$/;"	i
 node2	graph_test.svg	/^<g id="node2" class="node">$/;"	i
+node20	graph_main.svg	/^<g id="node20" class="node">$/;"	i
 node20	graph_test.svg	/^<g id="node20" class="node">$/;"	i
+node21	graph_main.svg	/^<g id="node21" class="node">$/;"	i
 node21	graph_test.svg	/^<g id="node21" class="node">$/;"	i
+node22	graph_main.svg	/^<g id="node22" class="node">$/;"	i
 node22	graph_test.svg	/^<g id="node22" class="node">$/;"	i
+node23	graph_main.svg	/^<g id="node23" class="node">$/;"	i
+node24	graph_main.svg	/^<g id="node24" class="node">$/;"	i
+node25	graph_main.svg	/^<g id="node25" class="node">$/;"	i
+node26	graph_main.svg	/^<g id="node26" class="node">$/;"	i
+node27	graph_main.svg	/^<g id="node27" class="node">$/;"	i
+node28	graph_main.svg	/^<g id="node28" class="node">$/;"	i
+node29	graph_main.svg	/^<g id="node29" class="node">$/;"	i
+node3	graph_main.svg	/^<g id="node3" class="node">$/;"	i
 node3	graph_test.svg	/^<g id="node3" class="node">$/;"	i
+node30	graph_main.svg	/^<g id="node30" class="node">$/;"	i
+node31	graph_main.svg	/^<g id="node31" class="node">$/;"	i
+node32	graph_main.svg	/^<g id="node32" class="node">$/;"	i
+node33	graph_main.svg	/^<g id="node33" class="node">$/;"	i
+node34	graph_main.svg	/^<g id="node34" class="node">$/;"	i
+node35	graph_main.svg	/^<g id="node35" class="node">$/;"	i
+node36	graph_main.svg	/^<g id="node36" class="node">$/;"	i
+node37	graph_main.svg	/^<g id="node37" class="node">$/;"	i
+node38	graph_main.svg	/^<g id="node38" class="node">$/;"	i
+node39	graph_main.svg	/^<g id="node39" class="node">$/;"	i
+node4	graph_main.svg	/^<g id="node4" class="node">$/;"	i
 node4	graph_test.svg	/^<g id="node4" class="node">$/;"	i
+node40	graph_main.svg	/^<g id="node40" class="node">$/;"	i
+node41	graph_main.svg	/^<g id="node41" class="node">$/;"	i
+node42	graph_main.svg	/^<g id="node42" class="node">$/;"	i
+node43	graph_main.svg	/^<g id="node43" class="node">$/;"	i
+node44	graph_main.svg	/^<g id="node44" class="node">$/;"	i
+node45	graph_main.svg	/^<g id="node45" class="node">$/;"	i
+node46	graph_main.svg	/^<g id="node46" class="node">$/;"	i
+node47	graph_main.svg	/^<g id="node47" class="node">$/;"	i
+node48	graph_main.svg	/^<g id="node48" class="node">$/;"	i
+node49	graph_main.svg	/^<g id="node49" class="node">$/;"	i
+node5	graph_main.svg	/^<g id="node5" class="node">$/;"	i
 node5	graph_test.svg	/^<g id="node5" class="node">$/;"	i
+node50	graph_main.svg	/^<g id="node50" class="node">$/;"	i
+node51	graph_main.svg	/^<g id="node51" class="node">$/;"	i
+node52	graph_main.svg	/^<g id="node52" class="node">$/;"	i
+node53	graph_main.svg	/^<g id="node53" class="node">$/;"	i
+node54	graph_main.svg	/^<g id="node54" class="node">$/;"	i
+node55	graph_main.svg	/^<g id="node55" class="node">$/;"	i
+node56	graph_main.svg	/^<g id="node56" class="node">$/;"	i
+node57	graph_main.svg	/^<g id="node57" class="node">$/;"	i
+node58	graph_main.svg	/^<g id="node58" class="node">$/;"	i
+node59	graph_main.svg	/^<g id="node59" class="node">$/;"	i
+node6	graph_main.svg	/^<g id="node6" class="node">$/;"	i
 node6	graph_test.svg	/^<g id="node6" class="node">$/;"	i
+node60	graph_main.svg	/^<g id="node60" class="node">$/;"	i
+node61	graph_main.svg	/^<g id="node61" class="node">$/;"	i
+node62	graph_main.svg	/^<g id="node62" class="node">$/;"	i
+node63	graph_main.svg	/^<g id="node63" class="node">$/;"	i
+node64	graph_main.svg	/^<g id="node64" class="node">$/;"	i
+node65	graph_main.svg	/^<g id="node65" class="node">$/;"	i
+node66	graph_main.svg	/^<g id="node66" class="node">$/;"	i
+node67	graph_main.svg	/^<g id="node67" class="node">$/;"	i
+node68	graph_main.svg	/^<g id="node68" class="node">$/;"	i
+node69	graph_main.svg	/^<g id="node69" class="node">$/;"	i
+node7	graph_main.svg	/^<g id="node7" class="node">$/;"	i
 node7	graph_test.svg	/^<g id="node7" class="node">$/;"	i
+node70	graph_main.svg	/^<g id="node70" class="node">$/;"	i
+node71	graph_main.svg	/^<g id="node71" class="node">$/;"	i
+node72	graph_main.svg	/^<g id="node72" class="node">$/;"	i
+node73	graph_main.svg	/^<g id="node73" class="node">$/;"	i
+node74	graph_main.svg	/^<g id="node74" class="node">$/;"	i
+node75	graph_main.svg	/^<g id="node75" class="node">$/;"	i
+node76	graph_main.svg	/^<g id="node76" class="node">$/;"	i
+node77	graph_main.svg	/^<g id="node77" class="node">$/;"	i
+node78	graph_main.svg	/^<g id="node78" class="node">$/;"	i
+node79	graph_main.svg	/^<g id="node79" class="node">$/;"	i
+node8	graph_main.svg	/^<g id="node8" class="node">$/;"	i
 node8	graph_test.svg	/^<g id="node8" class="node">$/;"	i
+node80	graph_main.svg	/^<g id="node80" class="node">$/;"	i
+node81	graph_main.svg	/^<g id="node81" class="node">$/;"	i
+node82	graph_main.svg	/^<g id="node82" class="node">$/;"	i
+node83	graph_main.svg	/^<g id="node83" class="node">$/;"	i
+node84	graph_main.svg	/^<g id="node84" class="node">$/;"	i
+node85	graph_main.svg	/^<g id="node85" class="node">$/;"	i
+node86	graph_main.svg	/^<g id="node86" class="node">$/;"	i
+node87	graph_main.svg	/^<g id="node87" class="node">$/;"	i
+node88	graph_main.svg	/^<g id="node88" class="node">$/;"	i
+node89	graph_main.svg	/^<g id="node89" class="node">$/;"	i
+node9	graph_main.svg	/^<g id="node9" class="node">$/;"	i
 node9	graph_test.svg	/^<g id="node9" class="node">$/;"	i
+node90	graph_main.svg	/^<g id="node90" class="node">$/;"	i
+node91	graph_main.svg	/^<g id="node91" class="node">$/;"	i
+node92	graph_main.svg	/^<g id="node92" class="node">$/;"	i
+node93	graph_main.svg	/^<g id="node93" class="node">$/;"	i
+node94	graph_main.svg	/^<g id="node94" class="node">$/;"	i
+node95	graph_main.svg	/^<g id="node95" class="node">$/;"	i
+node96	graph_main.svg	/^<g id="node96" class="node">$/;"	i
+node97	graph_main.svg	/^<g id="node97" class="node">$/;"	i
+node98	graph_main.svg	/^<g id="node98" class="node">$/;"	i
+node99	graph_main.svg	/^<g id="node99" class="node">$/;"	i
 nodeDistance	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b747900.t.defaultOptions.hierarchicalRepulsion
 nodeDistance	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b747900.t.defaultOptions.repulsion
 nodeIndices	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:xT.body
@@ -3012,6 +3400,7 @@ nodes	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports
 nodes	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:xT.body
 nodes	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:xT.body.data
 ns7febf3140101	graph_test.svg	/^ viewBox="0.00 0.00 5160.00 234.00" xmlns="http:\/\/www.w3.org\/2000\/svg" xmlns:xlink="http:\/\//;"	n	uri:http://www.w3.org/2000/svg
+nsbe7604990101	graph_main.svg	/^ viewBox="0.00 0.00 26014.00 1067.42" xmlns="http:\/\/www.w3.org\/2000\/svg" xmlns:xlink="http:\//;"	n	uri:http://www.w3.org/2000/svg
 null_grad	tensor.h	/^    int null_grad;$/;"	m	struct:__anonf138f8960108	typeref:typename:int
 null_ops	tensor.h	/^    int null_ops;$/;"	m	struct:__anonf138f8960108	typeref:typename:int
 null_parents	tensor.h	/^    int null_parents;$/;"	m	struct:__anonf138f8960108	typeref:typename:int
@@ -3020,6 +3409,7 @@ num_heads	t.h	/^	int num_heads;$/;"	m	struct:__anon0b88a6af0108	typeref:typename
 num_nodes	dag.c	/^	int num_nodes;$/;"	m	struct:__anon0f477fc20108	typeref:typename:int	file:
 num_parents	tensor.h	/^	int num_parents;$/;"	m	struct:Tensor	typeref:typename:int
 num_parents	test.c	/^	int num_parents;$/;"	m	struct:Tensor	typeref:typename:int	file:
+o	example.py	/^o = torch.square(z)$/;"	v
 o	lib/tom-select/tom-select.complete.min.js	/^function o(i,s,o){return i||(i=w('<option value="'+N(s)+'">'+N(o)+"<\/option>")),i!=n&&t.input.a/;"	f
 o	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	c	class:AnonymousFunction9fada3b742100.AnonymousFunction9fada3b742300
 o	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	c	class:AnonymousFunction9fada3b750600.AnonymousFunction9fada3b751400
@@ -3082,6 +3472,7 @@ opacity	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof expor
 operations	tensor.h	/^	Op *operations; \/\/ Added name, and type as well!$/;"	m	struct:Tensor	typeref:typename:Op *
 operations	test.c	/^	Op *operations; \/\/ Added name, and type as well!$/;"	m	struct:Tensor	typeref:typename:Op *	file:
 optgroups	lib/tom-select/tom-select.complete.min.js	/^t&&(p=t.textContent)}var u,h,g,f,v,m,O={placeholder:p,options:[],optgroups:[],items:[],maxItems:/;"	p	class:U.O
+optimizer	main.c	/^void optimizer(MHA *m, FFN *f, LayerNorm *l1, LayerNorm *l2, float lr) {$/;"	f	typeref:typename:void
 options	lib/tom-select/tom-select.complete.min.js	/^t&&(p=t.textContent)}var u,h,g,f,v,m,O={placeholder:p,options:[],optgroups:[],items:[],maxItems:/;"	p	class:U.O
 options	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:Eb.n
 optionsBackup	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	c	class:AnonymousFunction9fada3b761b00.t
@@ -3174,6 +3565,7 @@ root	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&
 roundness	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:defaultOptions.smooth
 roundness	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:optionsBackup.edges.smooth
 roundness	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:t.edges.smooth
+rows	tensor.h	/^	int rows;$/;"	m	struct:Tensor	typeref:typename:int
 run_graph_validation	tensor.c	/^void run_graph_validation(Arena *A, Tensor *output, int max_nodes) {$/;"	f	typeref:typename:void
 ry	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	c
 s	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	c
@@ -3219,6 +3611,7 @@ shape	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports
 shape	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b765f00.t.defaultOptions.controlNodeStyle
 shape	tensor.h	/^	int *shape;$/;"	m	struct:Tensor	typeref:typename:int *
 shape	test.c	/^	int *shape;$/;"	m	struct:Tensor	typeref:typename:int *	file:
+shared_dim	tensor.h	/^	int shared_dim;$/;"	m	struct:Tensor	typeref:typename:int
 shift	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	c	class:s
 shift	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AC.s
 shift	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:s
@@ -3367,7 +3760,7 @@ tensor_add_backward	tensor.c	/^void tensor_add_backward(Arena *A, Tensor *o) {$/
 tensor_add_inplace	tensor.c	/^void tensor_add_inplace(Tensor **a, Tensor **b) {$/;"	f	typeref:typename:void
 tensor_check	tensor.c	/^void tensor_check(char *name, Tensor *x) {$/;"	f	typeref:typename:void
 tensor_concat	tensor.c	/^Tensor *tensor_concat(Arena *A, Tensor **heads, int num_heads) {$/;"	f	typeref:typename:Tensor *
-tensor_concat_backward	tensor.c	/^void tensor_concat_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_concat_backward	tensor.c	/^void tensor_concat_backward(Arena *A, Tensor *o) {$/;"	f	typeref:typename:void
 tensor_create	tensor.c	/^Tensor *tensor_create(int ndim, int *shape) {$/;"	f	typeref:typename:Tensor *
 tensor_create_new	tensor.c	/^Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {$/;"	f	typeref:typename:Tensor *
 tensor_create_new	test.c	/^Tensor *tensor_create_new(Arena *A, int ndim, int *shape) {$/;"	f	typeref:typename:Tensor *
@@ -3379,6 +3772,7 @@ tensor_element_wise_product	tensor.c	/^Tensor *tensor_element_wise_product(Arena
 tensor_element_wise_product_backward	tensor.c	/^void tensor_element_wise_product_backward(Arena *A, Tensor *o) {$/;"	f	typeref:typename:void
 tensor_equal	tensor.c	/^bool tensor_equal(Tensor *x, Tensor *y) {$/;"	f	typeref:typename:bool
 tensor_exp	tensor.c	/^Tensor *tensor_exp(Arena *A, Tensor *x) {$/;"	f	typeref:typename:Tensor *
+tensor_exp_backward	tensor.c	/^void tensor_exp_backward(Arena *A, Tensor *o) {$/;"	f	typeref:typename:void
 tensor_expand_cols	tensor.c	/^Tensor *tensor_expand_cols(Arena *A, Tensor *m, int out_cols) {$/;"	f	typeref:typename:Tensor *
 tensor_expand_cols_backward	tensor.c	/^void tensor_expand_cols_backward(Arena *A, Tensor *o) {$/;"	f	typeref:typename:void
 tensor_expand_rows	tensor.c	/^Tensor *tensor_expand_rows(Arena *A, Tensor *m, int out_rows) {$/;"	f	typeref:typename:Tensor *
@@ -3392,29 +3786,31 @@ tensor_fill_with	tensor.c	/^void tensor_fill_with(Tensor *x, float v) {$/;"	f	ty
 tensor_fill_zeros	tensor.c	/^void tensor_fill_zeros(Tensor *x) {$/;"	f	typeref:typename:void
 tensor_get_2d	tensor.c	/^void tensor_get_2d(Tensor *t) {$/;"	f	typeref:typename:void
 tensor_matmul	tensor.c	/^Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {$/;"	f	typeref:typename:Tensor *
-tensor_matmul_backward	tensor.c	/^void tensor_matmul_backward(Arena *A, Tensor *currNode) {$/;"	f	typeref:typename:void
+tensor_matmul_backward	tensor.c	/^void tensor_matmul_backward(Arena *A, Tensor *o) {$/;"	f	typeref:typename:void
 tensor_mean	tensor.c	/^Tensor *tensor_mean(Arena *A, Tensor *a) {$/;"	f	typeref:typename:Tensor *
 tensor_mean_backward	tensor.c	/^void tensor_mean_backward(Arena *A, Tensor *o) {$/;"	f	typeref:typename:void
 tensor_metadata	tensor.c	/^void tensor_metadata(Tensor *x) {$/;"	f	typeref:typename:void
 tensor_mse_backward	tensor.c	/^void tensor_mse_backward(Tensor *x) {$/;"	f	typeref:typename:void
-tensor_mse_loss	t.c	/^Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target) {$/;"	f	typeref:typename:Tensor *
 tensor_mse_loss	tensor.c	/^Tensor *tensor_mse_loss(Arena *A, Tensor *pred, Tensor *target) {$/;"	f	typeref:typename:Tensor *
 tensor_randomize	tensor.c	/^void tensor_randomize(Tensor *x) {$/;"	f	typeref:typename:void
 tensor_randomize_weights	tensor.c	/^void tensor_randomize_weights(Tensor *x) {$/;"	f	typeref:typename:void
 tensor_relu	tensor.c	/^Tensor *tensor_relu(Arena *A, Tensor *x) {$/;"	f	typeref:typename:Tensor *
-tensor_relu_backward	tensor.c	/^void tensor_relu_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_relu_backward	tensor.c	/^void tensor_relu_backward(Arena *A, Tensor *o) {$/;"	f	typeref:typename:void
 tensor_row_max	tensor.c	/^Tensor *tensor_row_max(Arena *A, Tensor *x) {$/;"	f	typeref:typename:Tensor *
+tensor_row_max_backward	tensor.c	/^void tensor_row_max_backward(Arena *A, Tensor *o) {$/;"	f	typeref:typename:void
 tensor_row_sum	tensor.c	/^Tensor *tensor_row_sum(Arena *A, Tensor *x) {$/;"	f	typeref:typename:Tensor *
+tensor_row_sum_backward	tensor.c	/^void tensor_row_sum_backward(Arena *A, Tensor *o) {$/;"	f	typeref:typename:void
 tensor_scaler_addition	tensor.c	/^Tensor *tensor_scaler_addition(Arena *A, Tensor *x, float val) {$/;"	f	typeref:typename:Tensor *
 tensor_scaler_div	tensor.c	/^Tensor *tensor_scaler_div(Arena *A, Tensor *x, float val) {$/;"	f	typeref:typename:Tensor *
+tensor_scaler_div_backward	tensor.c	/^void tensor_scaler_div_backward(Arena *A, Tensor *o) {$/;"	f	typeref:typename:void
 tensor_scaler_multiplication	tensor.c	/^Tensor *tensor_scaler_multiplication(Tensor *x, float val) {$/;"	f	typeref:typename:Tensor *
 tensor_scalling	tensor.c	/^Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b) {$/;"	f	typeref:typename:Tensor *
 tensor_shape_2d	tensor.c	/^void tensor_shape_2d(Tensor *t) {$/;"	f	typeref:typename:void
 tensor_size	tensor.c	/^int tensor_size(Tensor *t) {$/;"	f	typeref:typename:int
 tensor_slice_cols	tensor.c	/^Tensor *tensor_slice_cols(Arena *A, Tensor *x, int k, int dk) {$/;"	f	typeref:typename:Tensor *
-tensor_slice_cols_backward	tensor.c	/^void tensor_slice_cols_backward(Tensor *x) {$/;"	f	typeref:typename:void
-tensor_softmax	tensor.c	/^Tensor *tensor_softmax(Arena *A, Tensor *x) {$/;"	f	typeref:typename:Tensor *
-tensor_softmax_backward	tensor.c	/^void tensor_softmax_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_slice_cols_backward	tensor.c	/^void tensor_slice_cols_backward(Arena *A, Tensor *o) {$/;"	f	typeref:typename:void
+tensor_softmax	tensor.c	/^Tensor *tensor_softmax(Arena *A, Tensor *a) {$/;"	f	typeref:typename:Tensor *
+tensor_softmax_backward	tensor.c	/^void tensor_softmax_backward(Arena *A, Tensor *o) {$/;"	f	typeref:typename:void
 tensor_sqrt	tensor.c	/^Tensor *tensor_sqrt(Arena *A, Tensor *a) {$/;"	f	typeref:typename:Tensor *
 tensor_sqrt_backward	tensor.c	/^void tensor_sqrt_backward(Arena *A, Tensor *o) {$/;"	f	typeref:typename:void
 tensor_square	tensor.c	/^Tensor *tensor_square(Arena *A, Tensor *a) {$/;"	f	typeref:typename:Tensor *
@@ -3423,7 +3819,9 @@ tensor_stride_2d	tensor.c	/^void tensor_stride_2d(Tensor *t) {$/;"	f	typeref:typ
 tensor_subtract	tensor.c	/^Tensor *tensor_subtract(Arena *A, Tensor *a, Tensor *b) {$/;"	f	typeref:typename:Tensor *
 tensor_subtract_backward	tensor.c	/^void tensor_subtract_backward(Arena *A, Tensor *o) {$/;"	f	typeref:typename:void
 tensor_transpose	tensor.c	/^Tensor *tensor_transpose(Arena *A, Tensor *a) {$/;"	f	typeref:typename:Tensor *
-tensor_transpose_backward	tensor.c	/^void tensor_transpose_backward(Tensor *x) {$/;"	f	typeref:typename:void
+tensor_transpose_backward	tensor.c	/^void tensor_transpose_backward(Arena *A, Tensor *o) {$/;"	f	typeref:typename:void
+tensor_xavier_init	tensor.c	/^void tensor_xavier_init(Tensor *x, int f_in, int f_out) {$/;"	f	typeref:typename:void
+tensor_zero_grad	tensor.c	/^void tensor_zero_grad(Tensor *x) {$/;"	f	typeref:typename:void
 theta	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b747900.t.defaultOptions.barnesHut
 theta	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b747900.t.defaultOptions.forceAtlas2Based
 timestep	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b747900.t.defaultOptions
@@ -3523,6 +3921,7 @@ wy	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"
 x	.ipynb_checkpoints/main-checkpoint.py	/^x = torch.randn((5,5), requires_grad = True)$/;"	v
 x	.ipynb_checkpoints/test-checkpoint.py	/^x = torch.randn(10,5,10)$/;"	v
 x	dsa/ll.c	/^	int x;$/;"	m	struct:Node	typeref:typename:int	file:
+x	example.py	/^x = torch.tensor([16.0, 32.0], requires_grad=True)$/;"	v
 x	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f	function:AnonymousFunction9fada3b71ff00
 x	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b714b00.t.centerCoordinates
 x	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b739500.AnonymousFunction9fada3b73a800.e
@@ -3562,9 +3961,11 @@ xT	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"
 x_hat	layer_norm.h	/^	Tensor *x_hat; \/\/ Normalized(x)$/;"	m	struct:__anon3463cb330108	typeref:typename:Tensor *
 xb	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
 xg	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
+xlink	graph_main.svg	/^ viewBox="0.00 0.00 26014.00 1067.42" xmlns="http:\/\/www.w3.org\/2000\/svg" xmlns:xlink="http:\//;"	n	uri:http://www.w3.org/1999/xlink
 xlink	graph_test.svg	/^ viewBox="0.00 0.00 5160.00 234.00" xmlns="http:\/\/www.w3.org\/2000\/svg" xmlns:xlink="http:\/\//;"	n	uri:http://www.w3.org/1999/xlink
 xm	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
 y	.ipynb_checkpoints/main-checkpoint.py	/^y = 2 * x + 5$/;"	v
+y	example.py	/^y = torch.tensor([10.0, 20.0], requires_grad=True)$/;"	v
 y	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	c	class:AnonymousFunction9fada3b745200.AnonymousFunction9fada3b745800
 y	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f	function:AnonymousFunction9fada3b71ff00
 y	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f	function:AnonymousFunction9fada3b761b00.AnonymousFunction9fada3b763000
@@ -3605,7 +4006,9 @@ yFixed	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof export
 yLine	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:AnonymousFunction9fada3b72cd00.t.size
 yb	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
 ym	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
+z	example.py	/^z = x - y$/;"	v
 zS	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
+zero_grad	main.c	/^void zero_grad(MHA *m, FFN *f, LayerNorm *l1, LayerNorm *l2) {$/;"	f	typeref:typename:void
 zk	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	f
 zoom	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:defaultOptions.keyboard.speed
 zoomSpeed	lib/vis-9.1.2/vis-network.min.js	/^!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeo/;"	p	class:defaultOptions

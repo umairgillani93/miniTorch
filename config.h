@@ -7,16 +7,16 @@
 #define RAND_FLOAT (float) rand() / (float) RAND_MAX
 #define HIDDEN_DIM 128
 #define BATCH_SIZE 16
-#define SEQ_LEN    16
+#define SEQ_LEN    160
 #define EMB_DIM    32
 #define alpha      1e-3
 #define HEADS      8
 #define HEAD_DIM EMB_DIM / HEADS
-#define EPOCHS     1
+#define EPOCHS     2
 #define BETA      1e-9
 #define GEMMA     14-3
 #define EPS       1e-5
-#define ARENA_SIZE 1024 * 1024 * 1024
+#define ARENA_SIZE 1024 * 1024 * 1024 
 #define MAX_NODES 10000000
 #define MAX_PARENTS 10000000
 
