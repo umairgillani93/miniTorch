@@ -184,22 +184,6 @@ int main() {
 			
 			backward(Sandbox, loss);
 
-#define ENSURE_GRAD_IN_A(t) \
-				if ((t) && ((t)->grad == NULL || (t)->grad->data == NULL || (t)->grad->data < Sandbox->base + Sandbox->size)) { \
-					int _sz = tensor_size(t); \
-					if (!(t)->grad) (t)->grad = arena_alloc(A, sizeof(Tensor)); \
-					(t)->grad->data = arena_alloc(A, _sz * sizeof(float)); \
-				}
-
-			// Force parameter gradients to reside safely in A before we touch them
-			ENSURE_GRAD_IN_A(m_batch->wq); ENSURE_GRAD_IN_A(m_batch->wk);
-			ENSURE_GRAD_IN_A(m_batch->wv); ENSURE_GRAD_IN_A(m_batch->wo);
-			ENSURE_GRAD_IN_A(f->w1);       ENSURE_GRAD_IN_A(f->w2);
-			ENSURE_GRAD_IN_A(L1->gamma);   ENSURE_GRAD_IN_A(L1->beta);
-			ENSURE_GRAD_IN_A(L2->gamma);   ENSURE_GRAD_IN_A(L2->beta);
-			#undef ENSURE_GRAD_IN_A
-
-
 			clip_gradient(m_batch->wq);
 			clip_gradient(m_batch->wk);
 			clip_gradient(m_batch->wv);

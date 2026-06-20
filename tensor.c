@@ -1003,10 +1003,10 @@ Tensor *tensor_expand_rows(Arena *A, Tensor *m, int out_rows) {
 }
 
 Tensor *tensor_element_wise_product(Arena *A, Tensor *a, Tensor *b) {
-	printf("a shape: \n");
+	//printf("a shape: \n");
 	//tensor_shape_2d(a);
 	
-	printf("b shape: \n");
+	//printf("b shape: \n");
 	//tensor_shape_2d(b);
 	assert((a->shape[0] == b->shape[0]) && (a->shape[1] == b->shape[1]));
 	int rows = a->shape[0];
