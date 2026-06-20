@@ -10,7 +10,7 @@ The goal is to explore exactly how attention-based models and automatic differen
 
 # Training Loss Curve
 The model successfully tracks gradients, learns, and minimizes loss over training iterations:
-![Training Curve](training_curve.png)
+![Training Curve](minitorch_loss_curve.png)
 
 ---
 
