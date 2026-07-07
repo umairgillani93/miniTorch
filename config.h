@@ -12,7 +12,7 @@
 #define alpha      1e-3
 #define HEADS      8
 #define HEAD_DIM EMB_DIM / HEADS
-#define EPOCHS     100
+#define EPOCHS     20
 #define BETA      1e-9
 #define GEMMA     14-3
 #define EPS       1e-5
