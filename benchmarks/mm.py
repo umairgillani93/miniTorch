@@ -1,10 +1,21 @@
 import os 
 import sys 
 import torch
+import time
 
-x = torch.randn(16, 32)
-y = torch.randn(32, 16)
+def compare_matmul():
+    
+    x = torch.randn(1024, 1024)
+    y = torch.randn(1024, 1024)
 
-z = torch.matmul(x, y)
+    z = torch.matmul(x, y)
+    return z
 
-print(z)
+
+if __name__ == "__main__":
+    start = time.time()
+    res = compare_matmul()
+    end = time.time()
+    print((end - start) * 1000)
+
+
