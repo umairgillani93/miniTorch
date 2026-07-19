@@ -8,7 +8,7 @@ class Tokenizer:
         self.str_to_int = vocab # vocab already haivng structure like: {'camel': 19}
         self.int_to_str = {v:k for k, v in vocab.items()} # reverts the keys and values of vocab
 
-    def encoder(self, text):
+    def encode(self, text):
         '''
         Encodes the text to corresponding 
         token ids.
@@ -49,4 +49,9 @@ if __name__ == "__main__":
     """
     u = Utility()
     vocab = u.create_vocab()
+    unk_tokens = ["<|unk|>", "<|endoftext|>"]
+    all_words = sorted(vocab)
+    all_words.extend(unk_tokens)
+    vocab = {c:i for i,c in enumerate(all_words)}
+
 
