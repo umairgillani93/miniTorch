@@ -36,16 +36,7 @@ class Tokenizer:
 
 if __name__ == "__main__":
     text = """
-        “wait!” she screamed. “don’t go!” but he was already halfway out the door.
-        She ran, faster than she ever thought possible, but stopped. Why?
-        He wasn’t running from her. He was running to her.
-        “Are you—?” she gasped. “I thought you—”
-        He smiled, quietly, holding out a box. “It’s for you.”
-        She froze. “What is it?”
-        A ring. No words needed.
-        Her breath caught, and then—“Yes.”
-        They kissed, finally, with the whole world quiet around them.
-        And they lived happily ever after.
+    this is  a ~ tilda and this is a sign of exclamation !
     """
     u = Utility()
     vocab = u.create_vocab()
@@ -53,5 +44,11 @@ if __name__ == "__main__":
     all_words = sorted(vocab)
     all_words.extend(unk_tokens)
     vocab = {c:i for i,c in enumerate(all_words)}
+    tokenizer = Tokenizer(vocab)
+    encoded = tokenizer.encode(text)
+    print(encoded)
+    decoded = tokenizer.decode(encoded)
+    print(f'decoded: {decoded}')
+    
 
 
