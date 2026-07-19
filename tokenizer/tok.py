@@ -1,6 +1,7 @@
 import os 
 import sys
 import re
+from utils import Utility
 
 class Tokenizer:
     def __init__(self, vocab):
@@ -46,5 +47,6 @@ if __name__ == "__main__":
         They kissed, finally, with the whole world quiet around them.
         And they lived happily ever after.
     """
-    t = Tokenizer(vocab)
+    u = Utility()
+    vocab = u.create_vocab()
 
