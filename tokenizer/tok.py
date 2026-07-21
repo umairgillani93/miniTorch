@@ -45,12 +45,15 @@ if __name__ == "__main__":
     all_words.extend(unk_tokens)
     vocab = {c:i for i,c in enumerate(all_words)}
     tokenizer = Tokenizer(vocab)
-    S = ['this is a first len',
-        'this is second',
-        'abc'
-        ]
+    
+    with open('./data.txt', 'r') as f:
+        S = f.readlines()
     
     # pad the sequences
     padded = u.pad_sequences(S)
     encoded = [tokenizer.encode(p) for p in padded]
     print(encoded)
+    #decoded = [tokenizer.decode(p) for p in encoded]
+    #print(decoded)
+
+
