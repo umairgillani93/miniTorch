@@ -45,10 +45,12 @@ if __name__ == "__main__":
     all_words.extend(unk_tokens)
     vocab = {c:i for i,c in enumerate(all_words)}
     tokenizer = Tokenizer(vocab)
-    encoded = tokenizer.encode(text)
-    print(encoded)
-    decoded = tokenizer.decode(encoded)
-    print(f'decoded: {decoded}')
+    S = ['this is a first len',
+        'this is second',
+        'abc'
+        ]
     
-
-
+    # pad the sequences
+    padded = u.pad_sequences(S)
+    encoded = [tokenizer.encode(p) for p in padded]
+    print(encoded)

@@ -17,7 +17,7 @@ class Utility:
 
         return all_words
 
-    def pad_sequence(self, sequences):
+    def pad_sequences(self, sequences):
         '''post pad the list of sequences to zeros'''
         S = []
         max_len = 0
@@ -29,17 +29,17 @@ class Utility:
             if (len(words) < max_len):
                 N = max_len - len(words)
                 words.extend(["0"] * N)
-                S.append(words)
+                S.append(' '.join(words))
             else:
-                S.append(words)
+                S.append(' '.join(words))
 
         return S
 
 
-if __name__ == '__main__':
-    u = Utility()
-    S = ['this is a first len',
-        'this is second',
-        'abc'
-        ]
-    print(u.pad_sequence(S))
+#if __name__ == '__main__':
+#    u = Utility()
+#    S = ['this is a first len',
+#        'this is second',
+#        'abc'
+#        ]
+#    print(u.pad_sequence(S))
