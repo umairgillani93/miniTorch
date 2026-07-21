@@ -65,6 +65,7 @@ int main() {
 						y->data[(k * y_cols + c)]);
 			}
 			total += sum;
+			printf("Total %f\n", total);
 		}
 	}
 	clock_t end_time = clock();

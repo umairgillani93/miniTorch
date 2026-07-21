@@ -3,6 +3,7 @@ import sys
 import torch
 import time
 
+
 def compare_matmul():
     
     x = torch.randn(1024, 1024)
