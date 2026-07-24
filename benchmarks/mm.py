@@ -1,22 +1,23 @@
-import os 
-import sys 
 import torch
 import time
 
+torch.set_num_threads(1)  # Match your single-threaded C implementation
 
-def compare_matmul():
-    
-    x = torch.randn(1024, 1024)
-    y = torch.randn(1024, 1024)
+print("CUDA:", torch.cuda.is_available())
+print("Threads:", torch.get_num_threads())
 
-    z = torch.matmul(x, y)
-    return z
+x = torch.randn(1024, 1024, device="cpu")
+y = torch.randn(1024, 1024, device="cpu")
 
+# Warm-up (important)
+for _ in range(5):
+    torch.matmul(x, y)
 
-if __name__ == "__main__":
-    start = time.time()
-    res = compare_matmul()
-    end = time.time()
-    print((end - start) * 1000)
+start = time.perf_counter()
 
+z = torch.matmul(x, y)
+
+end = time.perf_counter()
+
+print(f"Matmul: {(end - start) * 1000:.3f} ms")
 

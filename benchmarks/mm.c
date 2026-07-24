@@ -65,9 +65,9 @@ int main() {
 						y->data[(k * y_cols + c)]);
 			}
 			total += sum;
-			printf("Total %f\n", total);
 		}
 	}
+	printf("Total %f\n", total);
 	clock_t end_time = clock();
 	double time_taken = (double)(end_time - start_time) / CLOCKS_PER_SEC;
 	printf("total time in ms: %f\n", time_taken * 1000);
