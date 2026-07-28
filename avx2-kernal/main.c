@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <immintrin.h>
+#include <time.h>
+#include <tensor.h>
+#include <arena.h>
+#include <config.h>
+
 
 int main() {
 	int A[2][8] = {
@@ -28,8 +33,20 @@ int main() {
 		}
 		printf("\n");
 	}
+
+	
+	srand(time(NULL));
+	Arena *A = malloc(sizeof(Arena));
+	size_t S = 1024 * 1024;
+	arean_init(A, S);
+	int ndim  = 2;
+	int *shape = arena_alloc(A, ndim * sizeof(int));
+	shape[0] = 1024;
+	shape[1] = 1024;
+
+
+	Tensor *a = tensor_create_new(A,ndim,shape);
+	tensor_get_2d(a);
 	return 0;
 }
-
-
 
