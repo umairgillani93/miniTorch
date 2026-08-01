@@ -1,8 +1,17 @@
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
+#include <time.h>
+#include <string.h>
+#include "tensor.h"
+#include "attention2.h"
+#include "layer_norm.h"
+#include "feed_forward_nn.h"
+#include "config.h"
+#include "arena.h"
 
 int main() {
-	float v = -64.00f;
-	int cols = (float)64;
-	printf("%f\n", v / cols);
+	
+	Tensor *a = tensor_create_new(
 	return 0; }
