@@ -58,22 +58,32 @@ int main() {
 	float *out_ptr = out->data;
 	int range = 32/8;
 
-	int offset = 0;
-	for (int r = 0; r < range; r++) {
-		__m256 a = _mm256_loadu_ps(x_ptr + offset);
-		__m256 b = _mm256_loadu_ps(y_ptr + offset);
-		__m256 temp = _mm256_add_ps(a, b);
-		_mm256_storeu_ps(out_ptr + offset, temp);
-		offset += 8;
+	for (int i = 0; i < 16; i++) {
+    for (int j = 0; j < 16; j++) {
+        __m256 acc = _mm256_setzero_ps();
+        for (int k = 0; k < 32; k += 8) {
+            __m256 va =
+                _mm256_loadu_ps(&Aptr[i * 32 + k]);
+            __m256 vb =
+                _mm256_loadu_ps(&BTptr[j * 32 + k]);
+
+            acc = _mm256_fmadd_ps(va, vb, acc);
+        }
+
+        float tmp[8];
+
+        _mm256_storeu_ps(tmp, acc);
+
+        float sum = 0.0f;
+
+        for (int t = 0; t < 8; t++)
+            sum += tmp[t];
+
+        Cptr[i * 16 + j] = sum;
+    }
 	}
 
-
-	for (int r = 0; r < 16; r++) {
-		for (int c = 0; c < 16; c++) {
-			printf("%0.2f ", out->data[r * 16 + c]); // FIX: Index formula & pointer reference
-		}
-		printf("\n");
-	}
+	tensor_get_2d(out);
 	tensor_shape_2d(out);
 	return 0;
 }
