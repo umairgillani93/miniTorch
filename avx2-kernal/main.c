@@ -40,54 +40,37 @@ int main() {
 	tensor_randomize(out);
 
 
-	for (int r = 0; r < 16; r++) {
-		for (int c = 0; c < 32; c++) {
-			float sum = 0.0f;
-			// k til range 'a' cols
-			for (int k = 0; k < 32; k++) {
-				sum += (x->data[r * 32 + k]) * 
-					(y->data[k * 16 + c]);
-			}
-			out->data[r * 16 + c]  = sum;
-		}
-	}
-
-
-	// here in my case rows = 16, and colms = 32
-	// so I'll loop through 32 / 8 number of times with an offset of 8
-	// for (int i = 0; i < 32; i += 8) like so 
-	// now I need to initialize register
-	//float *ptr_x = x->data;
-	//float *ptr_y = y->data;
-	//float *ptr_out = out->data;
-	//
 	//for (int r = 0; r < 16; r++) {
-	//	for (int c = 0; c < 32; c += 8) {
-
-
-	//		// initialize accumulator register for inner dimension 'k'
-	//		__m256 acc = _mm256_setzero_ps(); // zero initialized // FIX: __m265 -> __m256
-	//		// looping through inner dimension 
+	//	for (int c = 0; c < 32; c++) {
+	//		float sum = 0.0f;
+	//		// k til range 'a' cols
 	//		for (int k = 0; k < 32; k++) {
-	//			// 2. Broadcast a single scalar element from Matrix X: X[i][k]
-	//			// This loads one float and clones it into all 8 slots of the YMM register
-	//				__m256 reg_x_scalar = _mm256_set1_ps(ptr_x[r * 32 + k]); // FIX: i -> r
-
-	//				// Load a contiguous 8-float block from Matrix Y: Y[k][j ... j+7]
-	//				__m256 reg_y_rowchunk = _mm256_loadu_ps(&ptr_y[k * 32 + c]); // FIX: j -> c
-
-	//				//  Multiply and Accumulate: acc = acc + (reg_x_scalar * reg_y_rowchunk)
-	//				acc = _mm256_fmadd_ps(reg_x_scalar, reg_y_rowchunk, acc);
-	//			}
-	//		//  Store the final calculated 8-float block back to the output tensor
-	//		_mm256_storeu_ps(&ptr_out[r * 32 + c], acc); // FIX: i -> r, j -> c
+	//			sum += (x->data[r * 32 + k]) * 
+	//				(y->data[k * 16 + c]);
 	//		}
+	//		out->data[r * 16 + c]  = sum;
 	//	}
+	//}
+
+	// initialize the avx2 registers with float zero values
+	float *x_ptr = x->data;
+	float *y_ptr = y->data;
+	float *out_ptr = out->data;
+	int range = 32/8;
+
+	int offset = 0;
+	for (int r = 0; r < range; r++) {
+		__m256 a = _mm256_loadu_ps(x_ptr + offset);
+		__m256 b = _mm256_loadu_ps(y_ptr + offset);
+		__m256 temp = _mm256_add_ps(a, b);
+		_mm256_storeu_ps(out_ptr + offset, temp);
+		offset += 8;
+	}
 
 
 	for (int r = 0; r < 16; r++) {
 		for (int c = 0; c < 16; c++) {
-			printf("%f ", out->data[r * 16 + c]); // FIX: Index formula & pointer reference
+			printf("%0.2f ", out->data[r * 16 + c]); // FIX: Index formula & pointer reference
 		}
 		printf("\n");
 	}
