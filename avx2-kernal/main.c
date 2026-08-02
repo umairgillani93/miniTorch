@@ -36,7 +36,7 @@ int main() {
 	tensor_randomize_weights(x);
 	tensor_randomize_weights(y);
 
-	Tensor *out = tensor_create_new(A, ndim, out_shape);
+	Tensor *out= tensor_create_new(A, ndim, out_shape);
 	tensor_randomize(out);
 
 
@@ -53,36 +53,51 @@ int main() {
 	//}
 
 	// initialize the avx2 registers with float zero values
-	float *x_ptr = x->data;
-	float *y_ptr = y->data;
-	float *out_ptr = out->data;
-	int range = 32/8;
+	
+	float *Aptr = x->data;
+	float *BTptr = y->data;
+	float *Cptr = out->data;
+
+	int lda = 32;
+	int ldb = 32;
+	int ldc = 16;
 
 	for (int i = 0; i < 16; i++) {
-    for (int j = 0; j < 16; j++) {
-        __m256 acc = _mm256_setzero_ps();
-        for (int k = 0; k < 32; k += 8) {
-            __m256 va =
-                _mm256_loadu_ps(&Aptr[i * 32 + k]);
-            __m256 vb =
-                _mm256_loadu_ps(&BTptr[j * 32 + k]);
+		const float *a_row = Aptr + i * lda;
+		float *c_row = Cptr + i * ldc;
 
-            acc = _mm256_fmadd_ps(va, vb, acc);
-        }
+		for (int j = 0; j < 16; j++) {
 
-        float tmp[8];
+				const float *a = a_row;
+				const float *b = BTptr + j * ldb;
 
-        _mm256_storeu_ps(tmp, acc);
+				__m256 acc = _mm256_setzero_ps();
 
-        float sum = 0.0f;
+				for (int k = 0; k < 32; k += 8) {
 
-        for (int t = 0; t < 8; t++)
-            sum += tmp[t];
+						__m256 va = _mm256_loadu_ps(a);
+						__m256 vb = _mm256_loadu_ps(b);
 
-        Cptr[i * 16 + j] = sum;
-    }
+						acc = _mm256_add_ps(
+										acc,
+										_mm256_mul_ps(va, vb));
+
+						a += 8;
+						b += 8;
+				}
+
+				float tmp[8];
+
+				_mm256_storeu_ps(tmp, acc);
+
+				float sum = 0.0f;
+
+				for (int t = 0; t < 8; t++)
+						sum += tmp[t];
+
+				c_row[j] = sum;
+		}
 	}
-
 	tensor_get_2d(out);
 	tensor_shape_2d(out);
 	return 0;
