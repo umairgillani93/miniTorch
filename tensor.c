@@ -2936,7 +2936,9 @@ int main() {
 
 	Tensor *z = tensor_matmul(A, y, x);
 
+	tensor_get_2d(z);
 	tensor_shape_2d(z);
+	free(A);
 
 	return 0;
 }
