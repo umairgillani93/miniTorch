@@ -1554,6 +1554,8 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 	float *y_data = b->data;
 	float *out_data = out->data;
 
+	float total = 0.0f;
+	clock_t start_time = clock();
 	_avx2_matmul(x_data, y_data, out_data, a_rows, a_cols,  b_rows, b_cols);
 	
 
@@ -1567,6 +1569,11 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 	//		out->data[r * b_cols + c] = sum;
 	//	}
 	//}
+
+	clock_t end_time = clock();
+	double time_taken = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+	printf("total time in ms: %f\n", time_taken * 1000);
+	//free(A);
 	return out;
 }
 
@@ -2916,11 +2923,11 @@ int main() {
 	int ndim = 2;
 	int *shape_x = arena_alloc(A, ndim * sizeof(int));
 	int *shape_y = arena_alloc(A, ndim * sizeof(int));
-	shape_x[0] = SEQ_LEN;
-	shape_x[1] = EMB_DIM;
+	shape_x[0] = 1024;
+	shape_x[1] = 1024;
 
-	shape_y[0] = EMB_DIM;
-	shape_y[1] = SEQ_LEN;
+	shape_y[0] = 1024;
+	shape_y[1] = 1024;
 
 	Tensor *x = tensor_create_new(A, ndim, shape_x);
 	tensor_randomize_weights(x);
@@ -2934,10 +2941,9 @@ int main() {
 	y->grad = tensor_create_new(A, y->ndim, y->shape);
 	tensor_fill_zeros(y->grad);
 
-
 	Tensor *z = tensor_matmul(A, x, y);
 
-	tensor_get_2d(z);
+
 	tensor_shape_2d(z);
 	free(A);
 
