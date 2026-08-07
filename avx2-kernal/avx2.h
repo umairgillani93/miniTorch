@@ -3,7 +3,7 @@
 
 
 void _avx2_matmul(float *x_data, float *y_data, float *out_data,
-									int x_rows, int x_cols, int y_cols);
+									int x_rows, int x_cols, int y_rows, int y_cols);
 
 
 #endif

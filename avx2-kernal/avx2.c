@@ -5,27 +5,32 @@
 #include "avx2.h"
 
 void _avx2_matmul(float *x_data, float *y_data, float *out_data, 
-						      int x_rows, int x_cols, int y_cols) {
+						      int x_rows, int x_cols, int y_rows, int y_cols) {
 	
 	float *Aptr = x_data;
 	float *BTptr = y_data;
 	float *Cptr = out_data;
 
-	int lda = 32;
-	int ldb = 32;
-	int ldc = 16;
+	int lda = x_cols;
+	int ldb = y_rows;
+	int ldc = x_rows;
+	
+	printf("x rows: %d\n", x_rows);
+	printf("x cols: %d\n", x_cols);
+	printf("y rows: %d\n", y_rows);
+	printf("y cols: %d\n", y_cols);
 
-	for (int i = 0; i < 16; i++) {
+	for (int i = 0; i < x_rows; i++) {
 		const float *a_row = Aptr + i * lda;
 		float *c_row = Cptr + i * ldc;
 
-		for (int j = 0; j < 16; j++) {
+		for (int j = 0; j < x_rows; j++) {
 
 				const float *a = a_row;
 				const float *b = BTptr + j * ldb;
 
 				__m256 acc = _mm256_setzero_ps();
-				for (int k = 0; k < 32; k += 8) {
+				for (int k = 0; k < x_cols; k += 8) {
 
 					__m256 va = _mm256_loadu_ps(a);
 					__m256 vb = _mm256_loadu_ps(b);

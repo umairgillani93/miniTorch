@@ -1554,7 +1554,7 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 	float *y_data = b->data;
 	float *out_data = out->data;
 
-	_avx2_matmul(x_data, y_data, out_data, a_rows, a_cols, b_cols);
+	_avx2_matmul(x_data, y_data, out_data, a_rows, a_cols,  b_rows, b_cols);
 	
 
 	//for (int r = 0; r < a_rows; r++) {
@@ -2922,19 +2922,20 @@ int main() {
 	shape_y[0] = EMB_DIM;
 	shape_y[1] = SEQ_LEN;
 
-	Tensor *y = tensor_create_new(A, ndim, shape_y);
-	tensor_randomize_weights(y);
-	y->requires_grad = true;
-	y->grad = tensor_create_new(A, y->ndim, y->shape);
-	tensor_fill_zeros(y->grad);
-
 	Tensor *x = tensor_create_new(A, ndim, shape_x);
 	tensor_randomize_weights(x);
 	x->requires_grad = true;
 	x->grad = tensor_create_new(A, x->ndim, x->shape);
 	tensor_fill_zeros(x->grad);
 
-	Tensor *z = tensor_matmul(A, y, x);
+	Tensor *y = tensor_create_new(A, ndim, shape_y);
+	tensor_randomize_weights(y);
+	y->requires_grad = true;
+	y->grad = tensor_create_new(A, y->ndim, y->shape);
+	tensor_fill_zeros(y->grad);
+
+
+	Tensor *z = tensor_matmul(A, x, y);
 
 	tensor_get_2d(z);
 	tensor_shape_2d(z);
