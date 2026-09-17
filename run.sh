@@ -8,6 +8,7 @@ gcc -g -O0 \
 -mfma \
 -fsanitize=address \
 -fno-omit-frame-pointer \
+main2.c \
 tensor.c \
 ffn.c \
 ln.c \
