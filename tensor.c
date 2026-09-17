@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -12,8 +13,8 @@
 #include "arena.h"
 #include "graph_viz.h"
 #include "config.h"
+#include "avx2-kernal/avx2.h"
 
-#include <stddef.h>
 
 //#define RAND_FLOAT  (float) rand() / (float) RAND_MAX
 //#define EPS 1e-5
@@ -1519,8 +1520,6 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 	int b_rows = b->shape[0];
 	int b_cols = b->shape[1];
 
-	
-
 	int *out_shape = arena_alloc(A, a->ndim * sizeof(int));
 	out_shape[0] = a_rows;
 	out_shape[1] = b_cols;
@@ -1551,16 +1550,30 @@ Tensor *tensor_matmul(Arena *A, Tensor *a, Tensor *b) {
 		out->shared_dim = a_cols;
 	}
 
-	for (int r = 0; r < a_rows; r++) {
-		for (int c = 0; c < b_cols; c++) {
-			float sum = 0.0f;
-			for (int k = 0; k < a_cols; k++) {
-				sum += (a->data[(r * a_cols + k)] *
-					 	b->data[(k * b_cols + c)]);
-			}
-			out->data[r * b_cols + c] = sum;
-		}
-	}
+	float *x_data = a->data;
+	float *y_data = b->data;
+	float *out_data = out->data;
+
+	float total = 0.0f;
+	clock_t start_time = clock();
+	_avx2_matmul(x_data, y_data, out_data, a_rows, a_cols,  b_rows, b_cols);
+	
+
+	//for (int r = 0; r < a_rows; r++) {
+	//	for (int c = 0; c < b_cols; c++) {
+	//		float sum = 0.0f;
+	//		for (int k = 0; k < a_cols; k++) {
+	//			sum += (a->data[(r * a_cols + k)] *
+	//				 	b->data[(k * b_cols + c)]);
+	//		}
+	//		out->data[r * b_cols + c] = sum;
+	//	}
+	//}
+
+	clock_t end_time = clock();
+	double time_taken = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+	printf("total time in ms: %f\n", time_taken * 1000);
+	//free(A);
 	return out;
 }
 
@@ -2910,17 +2923,11 @@ Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b) {
 //	int ndim = 2;
 //	int *shape_x = arena_alloc(A, ndim * sizeof(int));
 //	int *shape_y = arena_alloc(A, ndim * sizeof(int));
-//	shape_x[0] = SEQ_LEN;
-//	shape_x[1] = EMB_DIM;
+//	shape_x[0] = 1024;
+//	shape_x[1] = 1024;
 //
-//	shape_y[0] = SEQ_LEN;
-//	shape_y[1] = EMB_DIM;
-//
-//	Tensor *y = tensor_create_new(A, ndim, shape_y);
-//	tensor_randomize_weights(y);
-//	y->requires_grad = true;
-//	y->grad = tensor_create_new(A, y->ndim, y->shape);
-//	tensor_fill_zeros(y->grad);
+//	shape_y[0] = 1024;
+//	shape_y[1] = 1024;
 //
 //	Tensor *x = tensor_create_new(A, ndim, shape_x);
 //	tensor_randomize_weights(x);
@@ -2928,32 +2935,17 @@ Tensor *tensor_scalling(Arena *A, Tensor *a, Tensor *b) {
 //	x->grad = tensor_create_new(A, x->ndim, x->shape);
 //	tensor_fill_zeros(x->grad);
 //
-//	LayerNorm *ln1 = layer_norm_create_new(A, 32);
-// 	layer_norm_init_params(A, ln1);
+//	Tensor *y = tensor_create_new(A, ndim, shape_y);
+//	tensor_randomize_weights(y);
+//	y->requires_grad = true;
+//	y->grad = tensor_create_new(A, y->ndim, y->shape);
+//	tensor_fill_zeros(y->grad);
 //
-//	LayerNorm *ln2 = layer_norm_create(A, 32);
-//	layer_norm_init_params(A, ln2);
+//	Tensor *z = tensor_matmul(A, x, y);
 //
-//	MHA *mha = mha_create_new(A, HEADS, SEQ_LEN, EMB_DIM);
-//	mha_init_params(A, mha);
 //
-//	FFN *f = ffn_create(A, EMB_DIM, HIDDEN_DIM);
-//	ffn_init_params(f);
-//
-//	
-//	Tensor *mha_out = mha_forward(A, x, mha);
-//	Tensor *ln1_out = layer_norm_forward(A, ln1, mha_out);
-//
-//	Tensor *ffn_out = ffn_forward(A, ln1_out, f);
-//	Tensor *ln2_out= layer_norm_forward(A, ln2, ffn_out);
-//	
-//	Tensor *loss = tensor_f(A, ln2_out);
-//	loss->grad->data[0] = 1.0f;
-//
-//	run_graph_validation(A, loss, MAX_NODES);
-//	backward(A, loss);
+//	tensor_shape_2d(z);
 //	free(A);
-//	export_and_visualize_graph_new(loss, "graph_final.dot", "graph_final.png");
 //
 //	return 0;
 //}

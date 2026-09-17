@@ -7,7 +7,7 @@
 #define RAND_FLOAT (float) rand() / (float) RAND_MAX
 #define HIDDEN_DIM 128
 #define BATCH_SIZE 16
-#define SEQ_LEN    160
+#define SEQ_LEN    16
 #define EMB_DIM    32
 #define alpha      1e-3
 #define HEADS      8

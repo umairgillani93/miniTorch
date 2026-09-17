@@ -8,6 +8,7 @@
 #include "feed_forward_nn.h"
 #include "arena.h"
 #include "config.h"
+#include <string.h>
 #include <stddef.h>
 
 
